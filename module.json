@@ -13,7 +13,7 @@
   "download": "https://github.com/Dispositif/foundry-phones-computers/releases/download/v1.0.3/soren-phones-computers.zip",
   "readme": "https://github.com/Dispositif/foundry-phones-computers#readme",
   "compatibility": {
-    "minimum": "13",
+    "minimum": "14",
     "verified": "14"
   },
   "esmodules": [
