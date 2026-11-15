@@ -121,6 +121,9 @@ export function playerCall(item, to) {
   if (isMasked(to)) return deviceNotice(t("Warn.CantCallMasked"), { warn: true });
   const phone = getPhoneData(item);
   if (modelOf(phone).noCalls) return;
+  // Dialing the device's own number (or a contact saved with it).
+  const bare = (s) => String(s ?? "").toLowerCase().replace(/[\s\-()]/g, "");
+  if (phone?.number && bare(keyFor(phone, to)) === bare(phone.number)) return deviceNotice(t("Warn.OwnNumber"), { warn: true });
   if (phone?.locked) return deviceNotice(t("Warn.Locked"), { warn: true });
   if (modeOf(phone) === "off") return deviceNotice(t("Warn.PhoneOff"), { warn: true });
   if (outgoing) return deviceNotice(t("Warn.AlreadyCalling"), { warn: true });
