@@ -50,6 +50,7 @@
       "Locked": "Phone locked.",
       "PhoneOff": "Your phone is switched off.",
       "CantCallMasked": "You cannot call back a hidden number.",
+      "OwnNumber": "You cannot call your own number.",
       "AlreadyCalling": "A call is already in progress.",
       "SceneNotFound": "Scene \"{name}\" not found.",
       "ActorNotFound": "Character \"{name}\" not found.",

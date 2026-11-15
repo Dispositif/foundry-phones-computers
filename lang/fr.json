@@ -50,6 +50,7 @@
       "Locked": "Téléphone verrouillé.",
       "PhoneOff": "Votre téléphone est éteint.",
       "CantCallMasked": "Impossible de rappeler un numéro masqué.",
+      "OwnNumber": "Impossible d'appeler votre propre numéro.",
       "AlreadyCalling": "Un appel est déjà en cours.",
       "SceneNotFound": "Scène « {name} » introuvable.",
       "ActorNotFound": "Personnage « {name} » introuvable.",
