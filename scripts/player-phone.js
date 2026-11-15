@@ -614,6 +614,14 @@ export class PlayerPhone extends ApplicationV2 {
   _renderHeader(p, mine) {
     const mode = modeOf(p.phone);
     const phoneSel = deviceSelect(mine, p, (q) => (this.gm ? phoneLabel(q) : `${q.phone.label} · ${q.phone.number}`));
+    // Player, mobile device switched off: only the power button, which switches it on.
+    if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {
+      // The ring/silent buttons keep their space (hidden) so the power button stays in place.
+      const btns = Object.entries(MODES).map(([k, m]) => k === "off"
+        ? `<button type="button" class="spt-mode" data-mode="on" title="${t("PowerOn")}" aria-label="${t("PowerOn")}"><i class="fas ${m.icon}"></i></button>`
+        : `<button type="button" class="spt-mode" style="visibility:hidden" tabindex="-1" aria-hidden="true"><i class="fas ${m.icon}"></i></button>`).join("");
+      return `<header class="spt-phone-top">${phoneSel}<div class="spt-modes">${btns}</div></header>`;
+    }
     const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : Object.entries(MODES)
       .map(([k, m]) => `<button type="button" class="spt-mode ${k === mode ? "active" : ""}" data-mode="${k}" title="${m.label}"><i class="fas ${m.icon}"></i></button>`)
       .join("");
