@@ -350,6 +350,10 @@
       "universe": {
         "name": "Universe",
         "hint": "Era or genre of the game: sets the devices offered, their default looks, the phone created for a character who has none (a mobile in Vintage, a smartphone otherwise) and some words. Any setting: everything, as before."
+      },
+      "welcomeMessage": {
+        "name": "Operator welcome message",
+        "hint": "The first time a player opens a new device, its operator sends a welcome message (a mail on a computer)."
       }
     },
     "Migrated": "{n} device(s) recovered from the previous version.",
@@ -383,6 +387,10 @@
         },
         "Secure": {
           "Line": "Secure voice"
+        },
+        "Welcome": {
+          "Sms": "{operator}: your line is now active. Welcome to the network.",
+          "Mail": "{operator}: welcome\nYour access is active. Your messages will arrive here."
         }
       },
       "modern": {},
@@ -434,6 +442,10 @@
         "Masked": "Untraceable ID",
         "Secure": {
           "Line": "Encrypted channel"
+        },
+        "Welcome": {
+          "Sms": "NODE ONLINE. {operator} wishes you a traceless connection.",
+          "Mail": "{operator} // NODE ONLINE\nChannel open. Incoming packets will show here."
         }
       }
     },
@@ -638,6 +650,56 @@
       "FabHint": "jamming (click to open)",
       "GmFab": "Jammed: {scenes}",
       "NewHint": "No number. Switched on, it cuts the mobile network and Wi-Fi in its carrier's scene, until switched off or the carrier changes scene."
+    },
+    "Welcome": {
+      "Title": "Welcome to Phones & Computers",
+      "Help": "Welcome and guided tour",
+      "Lead": "You are the network.",
+      "PointDevice": "To be called or texted, a player only needs a device. If they have none, their character gets one automatically the first time you contact them.",
+      "PointNpc": "From the {panel} panel, call or write under any name or number you like. No need to create NPC devices or fill in the directory.",
+      "PointReply": "Players can call or text any number, even a made-up one that is not in the directory: you answer, as whoever you like.",
+      "EquipTitle": "Equip your PCs",
+      "Equip": "Equip",
+      "NoCharacters": "No player has an assigned character. Assign a character to each player (User Configuration), then reopen this window.",
+      "Universe": "Universe:",
+      "Change": "Change",
+      "Tour": "Guided tour",
+      "OpenPanel": "Open the {panel} panel",
+      "Reopen": "To reopen this window: ? button in the {panel} panel.",
+      "Sms": "Welcome to the {operator} network. Your line is active: your conversations and contacts are on the home screen.",
+      "Mail": "Welcome to {operator}\nYour mailbox is active. Your messages will arrive here."
+    },
+    "Tour": {
+      "Title": "Phones & Computers: the GM panel",
+      "Description": "Call and text players as any NPC.",
+      "send": {
+        "title": "Send",
+        "content": "Everything starts here: messages and calls to the players."
+      },
+      "recipient": {
+        "title": "Recipient",
+        "content": "Pick a player. If they have no device yet, their character gets one automatically."
+      },
+      "sender": {
+        "title": "Sender",
+        "content": "Type the name or number the players will see: an NPC, a made-up number… No NPC device or directory needed. Left empty, the number is hidden."
+      },
+      "mode": {
+        "title": "Message or call",
+        "content": "Send a message, or ring their device. When they answer, play the NPC out loud."
+      },
+      "inbox": {
+        "title": "Replies",
+        "content": "Players' messages to NPCs land here. You answer as the NPC."
+      },
+      "devices": {
+        "title": "Devices",
+        "content": "Every device: edit, give, lock, or create more (landline, terminal, pager…). The NPC directory is optional."
+      },
+      "network": {
+        "title": "Network",
+        "content": "Cut the network for the whole table. Messages wait until it is back. The ? button reopens the welcome window."
+      }
     }
   }
 }

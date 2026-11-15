@@ -12,6 +12,7 @@ import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
 import { openPager } from "./pager.js";
 import { BOOT_MS, bootText, hostName } from "./names.js";
+import { welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Player window: My phone                      */
@@ -339,6 +340,7 @@ export class PlayerPhone extends ApplicationV2 {
     if (!this.gm && modeOf(p.phone) === "off") return this._renderOff(p, mine);
     if (!this.gm && this._boot?.uuid === p.item.uuid && Date.now() < this._boot.until) return this._renderBoot(p, mine);
     if (!this.gm && p.phone.locked) return this._renderLocked(p, mine);
+    if (!this.gm) welcomeDevice(p);
     // A rotary landline has nothing but its dial: the GM sees it as the players do.
     if (isLandline(p.phone) && (!this.gm || skinOf(p.phone) !== "modern")) return this._renderDialer(p, mine);
     const computer = isComputer(p.phone);

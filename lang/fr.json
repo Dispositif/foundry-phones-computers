@@ -350,6 +350,10 @@
       "universe": {
         "name": "Univers",
         "hint": "Époque ou genre de la partie : fixe les appareils proposés, leurs habillages par défaut, le téléphone créé pour un personnage qui n'en a pas (un mobile en Vintage, un smartphone sinon) et certains mots. Tous univers : tout, comme avant."
+      },
+      "welcomeMessage": {
+        "name": "Message de bienvenue de l'opérateur",
+        "hint": "La première fois qu'un joueur ouvre un nouvel appareil, son opérateur lui envoie un message de bienvenue (un mail sur un ordinateur)."
       }
     },
     "Migrated": "{n} appareil(s) repris de l'ancienne version.",
@@ -383,6 +387,10 @@
         },
         "Secure": {
           "Line": "Ligne protégée"
+        },
+        "Welcome": {
+          "Sms": "{operator} : votre ligne est activée. Bienvenue sur le réseau.",
+          "Mail": "{operator} : bienvenue\nVotre accès est activé. Vos messages arriveront ici."
         }
       },
       "modern": {},
@@ -434,6 +442,10 @@
         "Masked": "ID intraçable",
         "Secure": {
           "Line": "Canal chiffré"
+        },
+        "Welcome": {
+          "Sms": "NODE ONLINE. {operator} vous souhaite une connexion sans trace.",
+          "Mail": "{operator} // NODE ONLINE\nCanal ouvert. Les paquets entrants s'afficheront ici."
         }
       }
     },
@@ -638,6 +650,56 @@
       "FabHint": "brouillage en cours (clic pour ouvrir)",
       "GmFab": "Brouillé : {scenes}",
       "NewHint": "Sans numéro. Allumé, il coupe le réseau mobile et le Wi-Fi dans la scène de son porteur, jusqu'à ce qu'on l'éteigne ou que le porteur change de scène."
+    },
+    "Welcome": {
+      "Title": "Bienvenue dans Phones & Computers",
+      "Help": "Bienvenue et visite guidée",
+      "Lead": "Vous êtes le réseau.",
+      "PointDevice": "Pour être appelé ou recevoir un message, un joueur a seulement besoin d'un appareil. S'il n'en a pas, son personnage en reçoit un automatiquement la première fois que vous le contactez.",
+      "PointNpc": "Depuis le panneau {panel}, appelez ou écrivez sous le nom ou le numéro que vous voulez. Pas besoin de créer d'appareil PNJ ni de remplir l'annuaire.",
+      "PointReply": "Les joueurs peuvent appeler ou écrire à n'importe quel numéro, même inventé et absent de l'annuaire : c'est vous qui répondez, au nom de qui vous voulez.",
+      "EquipTitle": "Équiper vos PJ",
+      "Equip": "Équiper",
+      "NoCharacters": "Aucun joueur n'a de personnage assigné. Assignez un personnage à chaque joueur (Configuration de l'utilisateur), puis rouvrez cette fenêtre.",
+      "Universe": "Univers :",
+      "Change": "Changer",
+      "Tour": "Visite guidée",
+      "OpenPanel": "Ouvrir le panneau {panel}",
+      "Reopen": "Pour rouvrir cette fenêtre : bouton ? du panneau {panel}.",
+      "Sms": "Bienvenue sur le réseau {operator}. Votre ligne est active : vos conversations et vos contacts sont sur l'écran d'accueil.",
+      "Mail": "Bienvenue chez {operator}\nVotre boîte mail est active. Vos messages arriveront ici."
+    },
+    "Tour": {
+      "Title": "Phones & Computers : le panneau du MJ",
+      "Description": "Appeler et écrire aux joueurs au nom de n'importe quel PNJ.",
+      "send": {
+        "title": "Envoyer",
+        "content": "Tout part d'ici : messages et appels vers les joueurs."
+      },
+      "recipient": {
+        "title": "Destinataire",
+        "content": "Choisissez un joueur. S'il n'a pas encore d'appareil, son personnage en reçoit un automatiquement."
+      },
+      "sender": {
+        "title": "Expéditeur",
+        "content": "Tapez le nom ou le numéro que les joueurs verront : un PNJ, un numéro inventé… Aucun appareil PNJ ni annuaire n'est nécessaire. Laissé vide, le numéro est masqué."
+      },
+      "mode": {
+        "title": "Message ou appel",
+        "content": "Envoyez un message, ou faites sonner son appareil. Quand il décroche, jouez le PNJ à voix haute."
+      },
+      "inbox": {
+        "title": "Réponses",
+        "content": "Les messages des joueurs aux PNJ arrivent ici. Vous répondez au nom du PNJ."
+      },
+      "devices": {
+        "title": "Appareils",
+        "content": "Tous les appareils : modifier, donner, verrouiller, ou en créer d'autres (fixe, terminal, bipeur…). L'annuaire des PNJ est facultatif."
+      },
+      "network": {
+        "title": "Réseau",
+        "content": "Coupez le réseau pour toute la table. Les messages attendent son retour. Le bouton ? rouvre la fenêtre de bienvenue."
+      }
     }
   }
 }
