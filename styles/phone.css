@@ -429,17 +429,21 @@ a.spt-link:hover { filter: brightness(1.15); }
 #spt-phone-fab .spt-fab {
   position: absolute; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: #1b1d22; color: #e8e8e8; font-size: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
+  /* Default look (Any setting, Modern): frosted glass, the map shows through blurred. */
+  background: rgba(255,255,255,0.14); color: #fff; font-size: 20px;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.35); cursor: pointer;
 }
+#spt-phone-fab .spt-fab > i { text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 #spt-phone-fab .spt-fab[hidden] { display: none; }
-#spt-phone-fab .spt-fab:hover { background: #2a2d34; }
+#spt-phone-fab .spt-fab:hover { background: rgba(255,255,255,0.24); }
 /* Other carried devices: small round satellites. */
-#spt-phone-fab .spt-fab-sat { width: 30px; height: 30px; font-size: 13px; background: #202329; color: #cfd4da; }
+#spt-phone-fab .spt-fab-sat { width: 30px; height: 30px; font-size: 13px; }
 #spt-phone-fab .spt-fab-sat .spt-fab-badge { min-width: 14px; height: 14px; padding: 0 3px; font-size: 9px; top: -4px; right: -4px; }
 #spt-phone-fab .spt-fab-sat.off::after { height: 2px; }
 /* Room device (installed in a place): rounded square, "office" blue tint, location pin. */
-#spt-phone-fab .spt-fab-room { width: 34px; height: 34px; font-size: 15px; border-radius: 9px; background: #232a33; color: #c9d6e6; border-color: rgba(150,185,230,0.45); }
+#spt-phone-fab .spt-fab-room { width: 34px; height: 34px; font-size: 15px; border-radius: 9px; background: rgba(120,170,255,0.18); border-color: rgba(170,200,255,0.55); }
+#spt-phone-fab .spt-fab-room:hover { background: rgba(120,170,255,0.3); }
 #spt-phone-fab .spt-fab-pin {
   position: absolute; left: -5px; bottom: -5px; width: 15px; height: 15px; border-radius: 50%;
   background: #3a6ea8; color: #fff; font-size: 8px; display: flex; align-items: center; justify-content: center;
@@ -448,7 +452,7 @@ a.spt-link:hover { filter: brightness(1.15); }
 #spt-phone-fab .spt-fab-badge {
   position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px;
   border-radius: 9px; background: var(--spt-danger); color: #fff; font-size: 11px; font-weight: bold; z-index: 2;
-  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #1b1d22;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px rgba(255,255,255,0.7);
 }
 #spt-phone-fab .spt-fab-room .spt-fab-badge { min-width: 15px; height: 15px; font-size: 10px; top: -5px; right: -5px; }
 #spt-phone-fab .spt-fab-badge[hidden] { display: none; }
@@ -1013,13 +1017,45 @@ body[data-spt-universe="cyberpunk"] #spt-phone-panel > .window-header { border-b
 body[data-spt-universe="retro"] #spt-phone-panel.minimized > .window-header,
 body[data-spt-universe="cyberpunk"] #spt-phone-panel.minimized > .window-header { border-bottom: none; }
 /* Floating buttons (players and GM): tinted, coloured edge; call states keep their own colours */
-body[data-spt-universe="retro"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer),
-body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) {
-  background: var(--spt-uni-fab-bg); color: var(--spt-uni-fab-fg); border: 1px solid var(--spt-uni);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.55), 0 0 8px var(--spt-uni-glow);
+/* Vintage floating buttons: beige bakelite with slight relief; room devices as green LCD screens with sharp corners. */
+body[data-spt-universe="retro"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) {
+  background: linear-gradient(160deg, #d9cfb8, #b7ab90); color: #2c3a24; border: 1px solid #6e644f;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 3px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.6);
 }
-body[data-spt-universe="retro"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer):hover,
-body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer):hover { filter: brightness(1.35); }
+body[data-spt-universe="retro"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) > i { text-shadow: 0 1px 0 rgba(255,255,255,0.35); }
+body[data-spt-universe="retro"] #spt-phone-fab .spt-fab-room:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) {
+  border-radius: 5px; background: linear-gradient(#9fb070, #7e8f52); color: #1f2a14; border: 2px solid #3a3a30;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.6);
+}
+body[data-spt-universe="retro"] #spt-phone-fab .spt-fab-room:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) > i { text-shadow: none; }
+body[data-spt-universe="retro"] #spt-phone-fab .spt-fab-badge { border-radius: 3px; font-family: "Courier New", monospace; box-shadow: 0 0 0 2px #3a3a30; }
+body[data-spt-universe="retro"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer):hover { filter: brightness(1.08); }
+/* Cyberpunk floating buttons: graduated brushed-metal ring, holographic blue icon; room devices as amber consoles. */
+body[data-spt-universe="cyberpunk"] #spt-phone-fab { --spt-fab-spread: 1.22; }
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) {
+  background: radial-gradient(circle at 50% 45%, #16324a 0 55%, #0b1622 56%) padding-box; color: #8fe3ff;
+  border: 3px solid transparent; -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: 0 0 0 1px #000, 0 0 0 3px #9aa3ad, 0 0 0 4px #4b525a, 0 3px 10px rgba(0,0,0,0.6), inset 0 0 10px rgba(80,200,255,0.35);
+}
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-sat:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) {
+  box-shadow: 0 0 0 1px #000, 0 0 0 2px #9aa3ad, 0 0 0 3px #4b525a, 0 2px 8px rgba(0,0,0,0.6), inset 0 0 8px rgba(80,200,255,0.35);
+}
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) > i { text-shadow: 0 0 5px #4cc9ff, 0 0 10px rgba(76,201,255,0.6); }
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-room:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) {
+  border-radius: 6px; background: linear-gradient(#2a3038, #171b20); color: #ffb648; border: 1px solid #6b737c;
+  box-shadow: inset 0 0 0 2px #0d0f12, inset 0 0 10px rgba(255,170,60,0.25), 0 3px 10px rgba(0,0,0,0.6);
+}
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-room:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer) > i { text-shadow: 0 0 6px rgba(255,170,60,0.8); }
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-pin { background: #ffb648; color: #2a1a00; box-shadow: 0 0 0 2px #0b1622; }
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-badge { border-radius: 3px; box-shadow: 0 0 0 2px #0b1622; }
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab:not(.online):not(.calling):not(.ringing):not(.jamming):not(.spt-fab-jammer):hover { filter: brightness(1.3); }
+/* Main button: tick marks around the metal ring. */
+body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
+  content: ""; position: absolute; inset: -9px; border-radius: 50%; pointer-events: none; opacity: 0.8;
+  background: repeating-conic-gradient(#9aa3ad 0 3deg, transparent 3deg 45deg);
+  -webkit-mask: radial-gradient(circle, transparent 27px, #000 28px); mask: radial-gradient(circle, transparent 27px, #000 28px);
+}
 
 /* Mobile (monochrome LCD): call buttons in the screen's two tones instead of green and red */
 .spt-player-phone.spt-skin-mobile .window-content .spt-incoming-keys button { border-radius: 6px; font-size: 1.2rem; box-shadow: none; }
