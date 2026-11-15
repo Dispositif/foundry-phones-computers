@@ -10,6 +10,7 @@ import { hangUpAll, pendingCalls, ring } from "./ring.js";
 import { clock, liveCalls, timerHtml } from "./live-call.js";
 import { esc, isMasked, nl2br, norm } from "./util.js";
 import { t, tn } from "./i18n.js";
+import { openWelcome } from "./welcome.js";
 /* -------------------------------------------- */
 /*  GM panel                                    */
 /* -------------------------------------------- */
@@ -249,6 +250,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         if (res?.open && res.item) openPhone(res.item.uuid);
       },
       directory: function () { directoryDialog(); },
+      welcome: function () { openWelcome(); },
       editPhone: async function (event, target) { editPhoneDialog(await fromUuid(target.dataset.uuid)); },
       contacts: async function (event, target) { contactsDialog(await fromUuid(target.dataset.uuid)); },
       give: async function (event, target) { giveDialog(await fromUuid(target.dataset.uuid)); },

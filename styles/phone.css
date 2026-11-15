@@ -77,6 +77,7 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-gm-status.down .spt-pill { background: rgba(192,57,43,0.25); color: #ff8a7a; }
 .spt-gm-status .spt-gm-pending { font-size: 0.85em; opacity: 0.8; }
 .spt-gm-status .spt-gm-net { margin-left: auto; flex: 0 0 auto; width: auto; font-size: 0.85em; padding: 1px 10px; }
+.spt-gm-status .spt-gm-help { flex: 0 0 2em; width: 2em; padding: 1px 0; font-size: 0.85em; }
 .spt-gm-ringing { display: flex; align-items: center; gap: 0.5rem; padding: 5px 10px; background: rgba(201,118,28,0.18); border-bottom: 1px solid rgba(201,118,28,0.4); }
 .spt-gm-ringing > i { animation: spt-phone-shake 0.6s infinite; color: var(--spt-warn); }
 .spt-gm-ringing button { margin-left: auto; flex: 0 0 2.4em; width: 2.4em; color: var(--spt-danger); }
@@ -1105,3 +1106,32 @@ body[data-spt-universe="retro"] #spt-phone-fab .spt-fab { border-radius: 10px; }
 .spt-jammer-neon .spt-jammer .spt-jammer-switch.on > span { background: linear-gradient(#ff8ad8, #d0158f); box-shadow: 0 0 8px #ff2fb4; }
 .spt-jammer-neon .spt-jammer .spt-jammer-dial { background: repeating-conic-gradient(#1a1622 0 10deg, #0b0a10 10deg 20deg); box-shadow: 0 0 6px rgba(255,47,180,0.45), inset 0 0 0 5px #141019; }
 .spt-jammer-neon .spt-jammer .spt-jammer-dial::after { background: #19f0ff; box-shadow: 0 0 4px #19f0ff; }
+
+/* GM welcome window */
+.spt-welcome .window-content { padding: 12px 14px; }
+.spt-wl-lead { font-size: 1.15em; font-weight: 600; margin: 0 0 6px; }
+.spt-wl-lead i { color: var(--spt-accent); margin-right: 0.3em; }
+.spt-wl-points { list-style: none; margin: 0 0 10px; padding: 0; }
+.spt-wl-points li { display: flex; gap: 0.6em; align-items: baseline; padding: 3px 0; }
+.spt-wl-points li > i { flex: 0 0 1.2em; text-align: center; opacity: 0.75; }
+.spt-wl h3 { margin: 10px 0 4px; border-bottom: 1px solid var(--spt-line); padding-bottom: 2px; font-size: 1em; }
+.spt-wl-list { list-style: none; margin: 0; padding: 0; }
+.spt-wl-row { display: flex; align-items: center; gap: 0.5em; padding: 4px 2px; border-bottom: 1px solid var(--spt-soft); }
+.spt-wl-row.equipped .spt-wl-who { opacity: 0.6; }
+.spt-wl-who { flex: 1 1 auto; display: flex; align-items: center; gap: 0.4em; min-width: 0; }
+.spt-wl-who input { flex: 0 0 auto; margin: 0; }
+.spt-wl-player { font-size: 0.85em; opacity: 0.65; }
+.spt-wl-state { display: flex; flex-wrap: wrap; gap: 0.2em 0.6em; font-size: 0.85em; opacity: 0.75; }
+.spt-wl-row select { flex: 0 0 9.5em; width: 9.5em; }
+.spt-wl-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+.spt-wl-actions button { flex: 0 0 auto; width: auto; padding: 2px 14px; }
+.spt-wl-empty { opacity: 0.8; }
+.spt-wl-universe { margin: 10px 0 0; font-size: 0.9em; }
+.spt-wl-universe a { margin-left: 0.4em; text-decoration: underline; cursor: pointer; }
+.spt-wl-footer { display: flex; gap: 8px; margin-top: 12px; }
+.spt-wl-reopen { margin: 8px 0 0; font-size: 0.8em; opacity: 0.6; text-align: center; }
+.spt-wl .spt-primary { font-weight: 600; }
+
+/* Guided tour (Foundry tooltip): bigger previous / next buttons, ours only */
+.tour:has(.spt-tour) .step-button, .tour:has(.spt-tour) [data-action="previous"], .tour:has(.spt-tour) [data-action="next"] { display: inline-flex; align-items: center; justify-content: center; min-width: 2.2em; min-height: 2.2em; padding: 4px 10px; font-size: 1.3em; cursor: pointer; }
+.tour:has(.spt-tour) .step-button i, .tour:has(.spt-tour) [data-action] i { font-size: 1em; }
