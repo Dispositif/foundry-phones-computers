@@ -3,6 +3,7 @@
 ## unrelease
 - Random device names, emails, operator and machine names by universe; remove demo macro
 - GM welcome window and guided tour of the GM panel. Operator welcome message.
+- Floating buttons for several devices: other carried devices as satellites, room devices as squares.
 
 ## 1.3.0
 - New device: **Jammer**. Switched on, it cuts the mobile network and Wi-Fi in its carrier's scene; the GM can make it fail. Switches off when the carrier changes scene.
