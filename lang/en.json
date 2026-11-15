@@ -20,6 +20,8 @@
       "other": "{n} unread messages"
     },
     "MyPhone": "My phone",
+    "NextDevice": "Next device (Ctrl+Shift+P)",
+    "CopyAddress": "Copy",
     "Model": {
       "landline": "Landline",
       "mobile": "Mobile phone",

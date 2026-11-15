@@ -4,7 +4,7 @@
 
 A <a href="https://foundryvtt.com" target="_blank">Foundry VTT</a> module that gives your characters phones, laptops and room terminals. Every call or message to an NPC lands with the GM, who answers, lets it ring, or decides the number doesn't exist. Built for investigation and narrative play, not as a smartphone simulator.
 
-- **Ctrl+Shift+P** opens the GM panel, or the player's phone. Floating buttons too.
+- **Ctrl+Shift+P** opens the GM panel, or the player's phone (multiple presses). Floating buttons too.
 - **No setup needed:** the GM can ring a player or text them right away; a phone is created for their character if needed.
 - **Agents talk to each other** directly, without the GM. Nothing ever goes to the chat.
 - **No clock:** no date or time is ever shown, so nothing contradicts your fiction.

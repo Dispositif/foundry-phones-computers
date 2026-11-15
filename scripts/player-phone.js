@@ -70,6 +70,20 @@ export class PlayerPhone extends ApplicationV2 {
     actions: {
       open: function (event, target) { this._go("conv", target.dataset.key); },
       back: function () { this._go("list"); },
+      nextDevice: function () { this.nextDevice(); },
+      copyAddress: async function (event, target) {
+        const text = target.dataset.address;
+        if (!text) return;
+        try {
+          if (game.clipboard?.copyPlainText) await game.clipboard.copyPlainText(text);
+          else await navigator.clipboard.writeText(text);
+        } catch {
+          return;
+        }
+        // Brief flash on the address itself (no Foundry notification for players).
+        target.classList.add("copied");
+        setTimeout(() => target.classList.remove("copied"), 1000);
+      },
       compose: function () { this._go("new"); },
       send: function () { this._send(); },
       call: function () { this._call(); },
@@ -252,6 +266,36 @@ export class PlayerPhone extends ApplicationV2 {
   _rerender() {
     this._skipRead = true;
     return this.render();
+  }
+
+  /** Devices a player can show in this window (a pager has its own window). */
+  _usable() {
+    return this._mine().filter((p) => !isPager(p.phone));
+  }
+
+  /** Switches to the player's next device (header button, repeated Ctrl+Shift+P). */
+  nextDevice() {
+    const usable = this._usable();
+    if (usable.length < 2) return;
+    const i = usable.findIndex((p) => p.item.uuid === this._current()?.item.uuid);
+    const next = usable[(i + 1) % usable.length];
+    this._state.phoneUuid = next.item.uuid;
+    saveLastDevice(next.item.uuid);
+    this._go("list");
+  }
+
+  /**
+   * Player header: the device's label and address, as plain text.
+   * Click on the address = copy. With several devices, a "next" button.
+   */
+  _deviceTitle(p) {
+    const name = p.phone.label;
+    const addr = p.phone.number ?? "";
+    const full = addr ? `${name} · ${addr}` : name;
+    const next = this._usable().length > 1
+      ? `<a class="spt-next-device" data-action="nextDevice" title="${t("NextDevice")}" aria-label="${t("NextDevice")}"><i class="fas fa-chevron-right"></i></a>`
+      : "";
+    return `<div class="spt-dev-title" title="${esc(full)}"><strong>${esc(name)}</strong>${addr ? `<small class="spt-dev-addr" data-action="copyAddress" data-address="${esc(addr)}" title="${t("CopyAddress")}">${esc(addr)}</small>` : ""}</div>${next}`;
   }
 
   _go(view, key = null) {
@@ -593,7 +637,7 @@ export class PlayerPhone extends ApplicationV2 {
   }
 
   _renderLocked(p, mine) {
-    const phoneSel = deviceSelect(mine, p, (q) => q.phone.label);
+    const phoneSel = this._deviceTitle(p);
     const unread = unreadCount(p.phone);
     const federal = skinOf(p.phone) === "federal";
     // Terminals (any look) and the federal look show an inactive login form.
@@ -613,7 +657,7 @@ export class PlayerPhone extends ApplicationV2 {
 
   _renderHeader(p, mine) {
     const mode = modeOf(p.phone);
-    const phoneSel = deviceSelect(mine, p, (q) => (this.gm ? phoneLabel(q) : `${q.phone.label} · ${q.phone.number}`));
+    const phoneSel = this.gm ? deviceSelect(mine, p, phoneLabel) : this._deviceTitle(p);
     // Player, mobile device switched off: only the power button, which switches it on.
     if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {
       // The ring/silent buttons keep their space (hidden) so the power button stays in place.

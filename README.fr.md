@@ -6,7 +6,7 @@
 
 Un module Foundry VTT qui donne aux personnages des téléphones, des ordinateurs portables et des terminaux installés dans les lieux. Chaque appel ou message vers un PNJ arrive chez le MJ, qui répond, laisse sonner ou décide que le numéro n'existe pas. Pensé pour l'enquête et le jeu narratif, pas comme un simulateur de smartphone.
 
-- **Ctrl+Shift+P** ouvre le panneau MJ, ou le téléphone du joueur. Il y a aussi des boutons flottants.
+- **Ctrl+Shift+P** ouvre le panneau MJ, ou le téléphone du joueur (appuis multiples). Il y a aussi des boutons flottants.
 - **Rien à configurer :** le MJ peut tout de suite appeler un joueur ou lui écrire ; un téléphone est créé pour son personnage si besoin.
 - **Les agents communiquent entre eux** directement, sans le MJ. Rien ne passe jamais par le chat.
 - **Pas d'horloge :** aucune date ni heure n'est affichée, pour ne jamais contredire la fiction.
