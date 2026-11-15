@@ -122,16 +122,16 @@ export function gmInbox() {
   return out.sort((a, b) => b.e.t - a.e.t);
 }
 
-/** Device selector: model icon on the left, updated on change. */
+/** Device selector (player phone header). */
 export function deviceSelect(mine, p, labelFn) {
-  // A single device: its name only (the screen already shows what kind of device it is).
+  // No model icon: the screen already shows what kind of device it is.
   if (mine.length <= 1) {
     return `<div class="spt-icon-select"><strong>${esc(labelFn(p))}</strong></div>`;
   }
   const opts = mine
-    .map((q) => `<option value="${q.item.uuid}" data-icon="${modelOf(q.phone).icon}" ${q.item.uuid === p.item.uuid ? "selected" : ""}>${esc(labelFn(q))}</option>`)
+    .map((q) => `<option value="${q.item.uuid}" ${q.item.uuid === p.item.uuid ? "selected" : ""}>${esc(labelFn(q))}</option>`)
     .join("");
-  return `<div class="spt-icon-select spt-phone-select"><i class="fas ${modelOf(p.phone).icon}"></i><select data-phone-select data-icon-select>${opts}</select></div>`;
+  return `<div class="spt-icon-select spt-phone-select"><select data-phone-select>${opts}</select></div>`;
 }
 
 /** Syncs the icon placed before each <select data-icon-select>. */

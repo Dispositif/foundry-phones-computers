@@ -200,7 +200,7 @@
       "Restore": "Restore network",
       "Cut": "Cut network",
       "GmAway": "GM away",
-      "Signal": "Signal",
+      "Signal": "Network OK",
       "NoSignalShort": "No signal"
     },
     "CallerResult": {
