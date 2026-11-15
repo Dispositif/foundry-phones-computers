@@ -11,6 +11,7 @@ import { dismissEnded, hangUpLive, liveOn, otherEnd, phoneClosed, statusHtml } f
 import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./share.js";
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
 import { openPager } from "./pager.js";
+import { BOOT_MS, bootText, hostName } from "./names.js";
 import { t, tn } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Player window: My phone                      */
@@ -104,7 +105,7 @@ export class PlayerPhone extends ApplicationV2 {
         const live = liveOn(this._current()?.item.uuid);
         if (live) hangUpLive(live.callId);
       },
-      powerOn: function () { this._current()?.item.update({ [`flags.${MODULE_ID}.phone.mode`]: "on" }); },
+      powerOn: function () { this._setMode(this._current(), "on"); },
       gmItemSheet: function () { const p = this._current(); if (p) openSystemSheet(p.item); },
       showEntry: async function (event, target) {
         const p = this._current();
@@ -336,6 +337,7 @@ export class PlayerPhone extends ApplicationV2 {
     if (incoming && isLandline(p.phone)) return this._renderDialer(p, mine, incoming);
     if (incoming) return this._renderIncoming(p, mine, incoming);
     if (!this.gm && modeOf(p.phone) === "off") return this._renderOff(p, mine);
+    if (!this.gm && this._boot?.uuid === p.item.uuid && Date.now() < this._boot.until) return this._renderBoot(p, mine);
     if (!this.gm && p.phone.locked) return this._renderLocked(p, mine);
     // A rotary landline has nothing but its dial: the GM sees it as the players do.
     if (isLandline(p.phone) && (!this.gm || skinOf(p.phone) !== "modern")) return this._renderDialer(p, mine);
@@ -406,6 +408,7 @@ export class PlayerPhone extends ApplicationV2 {
         </footer>`
       : "";
     return `${this._renderHeader(p, mine)}${this._tabsHtml(p)}
+      <div class="spt-hostname" title="${t("Files.Host")}"><i class="fas fa-network-wired"></i> ${esc(hostName(p.phone))}</div>
       <ul class="spt-files">${rows || `<li class="spt-phone-empty">${t("Files.Empty")}</li>`}</ul>
       ${foot}`;
   }
@@ -567,6 +570,26 @@ export class PlayerPhone extends ApplicationV2 {
       </div>`;
   }
 
+  /** Switching a device on (player): from off, the network operator shows for a moment. */
+  _setMode(p, mode) {
+    if (!p) return;
+    if (!this.gm && modeOf(p.phone) === "off" && mode !== "off") {
+      this._boot = { uuid: p.item.uuid, until: Date.now() + BOOT_MS };
+      setTimeout(() => this.rendered && this._rerender(), BOOT_MS + 100);
+    }
+    p.item.update({ [`flags.${MODULE_ID}.phone.mode`]: mode });
+  }
+
+  /** Just switched on: the operator's name (or "No signal"). */
+  _renderBoot(p, mine) {
+    const signal = hasSignal(p.phone) && !!game.users.activeGM;
+    return `${this._renderHeader(p, mine)}
+      <div class="spt-lockscreen spt-bootscreen">
+        <i class="fas fa-signal ${signal ? "" : "spt-signal off"}"></i>
+        <p class="spt-operator">${esc(bootText(p.phone))}</p>
+      </div>`;
+  }
+
   _renderLocked(p, mine) {
     const phoneSel = deviceSelect(mine, p, (q) => q.phone.label);
     const unread = unreadCount(p.phone);
@@ -579,6 +602,7 @@ export class PlayerPhone extends ApplicationV2 {
     return `<header class="spt-phone-top">${phoneSel}</header>
       <div class="spt-lockscreen">
         <i class="fas ${icon}"></i>
+        ${isComputer(p.phone) ? `<small class="spt-hostname" title="${t("Files.Host")}">${esc(hostName(p.phone))}</small>` : ""}
         <p>${text}</p>
         ${login ? `<input type="text" class="spt-fake-login" placeholder="${user}" readonly tabindex="-1"><input type="password" class="spt-fake-login" placeholder="••••••••" readonly tabindex="-1">` : ""}
         ${unread ? `<p class="spt-lock-notif">${tn("Unread", unread)}</p>` : ""}
@@ -843,7 +867,7 @@ export class PlayerPhone extends ApplicationV2 {
       this._go("list");
     });
     for (const btn of el.querySelectorAll("[data-mode]")) {
-      btn.addEventListener("click", () => p?.item.update({ [`flags.${MODULE_ID}.phone.mode`]: btn.dataset.mode }));
+      btn.addEventListener("click", () => this._setMode(p, btn.dataset.mode));
     }
     // Texts: Enter sends, Shift+Enter adds a line. Emails are longer: Enter adds a line, Ctrl/Cmd+Enter sends.
     const mail = p && isComputer(p.phone);

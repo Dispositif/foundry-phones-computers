@@ -353,14 +353,6 @@
       }
     },
     "Migrated": "{n} appareil(s) repris de l'ancienne version.",
-    "Demo": {
-      "Landline": "Fixe de démo",
-      "Terminal": "Terminal de démo",
-      "NpcPhone": "Mobile de PNJ (démo)",
-      "SampleText": "Rendez-vous ce soir, 22 h, au parking.",
-      "Created": "{n} appareil(s) de démo créé(s).",
-      "Removed": "{n} appareil(s) de démo retiré(s)."
-    },
     "UniverseName": {
       "all": "Tous univers",
       "retro": "Vintage (années 80-90)",
@@ -526,10 +518,10 @@
         "desktop": "Mails, documents",
         "jammer": "Coupe le réseau"
       },
-      "NameFor": "{model} de {name}",
       "Npc": "PNJ…",
       "NpcName": "Nom du PNJ",
       "Nobody": "Personne",
+      "OtherName": "Autre nom",
       "OtherNumber": "Autre numéro",
       "Change": "Changer",
       "Create": "Créer",
@@ -608,7 +600,8 @@
       "NoComputers": "Aucun portable ni terminal pour l'instant.",
       "MailFrom": "de {name}",
       "MailTo": "à {name}",
-      "FollowsMailbox": "Pièce jointe d'un mail : suit la messagerie ({state})"
+      "FollowsMailbox": "Pièce jointe d'un mail : suit la messagerie ({state})",
+      "Host": "Nom de la machine"
     },
     "Secure": {
       "Line": "Ligne sécurisée",

@@ -1,18 +1,20 @@
 import { DialogV2, MODULE_ID } from "./constants.js";
 import { DEFAULT_THEME, MODELS, directoryText, createPhone, newTheme, getPhoneData, markPhone, randomAddress, shownTheme, themeChoices } from "./devices.js";
 import { modelAllowed } from "./universes.js";
+import { deviceName } from "./names.js";
 import { esc, isMailAddress, norm, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Dialogs (GM, and contacts for the player)    */
 /* -------------------------------------------- */
 
-export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", secure = false, withModel = true }) {
-  // Default name = model label, as long as the GM has not changed it.
+export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", secure = false, withModel = true, holder = null }) {
+  // Default name = a random brand and model, following the model as long as the GM has not changed it.
+  const randomName = (m) => deviceName(m) ?? MODELS[m]?.label ?? MODELS.smartphone.label;
   const autoLabel = label === null;
-  label ??= MODELS[model]?.label ?? MODELS.smartphone.label;
+  label ??= randomName(model);
   const autoNumber = number === null;
-  number ??= randomAddress(model);
+  number ??= randomAddress(model, { name: holder });
   // Models of the universe (plus the device's own, kept even if the universe does not offer it).
   const modelOpts = Object.entries(MODELS)
     .filter(([k]) => k === model || modelAllowed(k))
@@ -39,8 +41,12 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
         <div class="form-group spt-if-landline"><label>${t("Form.Place")}</label>
           <input type="text" name="scene" list="spt-scenes" value="${esc(sceneName)}" placeholder="${t("Form.NoPlace")}">
           <datalist id="spt-scenes">${scenes}</datalist></div>
-        <div class="form-group"><label>${t("Form.DeviceName")}</label><input type="text" name="label" value="${esc(label)}" placeholder="${t("Form.DeviceNameHint")}"></div>
-        <div class="form-group spt-if-number"><label>${t("Form.Number")}</label><input type="text" name="number" value="${esc(number)}"><p class="hint">${t("Form.NumberHint")}</p></div>
+        <div class="form-group"><label>${t("Form.DeviceName")}</label><div class="form-fields">
+          <input type="text" name="label" value="${esc(label)}" placeholder="${t("Form.DeviceNameHint")}">
+          <button type="button" class="spt-dice" data-dice="label" title="${t("NewDev.OtherName")}"><i class="fas fa-dice"></i></button></div></div>
+        <div class="form-group spt-if-number"><label>${t("Form.Number")}</label><div class="form-fields">
+          <input type="text" name="number" value="${esc(number)}">
+          <button type="button" class="spt-dice" data-dice="number" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
         <div class="form-group spt-if-themes"><label>${t("Form.Theme")}</label><select name="theme">${themeOpts}</select></div>
         <div class="form-group spt-if-computer"><label>${t("Form.Inbox")}</label><select name="inbox">${["on", "locked", "none"].map((k) => `<option value="${k}" ${k === inbox ? "selected" : ""}>${t(`Form.Inbox_${k}`)}</option>`).join("")}</select></div>
         ${secureRow(secure)}
@@ -53,7 +59,10 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
       let lastAuto = autoLabel ? labelInput?.value : null;
       select?.addEventListener("change", () => {
         if (!labelInput || lastAuto === null || labelInput.value !== lastAuto) return;
-        labelInput.value = lastAuto = MODELS[select.value]?.label ?? lastAuto;
+        labelInput.value = lastAuto = randomName(select.value);
+      });
+      root?.querySelector?.("[data-dice=label]")?.addEventListener("click", () => {
+        labelInput.value = randomName(select?.value ?? model);
       });
       // Random number not edited yet: it follows the model (number or email address).
       const numberInput = root?.querySelector?.("[name=number]");
@@ -61,7 +70,10 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
       select?.addEventListener("change", () => {
         if (!numberInput || lastNumber === null || numberInput.value !== lastNumber) return;
         if (!!MODELS[select.value]?.mail === isMailAddress(lastNumber)) return;
-        numberInput.value = lastNumber = randomAddress(select.value);
+        numberInput.value = lastNumber = randomAddress(select.value, { name: holder });
+      });
+      root?.querySelector?.("[data-dice=number]")?.addEventListener("click", () => {
+        numberInput.value = randomAddress(select?.value ?? model, { name: holder });
       });
       const sync = () => {
         const landline = !!MODELS[select?.value ?? model]?.fixed;
@@ -101,8 +113,8 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
           const scene = sceneName ? game.scenes.find((sc) => norm(sc.name) === norm(sceneName)) : null;
           return {
             target: f.target?.value,
-            label: f.label.value.trim() || (MODELS[model]?.label ?? MODELS.smartphone.label),
-            number: number || randomAddress(model),
+            label: f.label.value.trim() || randomName(model),
+            number: number || randomAddress(model, { name: holder }),
             model,
             sceneName,
             theme: f.theme?.value ?? DEFAULT_THEME,
@@ -205,7 +217,8 @@ function kindForm(kind) {
   const pcs = playerActors();
   const npcs = game.actors.filter((a) => !pcs.includes(a)).sort((a, b) => a.name.localeCompare(b.name));
   const first = pcs[0] ?? null;
-  const nameFor = (actor) => (actor ? t("NewDev.NameFor", { model: kindLabel(kind), name: actor.name }) : kindLabel(kind));
+  // Name: a random brand and model of the universe ("Motorola R33").
+  const randomName = () => deviceName(kind.model) ?? kindLabel(kind);
   const chip = (value, inner, checked = false) => `<label class="spt-chip"><input type="radio" name="holder" value="${value}" ${checked ? "checked" : ""}>${inner}</label>`;
   const holderRow = fixed
     ? `<div class="form-group"><label>${t("Form.Place")}</label><select name="scene">${game.scenes
@@ -237,8 +250,8 @@ function kindForm(kind) {
     return {
       actor,
       npcName: f.npc?.value ?? "",
-      label: f.label.value.trim() || nameFor(actor || null),
-      number: model.jammer ? randomAddress(kind.model) : f.number.value.trim() || randomAddress(kind.model),
+      label: f.label.value.trim() || randomName(),
+      number: model.jammer ? randomAddress(kind.model) : f.number.value.trim() || randomAddress(kind.model, { name: actor?.name }),
       model: kind.model,
       theme: kind.theme ?? f.theme?.value ?? DEFAULT_THEME,
       sceneId: fixed ? f.scene?.value || null : undefined,
@@ -254,24 +267,30 @@ function kindForm(kind) {
         <div class="spt-chosen"><img src="modules/${MODULE_ID}/icons/${kind.icon ?? kind.model}.svg" alt="">
           <div><b>${esc(kindLabel(kind))}</b><small>${t(`NewDev.Caps.${kind.key}`)}</small></div></div>
         ${holderRow}
-        <div class="form-group"><label>${t("Form.DeviceName")}</label><input type="text" name="label" value="${esc(fixed ? kindLabel(kind) : nameFor(first))}"></div>
+        <div class="form-group"><label>${t("Form.DeviceName")}</label><div class="form-fields">
+          <input type="text" name="label" value="${esc(randomName())}">
+          <button type="button" class="spt-dice" data-dice="label" title="${t("NewDev.OtherName")}"><i class="fas fa-dice"></i></button></div></div>
         <div class="form-group ${model.jammer ? "hidden" : ""}"><label>${t("Form.Number")}</label><div class="form-fields">
-          <input type="text" name="number" value="${esc(randomAddress(kind.model))}">
-          <button type="button" class="spt-dice" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
+          <input type="text" name="number" value="${esc(randomAddress(kind.model, { name: fixed ? null : first?.name }))}">
+          <button type="button" class="spt-dice" data-dice="number" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
         ${model.jammer ? `<p class="hint">${t("Jammer.NewHint")}</p>` : ""}
         ${lookRow}
         ${model.jammer ? "" : secureRow(false)}
       </div>`,
     render: (event, x) => {
       const root = x?.element ?? x;
-      const labelInput = root?.querySelector?.("[name=label]");
-      let lastAuto = labelInput?.value;
-      // The name follows the holder until the GM types one.
-      const follow = () => {
-        if (!labelInput || labelInput.value !== lastAuto) return;
+      const numberInput = root?.querySelector?.("[name=number]");
+      let lastAuto = numberInput?.value;
+      const holderName = () => {
+        if (fixed) return null;
         const v = root.querySelector("[name=holder]:checked")?.value ?? "";
         const actor = v === "npc" ? resolveHolder(root.querySelector("[name=npc]")?.value) : game.actors.get(v);
-        labelInput.value = lastAuto = nameFor(actor ?? null);
+        return actor?.name ?? null;
+      };
+      // An email address is made from the holder's name: it follows the holder until the GM types one.
+      const follow = () => {
+        if (!model.mail || !numberInput || numberInput.value !== lastAuto) return;
+        numberInput.value = lastAuto = randomAddress(kind.model, { name: holderName() });
       };
       root?.querySelectorAll?.("[name=holder]").forEach((r) =>
         r.addEventListener("change", () => {
@@ -280,8 +299,11 @@ function kindForm(kind) {
         })
       );
       root?.querySelector?.("[name=npc]")?.addEventListener("change", follow);
-      root?.querySelector?.(".spt-dice")?.addEventListener("click", () => {
-        root.querySelector("[name=number]").value = randomAddress(kind.model);
+      root?.querySelector?.("[data-dice=number]")?.addEventListener("click", () => {
+        numberInput.value = lastAuto = randomAddress(kind.model, { name: holderName() });
+      });
+      root?.querySelector?.("[data-dice=label]")?.addEventListener("click", () => {
+        root.querySelector("[name=label]").value = randomName();
       });
     },
     buttons: [
@@ -357,7 +379,8 @@ export async function editPhoneDialog(item) {
     sceneId: phone.sceneId,
     theme: phone.theme ?? null,
     inbox: phone.inbox ?? "on",
-    secure: !!phone.secure
+    secure: !!phone.secure,
+    holder: item.parent?.name ?? null
   });
   if (!res) return;
   // An empty place is allowed (network access only); a name that matches no scene is not.
