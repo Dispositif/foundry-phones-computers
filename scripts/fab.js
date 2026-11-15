@@ -253,6 +253,8 @@ function layoutFab(fab) {
   const hasMain = !!main && !main.hidden;
   const rooms = [...fab.querySelectorAll(".spt-fab-room")];
   const sats = [...fab.querySelectorAll(".spt-fab-sat")];
+  // Thicker button looks (e.g. the cyberpunk metal rings) spread the group a little: CSS --spt-fab-spread.
+  const k = parseFloat(getComputedStyle(fab).getPropertyValue("--spt-fab-spread")) || 1;
   // The row of squares runs horizontally: satellites then avoid the horizontal slots.
   const slots = SAT_RINGS.flatMap(([d, angles]) => angles.filter((a) => !(rooms.length && a === 90)).map((a) => [d, a]));
   const place = (b, x, y) => {
@@ -263,9 +265,9 @@ function layoutFab(fab) {
   sats.forEach((b, i) => {
     const [d, a] = slots[Math.min(i, slots.length - 1)];
     const rad = (a * Math.PI) / 180;
-    place(b, dx * d * Math.sin(rad), dy * d * Math.cos(rad));
+    place(b, dx * k * d * Math.sin(rad), dy * k * d * Math.cos(rad));
   });
-  rooms.forEach((b, i) => place(b, dx * ((hasMain ? ROOM_START : 0) + ROOM_STEP * i), 0));
+  rooms.forEach((b, i) => place(b, dx * k * ((hasMain ? ROOM_START : 0) + ROOM_STEP * i), 0));
 }
 
 /** Rounded square per installed device (landline, terminal), with a pin when it has a place. */
