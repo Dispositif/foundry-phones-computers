@@ -20,6 +20,8 @@
       "other": "{n} messages non lus"
     },
     "MyPhone": "Mon téléphone",
+    "NextDevice": "Appareil suivant (Ctrl+Shift+P)",
+    "CopyAddress": "Copier",
     "Model": {
       "landline": "Téléphone fixe",
       "mobile": "Téléphone mobile",

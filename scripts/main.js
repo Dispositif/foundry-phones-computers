@@ -174,6 +174,8 @@ Hooks.once("init", () => {
     editable: [{ key: "KeyP", modifiers: ["Control", "Shift"] }],
     onDown: () => {
       if (game.user.isGM) openPanel();
+      // Window already in front: each new press moves to the next device.
+      else if (PlayerPhone.instance?.rendered && !PlayerPhone.instance.minimized) PlayerPhone.instance.nextDevice();
       else openPhone();
       return true;
     }
