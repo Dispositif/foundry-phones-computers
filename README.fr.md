@@ -40,8 +40,6 @@ Dans Foundry : **Modules complémentaires → Installer un module**, puis collez
 https://github.com/Dispositif/foundry-phones-computers/releases/latest/download/module.json
 ```
 
-Pour l'essayer sur un monde vide, lancez `game.modules.get("soren-phones-computers").api.demo()` dans une macro MJ (`api.removeDemo()` fait le ménage).
-
 **Mise à jour depuis Phone & Terminal (v0.29 et avant) :** installez ce module, activez-le à la place de l'ancien et rechargez. Appareils, historiques et réglages sont repris automatiquement.
 
 ---
@@ -124,8 +122,6 @@ Chaque appareil est un objet Foundry ordinaire qui porte un seul flag, `flags["s
 - Les réglages du monde contiennent le reste : annuaire PNJ, préfixe des numéros, coupure du réseau, appels en cours.
 
 **Le navigateur du MJ est le réseau.** Les joueurs n'écrivent jamais directement dans les appareils : chaque message, appel ou accusé de lecture passe par le socket du module vers le MJ actif, qui vérifie et écrit. Le contenu d'un journal affiché sur un appareil est rendu par le MJ et envoyé en HTML : les joueurs n'ont besoin d'aucun droit sur le journal.
-
-**API** (`game.modules.get("soren-phones-computers").api`) : `openPanel({ tab })`, `openPhone(itemUuid)`, `ring(target, { caller })`, `sendSms(target, text, { sender, att })`, `hangUp(callId)`, `allPhones()`, `createPhone(actor, { label, number, model, sceneId })`, `markPhone(item, { label, number, model })`, `transferPhone(item, actor)`, `demo()`, `removeDemo()`. Une cible s'écrit `"phone:555-0142"` ou `"user:<userId>"`.
 
 ---
 

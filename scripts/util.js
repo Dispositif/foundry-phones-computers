@@ -5,6 +5,7 @@ import { PhonePanel } from "./gm-panel.js";
 import { PlayerPhone } from "./player-phone.js";
 import { rerenderPagers } from "./pager.js";
 import { universe } from "./universes.js";
+import { mailAddress } from "./names.js";
 /* -------------------------------------------- */
 /*  Utilities                                   */
 /* -------------------------------------------- */
@@ -66,11 +67,11 @@ export function randomNumber() {
   return `${prefix}0${String(n).padStart(3, "0")}`;
 }
 
-/** Random address for a laptop or a terminal: user33@mail.net, or the universe's ID (NX-4217). */
-export function randomEmail() {
+/** Random address for a laptop or a terminal, in the universe's style (made from the holder's name if given), or the universe's ID (NX-4217). */
+export function randomEmail(name) {
   const prefix = universe().mailPrefix;
   if (prefix) return `${prefix}${Math.floor(Math.random() * 9000) + 1000}`;
-  return `user${Math.floor(Math.random() * 90) + 10}@mail.net`;
+  return mailAddress(name);
 }
 
 /** Does this address look like a laptop's or terminal's (email, or the universe's ID)? */

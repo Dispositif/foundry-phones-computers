@@ -192,6 +192,13 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-offscreen > i { opacity: 0.35; }
 .spt-offscreen button { width: auto; margin-top: 0.6rem; }
 .spt-lockscreen .spt-lock-notif { font-size: 0.9em; padding: 2px 10px; border-radius: 1em; background: rgba(128,128,128,0.2); }
+.spt-bootscreen { animation: spt-boot 0.6s ease-out; }
+.spt-bootscreen > i { font-size: 2rem; }
+.spt-bootscreen .spt-operator { font-size: 1.3em; font-weight: bold; letter-spacing: 0.06em; }
+@keyframes spt-boot { from { opacity: 0; transform: scale(0.96); } to { opacity: 0.85; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .spt-bootscreen { animation: none; } }
+.spt-player-phone .spt-hostname { font: 0.8em/1.4 "Courier New", Courier, monospace; letter-spacing: 0.05em; opacity: 0.7; }
+.spt-player-phone div.spt-hostname { padding: 2px 10px; }
 
 /* GM preparation in a device window */
 .spt-del { opacity: 0; font-size: 0.8em; transition: opacity 0.15s; }
@@ -726,7 +733,7 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-new-device .spt-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: none; }
 .spt-new-device .spt-chip:has(input:checked) { border-color: var(--color-warm-2, #ff8a3d); box-shadow: 0 0 0 1px var(--color-warm-2, #ff8a3d) inset; }
 .spt-new-device .spt-npc { margin-top: 6px; }
-.spt-new-device .spt-dice { flex: 0 0 2.4em; }
+.spt-new-device .spt-dice, .spt-phone-form .spt-dice { flex: 0 0 2.4em; }
 
 /* Live call: black window centred for the whole table, who is on the phone. */
 .spt-live .window-content { background: #0b0c0e; color: #e8e8e8; padding: 0; }

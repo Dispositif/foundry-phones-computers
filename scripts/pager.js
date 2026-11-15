@@ -1,6 +1,7 @@
 import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
 import { getLog, getPhoneData, hasSignal, isUnread, markEntryRead, modeOf, skinOf } from "./devices.js";
 import { esc, shieldIcon } from "./util.js";
+import { BOOT_MS, bootText } from "./names.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Pager (player side): its own small window   */
@@ -31,7 +32,13 @@ export class PagerWindow extends ApplicationV2 {
       mode: function () {
         const item = this.item;
         const phone = getPhoneData(item);
-        if (phone) item.update({ [`flags.${MODULE_ID}.phone.mode`]: MODE_CYCLE[modeOf(phone)] ?? "on" });
+        if (!phone) return;
+        // Switched on: the network operator shows for a moment.
+        if (modeOf(phone) === "off") {
+          this._bootUntil = Date.now() + BOOT_MS;
+          setTimeout(() => this.rendered && this.render(), BOOT_MS + 100);
+        }
+        item.update({ [`flags.${MODULE_ID}.phone.mode`]: MODE_CYCLE[modeOf(phone)] ?? "on" });
       }
     }
   };
@@ -79,7 +86,8 @@ export class PagerWindow extends ApplicationV2 {
     const off = mode === "off";
     const unread = list.some(isUnread);
     const net = hasSignal(phone) && game.users.activeGM ? "" : `<i class="fas fa-signal spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
-    const line = off ? "" : e ? e.text : t("Pager.Empty");
+    const boot = !off && Date.now() < (this._bootUntil ?? 0);
+    const line = off ? "" : boot ? bootText(phone) : e ? e.text : t("Pager.Empty");
     return `<div class="spt-pager-lcd ${off ? "off" : ""}">
         <div class="spt-pager-status">
           <a data-action="mode" title="${MODES[mode].label}"><i class="fas ${MODES[mode].icon}"></i></a>
@@ -88,7 +96,7 @@ export class PagerWindow extends ApplicationV2 {
           <span>${!off && unread ? `<i class="fas fa-envelope"></i>` : ""}</span>
           <span class="spt-pager-pos">${!off && list.length ? `${this.idx + 1}/${list.length}` : ""}</span>
         </div>
-        <div class="spt-pager-line ${e || off ? "" : "empty"}" data-action="read">${esc(line)}</div>
+        <div class="spt-pager-line ${(e && !boot) || off ? "" : "empty"}" data-action="read">${esc(line)}</div>
       </div>`;
   }
 

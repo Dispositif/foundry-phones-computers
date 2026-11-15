@@ -23,7 +23,6 @@ import { UNIVERSES, universeKey } from "./universes.js";
 import { PlayerPhone } from "./player-phone.js";
 import { hangUp, ring } from "./ring.js";
 import { onSocket } from "./socket.js";
-import { createDemo, removeDemo } from "./demo.js";
 import { isActiveGM, norm, rerenderAll } from "./util.js";
 import { loadLanguages, t, tn } from "./i18n.js";
 
@@ -268,7 +267,7 @@ Hooks.once("ready", async () => {
   if (game.user === game.users.activeGM) ensureDeviceItems();
   updateFab();
   restoreLive();
-  game.modules.get(MODULE_ID).api = { openPanel, openPhone, ring, hangUp, sendSms, allPhones, createPhone, markPhone, transferPhone, demo: createDemo, removeDemo };
+  game.modules.get(MODULE_ID).api = { openPanel, openPhone, ring, hangUp, sendSms, allPhones, createPhone, markPhone, transferPhone };
 });
 
 Hooks.on("userConnected", rerenderAll);
@@ -320,7 +319,7 @@ Hooks.on("createItem", async (item, options) => {
   const twins = allPhones({ jammers: true }).filter((p) => p.item !== item && !isFixed(p.phone) && norm(p.phone.number) === norm(phone.number));
   if (!twins.length) return;
   if (twins.some((p) => p.item.parent === item.parent)) {
-    await item.update({ [`flags.${MODULE_ID}.phone`]: { ...phone, number: randomAddress(phone.model), log: [], contacts: [] } });
+    await item.update({ [`flags.${MODULE_ID}.phone`]: { ...phone, number: randomAddress(phone.model, { name: item.parent?.name }), log: [], contacts: [] } });
     return;
   }
   for (const p of twins) await p.item.delete();

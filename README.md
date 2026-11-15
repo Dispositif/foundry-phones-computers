@@ -2,7 +2,7 @@
 
 *For modern or sci-fi settings: Delta Green, Cthulhu, Vampire, Blade Runner, Cyberpunk…*
 
-A Foundry VTT module that gives your characters phones, laptops and room terminals. Every call or message to an NPC lands with the GM, who answers, lets it ring, or decides the number doesn't exist. Built for investigation and narrative play, not as a smartphone simulator.
+A <a href="https://foundryvtt.com" target="_blank">Foundry VTT</a> module that gives your characters phones, laptops and room terminals. Every call or message to an NPC lands with the GM, who answers, lets it ring, or decides the number doesn't exist. Built for investigation and narrative play, not as a smartphone simulator.
 
 - **Ctrl+Shift+P** opens the GM panel, or the player's phone. Floating buttons too.
 - **No setup needed:** the GM can ring a player or text them right away; a phone is created for their character if needed.
@@ -37,8 +37,6 @@ In Foundry: **Add-on Modules → Install Module**, then paste the manifest URL:
 ```
 https://github.com/Dispositif/foundry-phones-computers/releases/latest/download/module.json
 ```
-
-To try it on an empty world, run `game.modules.get("soren-phones-computers").api.demo()` in a GM macro (`api.removeDemo()` cleans up).
 
 **Upgrading from Phone & Terminal (v0.29 and earlier):** install this module, enable it instead of the old one and reload. Devices, histories and settings are moved over automatically.
 
@@ -123,8 +121,10 @@ Each device is an ordinary Foundry item carrying one flag, `flags["soren-phones-
 
 **The GM's browser is the network.** Players never write to devices directly: every message, call and read receipt goes through the module socket to the active GM, who checks and writes. Journal content shown on a device is rendered by the GM and sent as HTML, so players need no journal permission.
 
-**API** (`game.modules.get("soren-phones-computers").api`): `openPanel({ tab })`, `openPhone(itemUuid)`, `ring(target, { caller })`, `sendSms(target, text, { sender, att })`, `hangUp(callId)`, `allPhones()`, `createPhone(actor, { label, number, model, sceneId })`, `markPhone(item, { label, number, model })`, `transferPhone(item, actor)`, `demo()`, `removeDemo()`. A target is `"phone:555-0142"` or `"user:<userId>"`.
-
 ---
 
 Icons and sounds: authors and licenses in [CREDITS.md](CREDITS.md).
+
+[Foundry v14](https://img.shields.io/badge/foundry-v14-blue?style=for-the-badge)
+[Downloads](https://img.shields.io/github/downloads/Dispositif/foundry-phones-computers/total.svg?style=for-the-badge)
+[Current version](https://img.shields.io/github/v/release/Dispositif/foundry-phones-computers?display_name=tag&style=for-the-badge&label=Current%20version)

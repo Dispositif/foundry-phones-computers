@@ -353,14 +353,6 @@
       }
     },
     "Migrated": "{n} device(s) recovered from the previous version.",
-    "Demo": {
-      "Landline": "Demo landline",
-      "Terminal": "Demo terminal",
-      "NpcPhone": "NPC mobile (demo)",
-      "SampleText": "Meet tonight, 10 pm, at the parking lot.",
-      "Created": "{n} demo device(s) created.",
-      "Removed": "{n} demo device(s) removed."
-    },
     "UniverseName": {
       "all": "Any setting",
       "retro": "Vintage (1980s-1990s)",
@@ -526,10 +518,10 @@
         "desktop": "Emails, documents",
         "jammer": "Cuts the network"
       },
-      "NameFor": "{name}'s {model}",
       "Npc": "NPC…",
       "NpcName": "NPC name",
       "Nobody": "Nobody",
+      "OtherName": "Another name",
       "OtherNumber": "Another number",
       "Change": "Change",
       "Create": "Create",
@@ -608,7 +600,8 @@
       "NoComputers": "No laptop or terminal yet.",
       "MailFrom": "from {name}",
       "MailTo": "to {name}",
-      "FollowsMailbox": "Email attachment: follows the mailbox ({state})"
+      "FollowsMailbox": "Email attachment: follows the mailbox ({state})",
+      "Host": "Machine name"
     },
     "Secure": {
       "Line": "Secure line",

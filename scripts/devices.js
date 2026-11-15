@@ -2,6 +2,7 @@ import { LOG_MAX, MASKED, MODULE_ID, SHEET_ID } from "./constants.js";
 import { esc, maskedLabel, norm, randomEmail, randomNumber, isMasked } from "./util.js";
 import { t } from "./i18n.js";
 import { universe } from "./universes.js";
+import { deviceName } from "./names.js";
 /* -------------------------------------------- */
 /*  Model: phones, contacts, history            */
 /* -------------------------------------------- */
@@ -519,14 +520,13 @@ export function deviceItemPatch(item, phone) {
   return patch;
 }
 
-/** Random number for the model: an email address for a laptop or a terminal. */
-/** Random number or email for a new device, never one already used by a device or the directory. */
-export function randomAddress(model) {
+/** Random number or email (laptop or terminal, made from the holder's name if given) for a new device, never one already used by a device or the directory. */
+export function randomAddress(model, { name } = {}) {
   // A jammer has no number: a hidden id keeps it unique (an item dragged to another character moves).
   if (MODELS[model]?.jammer) return `jam-${foundry.utils.randomID(8)}`;
   let address;
   for (let i = 0; i < 30; i++) {
-    address = MODELS[model]?.mail ? randomEmail() : randomNumber();
+    address = MODELS[model]?.mail ? randomEmail(name) : randomNumber();
     if (!phonesByNumber(address).length && !findNpc(address, { all: true })) break;
   }
   return address;
@@ -538,6 +538,8 @@ export function pickItemType() {
 }
 
 export async function createPhone(actor, { label, number, model = "smartphone", sceneId = null, theme = null, secure = false }) {
+  label ||= deviceName(model) ?? MODELS[model]?.label ?? MODELS.smartphone.label;
+  number ||= randomAddress(model, { name: actor?.name });
   const options = actor ? { parent: actor, spt: true } : { spt: true };
   const item = await Item.create(
     {
@@ -601,8 +603,8 @@ export async function defaultDeviceFor(user) {
   const carried = carriedPhone(user);
   if (carried) return carried;
   const model = universe().defaultModel;
-  const label = MODELS[model]?.label ?? MODELS.smartphone.label;
-  const item = await createPhone(actor, { label, number: randomAddress(model), model, theme: DEFAULT_THEME });
+  const label = deviceName(model) ?? MODELS[model]?.label ?? MODELS.smartphone.label;
+  const item = await createPhone(actor, { label, number: randomAddress(model, { name: actor.name }), model, theme: DEFAULT_THEME });
   if (!item) return null;
   ui.notifications.info(`📱 ${t("Info.DefaultCreated", { label, name: actor.name })}`);
   return { item, phone: getPhoneData(item), actor };
