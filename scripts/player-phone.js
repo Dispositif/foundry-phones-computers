@@ -385,8 +385,8 @@ export class PlayerPhone extends ApplicationV2 {
     if (!this.gm && this._boot?.uuid === p.item.uuid && Date.now() < this._boot.until) return this._renderBoot(p, mine);
     if (!this.gm && p.phone.locked) return this._renderLocked(p, mine);
     if (!this.gm) welcomeDevice(p);
-    // A rotary landline has nothing but its dial: the GM sees it as the players do.
-    if (isLandline(p.phone) && (!this.gm || skinOf(p.phone) !== "modern")) return this._renderDialer(p, mine);
+    // A landline has nothing but its dial (no history, no contacts): the GM sees it as the players do.
+    if (isLandline(p.phone)) return this._renderDialer(p, mine);
     const computer = isComputer(p.phone);
     // A player cannot write from a mailbox that is locked or absent.
     if (computer && !this.gm && inboxOf(p.phone) !== "on" && ["conv", "new", "doc"].includes(this._state.view)) this._state.view = "list";
@@ -567,7 +567,7 @@ export class PlayerPhone extends ApplicationV2 {
 
   /** Call in progress on a smartphone or mobile: the other end (face on a smartphone), the time on the line. */
   _renderLive(p, mine, live) {
-    const o = otherEnd(live);
+    const o = otherEnd(live, p.item.uuid);
     const face = p.phone.model !== "smartphone" ? `<i class="fas fa-phone"></i>`
       : o.img ? `<div class="spt-live-face" style="background-image:url('${esc(o.img)}')"></div>`
       : `<div class="spt-live-face unknown"><i class="fas fa-user"></i></div>`;
@@ -589,6 +589,8 @@ export class PlayerPhone extends ApplicationV2 {
 
   /** Outgoing call on a smartphone or mobile: who is called, and a hang-up key. */
   _renderOutgoing(p, mine, { name, img, face }) {
+    // The dialed number does not stay on the screen once the call is over.
+    this._state.to = "";
     // Smartphone: the face of who is called if the agent knows them, otherwise an empty portrait.
     const pic = !face ? `<i class="fas fa-phone"></i>`
       : img ? `<div class="spt-live-face" style="background-image:url('${esc(img)}')"></div>`
@@ -679,7 +681,7 @@ export class PlayerPhone extends ApplicationV2 {
         : hasSignal(p.phone)
         ? `<i class="fas ${netIcon} spt-signal" title="${t("Net.Signal")}"></i>`
         : `<i class="fas ${netIcon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
-    const contactsBtn = this._canEditContacts(p)
+    const contactsBtn = !isLandline(p.phone) && this._canEditContacts(p)
       ? `<a data-action="contacts" title="${t("Contacts.Title")}" aria-label="${t("Contacts.Title")}"><i class="fas fa-address-book"></i></a>`
       : "";
     const gmTools = this.gm
@@ -760,13 +762,15 @@ export class PlayerPhone extends ApplicationV2 {
       ${composer}`;
   }
 
-  /** Landline on the player side: a plain dial, no history or contacts. */
   /** Landline dialer. While it rings (modern look), the display shows the caller's number and the keys answer or hang up. */
   _renderDialer(p, mine, incoming = null, live = null) {
     this._state.view = "new";
+    // Empty display after a call, and on another device than the one last dialed from.
+    if (live || incoming || this._state.dialFor !== p.item.uuid) this._state.to = "";
+    this._state.dialFor = p.item.uuid;
     const strip = live
       ? `<div class="spt-dial-strip spt-lcd-ringing spt-lcd-live">
-          <input type="text" value="${esc(skinOf(p.phone) === "modern" ? otherEnd(live).name : "")}" placeholder="${t("Live.OnLine")}" readonly tabindex="-1">
+          <input type="text" value="${esc(skinOf(p.phone) === "modern" ? lcdCaller(otherEnd(live, p.item.uuid)) : "")}" placeholder="${t("Live.OnLine")}" readonly tabindex="-1">
           <i class="fas fa-phone"></i>
         </div>`
       : incoming
@@ -1002,6 +1006,11 @@ export function callLabel(e) {
   return t(`CallLog.in.${["answer", "decline"].includes(e.result) ? e.result : "missed"}`);
 }
 
+
+/** Modern landline display on the line: the other end's number, like while it rang (a name only when there is no number to show). */
+function lcdCaller(other) {
+  return other.sub || other.name;
+}
 
 /** Public directory numbers (yellow pages): any agent can find them by name. */
 function publicOptions() {

@@ -301,9 +301,13 @@ export function dismissEnded(callId) {
   rerenderAll();
 }
 
-/** The other end, as this player's device shows it: { name, img, sub, pc }. */
-export function otherEnd(data) {
-  const other = mySide(data) === data.a ? data.b : data.a;
+/**
+ * The other end, as this player's device shows it: { name, img, sub, pc }.
+ * itemUuid: the device showing the call, so its own end is found even when one player holds both ends.
+ */
+export function otherEnd(data, itemUuid = null) {
+  const mine = (itemUuid && [data.a, data.b].find((s) => s?.itemUuid === itemUuid)) || mySide(data);
+  const other = mine === data.a ? data.b : data.a;
   return display(data, other);
 }
 
