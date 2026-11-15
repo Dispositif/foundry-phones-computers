@@ -32,6 +32,8 @@ export function saveLastDevice(uuid) {
   try {
     localStorage.setItem(lastDeviceKey(), uuid);
   } catch {}
+  // The main button follows the chosen device (icon, greyed when off).
+  updateFab();
 }
 
 /** Device opened by the main button: the last one chosen, a phone rather than a pager. */
