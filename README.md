@@ -85,7 +85,7 @@ The **Network** panel (Ctrl+Shift+P, or the telecom button):
 
 - **Send:** ring a device or text it under any identity (NPC, number, hidden number), with an image or a journal page attached.
 - **Messages:** answer the agents' messages to NPCs; read their messages to each other.
-- **Calls:** every call, its outcome and duration. When an agent calls an NPC, you choose: answer, voicemail, no answer, unreachable, not in service.
+- **Calls:** every call, its outcome and duration. When an agent calls an NPC, you choose: answer, no answer, unreachable, unassigned (not in service).
 - **Devices:** every device by holder or place. Lock, no signal, give, edit, prepare its history.
 - **Files:** every computer file, by computer or by source journal: visible, locked or hidden.
 - **Tracking** (experimental): how precisely the network can locate each agent.

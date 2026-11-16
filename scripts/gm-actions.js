@@ -69,10 +69,9 @@ function warnLeak(who, to) {
 
 export const gmIncoming = new Map(); // callId -> { dialog, sound, done, origin }
 
-const OUTCOME_LABELS = labels("Outcome", ["answer", "voicemail", "noanswer", "unreachable", "unassigned"]);
+const OUTCOME_LABELS = labels("Outcome", ["answer", "noanswer", "unreachable", "unassigned"]);
 export const NPC_OUTCOMES = {
   answer: { get label() { return OUTCOME_LABELS.answer; }, icon: "fas fa-phone" },
-  voicemail: { get label() { return OUTCOME_LABELS.voicemail; }, icon: "fas fa-voicemail" },
   noanswer: { get label() { return OUTCOME_LABELS.noanswer; }, icon: "fas fa-phone-slash" },
   unreachable: { get label() { return OUTCOME_LABELS.unreachable; }, icon: "fas fa-signal" },
   unassigned: { get label() { return OUTCOME_LABELS.unassigned; }, icon: "fas fa-ban" }

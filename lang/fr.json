@@ -206,7 +206,6 @@
     "NameOrNumber": "nom ou numéro",
     "Outcome": {
       "answer": "Décrocher",
-      "voicemail": "Messagerie",
       "noanswer": "Pas de réponse",
       "unreachable": "Injoignable",
       "unassigned": "Non attribué"
@@ -235,7 +234,6 @@
       "NoSignalShort": "Pas de réseau"
     },
     "CallerResult": {
-      "voicemail": "Vous êtes sur la messagerie de {name}.",
       "unassigned": "Le numéro que vous avez demandé n'est pas attribué.",
       "unreachable": "Votre correspondant n'est pas joignable pour le moment.",
       "noanswer": "{name} ne répond pas.",
@@ -338,7 +336,6 @@
     "CallLog": {
       "out": {
         "answer": "Appel sortant",
-        "voicemail": "Messagerie",
         "unassigned": "Numéro non attribué",
         "unreachable": "Injoignable",
         "cancelled": "Appel annulé",
@@ -405,17 +402,6 @@
     },
     "Universe": {
       "retro": {
-        "Outcome": {
-          "voicemail": "Répondeur"
-        },
-        "CallLog": {
-          "out": {
-            "voicemail": "Répondeur"
-          }
-        },
-        "CallerResult": {
-          "voicemail": "Vous êtes sur le répondeur de {name}."
-        },
         "Read": {
           "Seen": "Distribué"
         },
@@ -628,7 +614,6 @@
       "noanswer": "Sans réponse",
       "decline": "Refusé",
       "missed": "Manqué",
-      "voicemail": "Messagerie",
       "unreachable": "Injoignable",
       "unassigned": "Non attribué",
       "cancelled": "Annulé",

@@ -87,7 +87,7 @@ Le panneau **Réseau** (Ctrl+Shift+P, ou le bouton télécom) :
 
 - **Envoyer :** faire sonner un appareil ou lui écrire sous n'importe quelle identité (PNJ, numéro, numéro masqué), avec une image ou une page de journal jointe.
 - **Messages :** répondre aux messages des agents vers les PNJ ; lire leurs messages entre eux.
-- **Appels :** tous les appels, leur issue et leur durée. Quand un agent appelle un PNJ, vous choisissez : décrocher, messagerie, pas de réponse, injoignable, numéro non attribué.
+- **Appels :** tous les appels, leur issue et leur durée. Quand un agent appelle un PNJ, vous choisissez : décrocher, pas de réponse, injoignable, numéro non attribué.
 - **Appareils :** tous les appareils par porteur ou par lieu. Verrouiller, couper le réseau, donner, modifier, préparer l'historique.
 - **Fichiers :** tous les fichiers des ordinateurs, par ordinateur ou par journal d'origine : visibles, verrouillés ou masqués.
 - **Traçage** (expérimental) : avec quelle précision le réseau peut localiser chaque agent.

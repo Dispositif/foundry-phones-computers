@@ -206,10 +206,9 @@
     "NameOrNumber": "name or number",
     "Outcome": {
       "answer": "Answer",
-      "voicemail": "Voicemail",
       "noanswer": "No answer",
       "unreachable": "Unreachable",
-      "unassigned": "Not in service"
+      "unassigned": "Unassigned (not in service)"
     },
     "Call": {
       "Incoming": "Incoming call",
@@ -235,7 +234,6 @@
       "NoSignalShort": "No signal"
     },
     "CallerResult": {
-      "voicemail": "You've reached {name}'s voicemail.",
       "unassigned": "The number you have dialed is not in service.",
       "unreachable": "The person you are calling cannot be reached at the moment.",
       "noanswer": "{name} does not answer.",
@@ -338,7 +336,6 @@
     "CallLog": {
       "out": {
         "answer": "Outgoing call",
-        "voicemail": "Voicemail",
         "unassigned": "Number not in service",
         "unreachable": "Unreachable",
         "cancelled": "Call cancelled",
@@ -405,17 +402,6 @@
     },
     "Universe": {
       "retro": {
-        "Outcome": {
-          "voicemail": "Answering machine"
-        },
-        "CallLog": {
-          "out": {
-            "voicemail": "Answering machine"
-          }
-        },
-        "CallerResult": {
-          "voicemail": "You've reached {name}'s answering machine."
-        },
         "Read": {
           "Seen": "Delivered"
         },
@@ -628,9 +614,8 @@
       "noanswer": "No answer",
       "decline": "Declined",
       "missed": "Missed",
-      "voicemail": "Voicemail",
       "unreachable": "Unreachable",
-      "unassigned": "Not assigned",
+      "unassigned": "Unassigned",
       "cancelled": "Cancelled",
       "busy": "Network busy",
       "neterror": "Network unavailable",

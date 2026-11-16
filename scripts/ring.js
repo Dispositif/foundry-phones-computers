@@ -97,7 +97,7 @@ export async function ring(target, { caller = MASKED, origin = null, callId = fo
   }
 
   if (!call.open.size) {
-    if (origin) finishOrigin(origin, { nosignal: "unreachable", off: "voicemail", unassigned: "unassigned" }[call.lastResult] ?? "noanswer");
+    if (origin) finishOrigin(origin, { nosignal: "unreachable", off: "unreachable", unassigned: "unassigned" }[call.lastResult] ?? "noanswer");
     return;
   }
   pendingCalls.set(callId, call);
@@ -169,7 +169,7 @@ export function onResponse({ callId, result, userId }) {
     pendingCalls.delete(callId);
     stopNearby(call, callId);
     closeDial(callId); // GM ringing window (answered: it is now the call window and stays)
-    if (call.origin) finishOrigin(call.origin, result === "answer" ? "answer" : result === "off" ? "voicemail" : "noanswer");
+    if (call.origin) finishOrigin(call.origin, result === "answer" ? "answer" : result === "off" ? "unreachable" : "noanswer");
   }
   rerenderAll();
 }
