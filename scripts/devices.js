@@ -1,3 +1,4 @@
+import { feature } from "./features.js";
 import { LOG_MAX, MASKED, MODULE_ID, SHEET_ID } from "./constants.js";
 import { esc, maskedLabel, norm, randomEmail, randomNumber, isMasked } from "./util.js";
 import { t } from "./i18n.js";
@@ -62,7 +63,8 @@ export function msgOn(phone) {
 
 /** Secure (encrypted) device: its calls and messages are encrypted when the other end is secure too. */
 export function isSecure(phone) {
-  return !!phone?.secure;
+  // Secure devices switched off in the module settings: every device talks in clear.
+  return !!phone?.secure && feature("secure");
 }
 
 /**

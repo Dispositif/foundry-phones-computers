@@ -12,7 +12,7 @@ import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
 import { openPager } from "./pager.js";
 import { BOOT_MS, bootText, hostName, operatorName } from "./names.js";
-import { welcomeDevice } from "./welcome.js";
+import { openPlayerGuide, welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Player window: My phone                      */
@@ -71,6 +71,7 @@ export class PlayerPhone extends ApplicationV2 {
       open: function (event, target) { this._go("conv", target.dataset.key); },
       back: function () { this._go("list"); },
       nextDevice: function () { this.nextDevice(); },
+      playerGuide: function () { openPlayerGuide(); },
       copyAddress: async function (event, target) {
         const text = target.dataset.address;
         if (!text) return;
@@ -208,7 +209,15 @@ export class PlayerPhone extends ApplicationV2 {
       gmDelete: async function (event, target) {
         const p = this._current();
         const { id, t: ts } = target.dataset;
-        await mutateLog(p.item, (log) => log.filter((e) => !(e.id ? e.id === id : String(e.t) === ts)));
+        if (!p?.item.isOwner) return;
+        // Player: confirm first (the GM deletes in one click).
+        if (!this.gm) {
+          if (isComputer(p.phone) || isFixed(p.phone)) return;
+          const ok = await foundry.applications.api.DialogV2.confirm({ window: { title: t("Delete"), icon: "fas fa-trash" }, content: `<p>${t("DeleteEntryConfirm")}</p>`, rejectClose: false });
+          if (!ok) return;
+        }
+        const match = (e) => (e.id ? e.id === id : String(e.t) === ts);
+        await mutateLog(p.item, (log) => log.filter((e) => !match(e) || (!this.gm && e.help)));
       }
     }
   };
@@ -291,7 +300,9 @@ export class PlayerPhone extends ApplicationV2 {
    */
   _deviceTitle(p) {
     const name = p.phone.label;
-    const addr = p.phone.number ?? "";
+    // Switched off or locked: only the model shows, not the number (or email, ID…).
+    const hidden = !this.gm && (p.phone.locked || modeOf(p.phone) === "off");
+    const addr = hidden ? "" : p.phone.number ?? "";
     const full = addr ? `${name} · ${addr}` : name;
     const next = this._usable().length > 1
       ? `<a class="spt-next-device" data-action="nextDevice" title="${t("NextDevice")}" aria-label="${t("NextDevice")}"><i class="fas fa-chevron-right"></i></a>`
@@ -729,7 +740,10 @@ export class PlayerPhone extends ApplicationV2 {
     const entries = getLog(p.phone, { includePending: this.gm })
       .filter((e) => sameConv(p.phone, e.with, key))
       .reverse();
-    const del = (e) => (this.gm ? `<a class="spt-del" data-action="gmDelete" data-id="${e.id ?? ""}" data-t="${e.t}" title="${t("Delete")}"><i class="fas fa-xmark"></i></a>` : "");
+    // Delete: the GM any entry; the player their own messages and calls, except the operator's welcome (it holds the player guide)
+    // Only on a carried phone: never on a laptop, a terminal or an installed device.
+    const playerDel = !isComputer(p.phone) && !isFixed(p.phone);
+    const del = (e) => (this.gm || (playerDel && !e.help && !e.pending) ? `<a class="spt-del" data-action="gmDelete" data-id="${e.id ?? ""}" data-t="${e.t}" title="${t("Delete")}"><i class="fas fa-xmark"></i></a>` : "");
     // Player: show screen / forward, on each message.
     const share = (e) => {
       if (this.gm || e.pending) return "";
@@ -746,7 +760,7 @@ export class PlayerPhone extends ApplicationV2 {
     const bubbles = entries
       .map((e) =>
         e.kind === "sms"
-          ? `<div class="spt-bubble ${e.dir}">${fileTag(e)}${del(e)}${share(e)}${fwdTag(e)}${secureTag(e)}${this._attHtml(e)}${e.text ? `<div>${nl2br(e.text)}</div>` : ""}${this.gm && e.dir === "in" && !e.prep ? `<span class="spt-read ${e.read === false ? "unread" : ""}">${e.pending ? t("Read.Pending") : e.read === false ? t("Read.Unread") : t("Read.Seen")}</span>` : ""}</div>`
+          ? `<div class="spt-bubble ${e.dir}">${fileTag(e)}${del(e)}${share(e)}${fwdTag(e)}${secureTag(e)}${this._attHtml(e)}${e.text ? `<div>${nl2br(e.text)}</div>` : ""}${e.help ? `<a class="spt-help-link" data-action="playerGuide"><i class="fas fa-circle-question"></i> ${t("Guide.Link")}</a>` : ""}${this.gm && e.dir === "in" && !e.prep ? `<span class="spt-read ${e.read === false ? "unread" : ""}">${e.pending ? t("Read.Pending") : e.read === false ? t("Read.Unread") : t("Read.Seen")}</span>` : ""}</div>`
           : `<div class="spt-call-line"><i class="fas ${e.result === "answer" ? "fa-phone" : "fa-phone-slash"}"></i> ${callLabel(e)} ${del(e)}</div>`
       )
       .join("");

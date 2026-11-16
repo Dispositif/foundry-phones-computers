@@ -3,6 +3,8 @@
 ## Unreleased
 - **GM panel redesign**, tools, theme settings.
 - GM welcome window and guided tour of the GM panel; operator welcome message.
+- Settings in the GM panel (gear); advanced features (secure, compromised, jammer, tracking) off by default.
+- Player guide linked from the operator's welcome message.
 - Random device names, emails, operators and machine names by universe; demo macro removed.
 - **Floating buttons redesign**.
 - Device header redesign, Ctrl+Shift+P repeats.

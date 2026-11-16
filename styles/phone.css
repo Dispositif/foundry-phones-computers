@@ -265,11 +265,14 @@ a.spt-link:hover { filter: brightness(1.15); }
   --skin-btn-bg: rgba(255,255,255,0.15); --skin-btn-fg: #1e2a17; --skin-btn-border: #1e2a17; --skin-radius: 0; --skin-link: #1e2a17;
 }
 .spt-player-phone.spt-skin-mobile .window-content { letter-spacing: 0.02em; box-shadow: inset 0 0 18px rgba(30,42,23,0.35); }
+/* LCD screen: a thin scrollbar in the screen's own ink, on a transparent track (Foundry's dark default looks out of place). */
+.spt-player-phone.spt-skin-mobile .window-content, .spt-player-phone.spt-skin-mobile .window-content * { scrollbar-width: thin; scrollbar-color: rgba(30,42,23,0.55) transparent; }
 .spt-player-phone.spt-skin-mobile .spt-bubble,
 .spt-player-phone.spt-skin-mobile .spt-bubble.in,
 .spt-player-phone.spt-skin-mobile .spt-bubble.out { border-radius: 0; background: transparent; color: #1e2a17; border: 1px dashed rgba(30,42,23,0.55); max-width: 95%; }
 .spt-player-phone.spt-skin-mobile .spt-bubble.out { border-style: solid; }
 .spt-player-phone.spt-skin-mobile .spt-badge { background: #1e2a17; color: #b7c79c; border-radius: 0; }
+.spt-player-phone.spt-skin-mobile .spt-bubble .spt-del { background: #1e2a17; color: #b7c79c; border-radius: 0; }
 .spt-player-phone.spt-skin-mobile .spt-modes .spt-mode { color: #1e2a17; }
 
 /* Laptop: plain mail client */
@@ -1338,3 +1341,30 @@ body[data-spt-gm-look="haze"] #spt-phone-panel .spt-agent-card.active { box-shad
 /* These looks are always dark, even with Foundry's light theme */
 body[data-spt-gm-look] #spt-phone-panel .spt-gm-status .spt-pill { color: #7fd18f; }
 body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #ff8a7a; }
+
+/* ---------- GM panel: settings view (gear) ---------- */
+.spt-gm .spt-gm-help.active { box-shadow: 0 0 0 1px currentColor inset; }
+.spt-gm-settings .spt-set-head { display: flex; align-items: center; justify-content: space-between; }
+.spt-gm-settings .spt-set-head a { cursor: pointer; opacity: 0.8; }
+.spt-gm-settings .spt-set-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--spt-line); }
+.spt-gm-settings .spt-set-label { flex: 1; min-width: 0; }
+.spt-gm-settings .spt-set-label .hint { margin: 2px 0 0; font-size: 0.85em; opacity: 0.7; }
+.spt-gm-settings .spt-set-field { flex: 0 0 auto; display: flex; align-items: center; }
+.spt-gm-settings .spt-set-field select, .spt-gm-settings .spt-set-field input[type="text"], .spt-gm-settings .spt-set-field input[type="number"] { width: 12em; }
+.spt-gm-settings .spt-set-field input[type="range"] { width: 10em; }
+.spt-gm-settings .spt-set-feature { cursor: pointer; }
+.spt-gm-settings .spt-set-title { margin: 10px 0 0; border: none; font-size: 1.05em; }
+.spt-gm-settings > .hint { margin: 0; font-size: 0.85em; opacity: 0.7; }
+.spt-gm-settings .spt-set-reload { display: flex; align-items: center; gap: 8px; color: var(--spt-warn); }
+.spt-gm-settings .spt-set-reload button { flex: 0 0 auto; width: auto; padding: 0 12px; }
+.spt-gm-settings .spt-set-foot { text-align: right; margin: 4px 0 0; }
+.spt-gm-settings .spt-set-foot a { cursor: pointer; opacity: 0.8; }
+/* Welcome window: link to the advanced features */
+.spt-welcome .spt-wl-more { margin: 6px 0 0; text-align: center; font-size: 0.9em; }
+.spt-welcome .spt-wl-more a { cursor: pointer; }
+/* Player: operator's tip message, link to the player guide */
+.spt-bubble .spt-help-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 0.9em; text-decoration: underline; cursor: pointer; }
+.spt-guide .spt-guide-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; line-height: 1.35; }
+.spt-guide .spt-guide-list li { display: flex; gap: 10px; align-items: baseline; }
+.spt-guide .spt-guide-ic { flex: 0 0 44px; display: inline-flex; gap: 6px; justify-content: flex-end; opacity: 0.8; }
+.spt-guide .spt-guide-credit { margin: 12px 0 0; font-size: 0.85em; opacity: 0.6; text-align: center; }

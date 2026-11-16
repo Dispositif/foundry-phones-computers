@@ -1,5 +1,5 @@
 import { ApplicationV2, MODULE_ID } from "./constants.js";
-import { addLog, allPhones, getLog, hasSignal, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
+import { addLog, allPhones, getLog, hasSignal, isComputer, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
 import { operatorName } from "./names.js";
 import { openPanel } from "./main.js";
 import { startTour, tourAvailable } from "./tour.js";
@@ -47,9 +47,10 @@ export class WelcomeApp extends ApplicationV2 {
         this.close();
         openPanel();
       },
+      // Universe and advanced features: the settings view of the GM panel.
       settings: function () {
-        const sheet = game.settings.sheet ?? new foundry.applications.settings.SettingsConfig();
-        sheet.render({ force: true });
+        this.close();
+        openPanel({ settings: true });
       }
     }
   };
@@ -86,6 +87,7 @@ export class WelcomeApp extends ApplicationV2 {
         ${tourAvailable() ? `<button type="button" data-action="tour"><i class="fas fa-route"></i> ${t("Welcome.Tour")}</button>` : ""}
         <button type="button" data-action="panel"><i class="fas fa-tower-cell"></i> ${t("Welcome.OpenPanel", { panel })}</button>
       </footer>
+      <p class="spt-wl-more"><a data-action="settings"><i class="fas fa-toolbox"></i> ${t("Welcome.MoreTools")}</a></p>
       <p class="spt-wl-reopen">${t("Welcome.Reopen", { panel })}</p>
     </div>`;
   }
@@ -125,17 +127,54 @@ const welcomed = new Set();
 
 /**
  * The first time a player opens a new device (empty history), its network operator
- * sends a welcome text (a mail on a laptop or terminal), in the universe's wording.
+ * sends a welcome text, in the universe's wording (not on pagers, laptops or terminals).
  * Stays in the fiction: nothing in the chat, the message simply lands on the device.
  */
 export async function welcomeDevice(p) {
   if (game.user.isGM || !p?.item?.isOwner || welcomed.has(p.item.uuid)) return;
   const phone = p.phone;
-  if (phone.welcomed || isPager(phone) || !msgOn(phone) || modeOf(phone) === "off" || !hasSignal(phone) || !game.users.activeGM) return;
+  if (phone.welcomed || isPager(phone) || isComputer(phone) || !msgOn(phone) || modeOf(phone) === "off" || !hasSignal(phone) || !game.users.activeGM) return;
   if (!game.settings.get(MODULE_ID, "welcomeMessage") || getLog(phone, { includePending: true }).length) return;
+  // Several players own the device: only the first one connected sends it.
+  const owners = game.users.filter((u) => u.active && !u.isGM && p.item.testUserPermission(u, "OWNER")).sort((a, b) => a.id.localeCompare(b.id));
+  if (owners.length && owners[0] !== game.user) return;
   welcomed.add(p.item.uuid);
   const operator = operatorName(phone);
-  const text = t(MODELS[phone.model]?.mail ? "Welcome.Mail" : "Welcome.Sms", { operator });
+  const text = t(MODELS[phone.model]?.mail ? "Welcome.Mail" : "Welcome.Sms", { operator, number: phone.number });
   await p.item.update({ [`flags.${MODULE_ID}.phone.welcomed`]: true });
-  await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(phone, operator), text, read: false, net: true });
+  // help: the bubble ends with a link to the player guide (titled in the fiction: subscriber's guide, user manual...).
+  await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(phone, operator), text, read: false, net: true, help: true });
+}
+
+/** Player: welcomes each of their devices as soon as it exists (not only when opened), so the floating button shows the unread badge. */
+export function welcomeOwnedDevices() {
+  if (game.user.isGM || !game.ready) return;
+  for (const p of allPhones()) if (p.item.isOwner) welcomeDevice(p);
+}
+
+const welcomeSoon = foundry.utils.debounce(welcomeOwnedDevices, 500);
+// A device given to the player: created on their character, or ownership granted.
+for (const hook of ["createItem", "updateItem", "updateActor"]) Hooks.on(hook, () => welcomeSoon());
+
+/** Player guide: a short help window, opened from the operator's welcome message. */
+export function openPlayerGuide() {
+  // The icons the player will meet on the device, next to each line.
+  const icons = {
+    Open: ["fa-mobile-screen"],
+    Call: ["fa-phone"],
+    Text: ["fa-pen-to-square", "fa-paper-plane"],
+    Contacts: ["fa-address-book", "fa-user-plus"],
+    Show: ["fa-eye", "fa-share"],
+    Next: ["fa-comment-slash"]
+  };
+  const items = Object.entries(icons)
+    .map(([k, ic]) => `<li><span class="spt-guide-ic">${ic.map((i) => `<i class="fas ${i}"></i>`).join("")}</span><span>${t(`Guide.${k}`)}</span></li>`)
+    .join("");
+  return new foundry.applications.api.DialogV2({
+    window: { title: t("Guide.Title"), icon: "fas fa-circle-question" },
+    classes: ["spt-guide"],
+    position: { width: 440 },
+    content: `<ul class="spt-guide-list">${items}</ul><p class="spt-guide-credit"><i class="fas fa-tower-cell"></i> ${t("Guide.Credit")}</p>`,
+    buttons: [{ action: "ok", label: t("Guide.Ok"), icon: "fas fa-check", default: true }]
+  }).render({ force: true });
 }

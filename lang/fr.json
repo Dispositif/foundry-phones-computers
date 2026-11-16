@@ -172,7 +172,13 @@
       "WatchHint": "Ce que le réseau sait des agents : messages entre eux, appels, localisation. Lecture seule.",
       "Leak": "Ce que voit l'ennemi",
       "LeakHint": "Seulement les appareils compromis : ce qui a fuité",
-      "ListenNew": "Nouveaux messages entre agents"
+      "ListenNew": "Nouveaux messages entre agents",
+      "Settings": "Réglages",
+      "Back": "Retour",
+      "ThisComputer": "cet ordinateur seulement",
+      "ReloadNeeded": "Ce changement s'applique après un rechargement.",
+      "Reload": "Recharger",
+      "FoundrySettings": "Tous les réglages dans Foundry"
     },
     "Document": "Document",
     "RemoveAttachment": "Retirer la pièce jointe",
@@ -416,8 +422,15 @@
           "Line": "Ligne protégée"
         },
         "Welcome": {
-          "Sms": "{operator} : votre ligne est activée. Bienvenue sur le réseau.",
-          "Mail": "{operator} : bienvenue\nVotre accès est activé. Vos messages arriveront ici."
+          "Sms": "{operator} : votre ligne {number} est activée. Bienvenue sur le réseau.",
+          "Mail": "{operator} : bienvenue\nVotre accès {number} est activé. Vos messages arriveront ici."
+        },
+        "Gm": {
+          "PanelTitle": "Standard"
+        },
+        "Guide": {
+          "Title": "Guide de l'abonné",
+          "Link": "Guide de l'abonné"
         }
       },
       "modern": {},
@@ -471,8 +484,12 @@
           "Line": "Canal chiffré"
         },
         "Welcome": {
-          "Sms": "NODE ONLINE. {operator} vous souhaite une connexion sans trace.",
-          "Mail": "{operator} // NODE ONLINE\nCanal ouvert. Les paquets entrants s'afficheront ici."
+          "Sms": "NODE ONLINE // {number}. {operator} vous souhaite une connexion sans trace.",
+          "Mail": "{operator} // NODE ONLINE\nCanal {number} ouvert. Les paquets entrants s'afficheront ici."
+        },
+        "Guide": {
+          "Title": "Manuel utilisateur",
+          "Link": "Manuel utilisateur"
         }
       }
     },
@@ -678,7 +695,7 @@
       "Missing": "Journaux supprimés",
       "OnDevices": "{n} fichier(s) sur {d} ordinateur(s)",
       "NoMatch": "Aucun fichier.",
-      "NoComputers": "Aucun portable ni terminal pour l'instant.",
+      "NoComputers": "Aucun laptop ni terminal pour l'instant.",
       "MailFrom": "de {name}",
       "MailTo": "à {name}",
       "FollowsMailbox": "Pièce jointe d'un mail : suit la messagerie ({state})",
@@ -733,14 +750,15 @@
       "Tour": "Visite guidée",
       "OpenPanel": "Ouvrir le panneau {panel}",
       "Reopen": "Pour rouvrir cette fenêtre : bouton ? du panneau {panel}.",
-      "Sms": "Bienvenue sur le réseau {operator}. Votre ligne est active : vos conversations et vos contacts sont sur l'écran d'accueil.",
-      "Mail": "Bienvenue chez {operator}\nVotre boîte mail est active. Vos messages arriveront ici.",
+      "Sms": "Bienvenue sur le réseau {operator}. Votre ligne est active, votre numéro : {number}.",
+      "Mail": "Bienvenue chez {operator}\nVotre boîte mail {number} est active. Vos messages arriveront ici.",
       "ReadyTitle": "Prêt à jouer",
       "ReadyPlayers": "{n} joueur(s), {m} avec un personnage",
       "ReadyNoPlayers": "Aucun compte joueur pour l'instant",
       "ReadyDevices": "Chaque agent a un appareil",
       "ReadyBare": "{n} agent(s) sans appareil : donnez-le depuis l'onglet Envoyer",
-      "PointDirectory": "L'<strong>Annuaire</strong> est facultatif : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver (nommer un numéro, le rendre public, l'épingler, le couper) et se remplit au fil de la partie."
+      "PointDirectory": "L'<strong>Annuaire</strong> est facultatif : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver (nommer un numéro, le rendre public, l'épingler, le couper) et se remplit au fil de la partie.",
+      "MoreTools": "Plus d'outils : sécurisé, brouilleur, traçage…"
     },
     "Tour": {
       "Title": "Phones & Computers : le panneau du MJ",
@@ -773,6 +791,31 @@
         "title": "Réseau",
         "content": "Coupez le réseau pour toute la table. Les messages attendent son retour. Le bouton ? rouvre la fenêtre de bienvenue."
       }
-    }
+    },
+    "Features": {
+      "Title": "Fonctions avancées",
+      "Hint": "Désactivées, elles disparaissent du panneau et des fenêtres d'appareils. Rien n'est supprimé : réactivées, tout revient.",
+      "secure": "Appareils sécurisés",
+      "secureHint": "Appels et messages chiffrés entre appareils sécurisés, lignes sécurisées avec les PNJ.",
+      "compromised": "Appareils compromis",
+      "compromisedHint": "Marquer un appareil sur écoute par l'ennemi ; filtre « ce que voit l'ennemi ».",
+      "jammer": "Brouilleur",
+      "jammerHint": "Un appareil porté qui coupe le réseau dans sa scène.",
+      "tracking": "Traçage",
+      "trackingHint": "Avec quelle précision le réseau peut localiser chaque agent (expérimental)."
+    },
+    "Guide": {
+      "Title": "Bien démarrer",
+      "Link": "Bien démarrer",
+      "Ok": "Compris",
+      "Open": "<strong>Ctrl+Shift+P</strong> ou le bouton flottant ouvre votre appareil. Appuyez encore : appareil suivant.",
+      "Call": "<strong>Appeler</strong> : tapez un numéro ou un nom, puis le bouton téléphone. Tout numéro marche, même inventé.",
+      "Text": "<strong>Écrire</strong> : ouvrez une conversation, ou commencez-en une avec n'importe quel numéro.",
+      "Contacts": "<strong>Contacts</strong> : le carnet d'adresses dans la barre du haut. Dans une conversation, ajoutez l'expéditeur à vos contacts.",
+      "Show": "<strong>Montrez</strong> votre écran aux agents de la même scène, ou <strong>transférez</strong> un message.",
+      "Next": "Rien ne passe jamais par le chat : tout reste sur vos appareils.",
+      "Credit": "Phones & Computers, un module Foundry VTT par Soren"
+    },
+    "DeleteEntryConfirm": "Supprimer définitivement ? Impossible d'annuler."
   }
 }

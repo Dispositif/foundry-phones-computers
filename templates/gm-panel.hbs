@@ -5,6 +5,7 @@
     {{#each jams}}<a class="spt-pill spt-jam-pill" data-action="openPhone" data-uuid="{{uuid}}" title="{{spt "Jammer.Open"}}"><i class="fas fa-tower-broadcast"></i> {{label}}</a>{{/each}}
     {{#if pending}}<span class="spt-gm-pending">{{spt "Net.Pending" n=pending}}</span>{{/if}}
     <button type="button" class="spt-gm-net" data-action="toggleNetwork">{{#if down}}{{spt "Net.Restore"}}{{else}}{{spt "Net.Cut"}}{{/if}}</button>
+    <button type="button" class="spt-gm-help {{#if settingsView}}active{{/if}}" data-action="openSettings" title="{{spt "Gm.Settings"}}" aria-label="{{spt "Gm.Settings"}}"><i class="fas fa-gear"></i></button>
     <button type="button" class="spt-gm-help" data-action="welcome" title="{{spt "Welcome.Help"}}" aria-label="{{spt "Welcome.Help"}}"><i class="fas fa-circle-question"></i></button>
   </header>
   {{#if ringing}}
@@ -14,6 +15,33 @@
   </div>
   {{/if}}
 
+  {{#if settingsView}}
+  {{!-- Module settings: replaces the tabs until closed --}}
+  <div class="spt-tab-body">
+    <section class="spt-gm-settings">
+      <header class="spt-set-head"><strong><i class="fas fa-gear"></i> {{spt "Gm.Settings"}}</strong><a data-action="closeSettings"><i class="fas fa-arrow-left"></i> {{spt "Gm.Back"}}</a></header>
+      {{#each settingsView.rows}}
+      <div class="spt-set-row">
+        <div class="spt-set-label">{{name}}{{#if client}} <small class="spt-dim">({{spt "Gm.ThisComputer"}})</small>{{/if}}{{#if hint}}<p class="hint">{{hint}}</p>{{/if}}</div>
+        <div class="spt-set-field">
+          {{#if select}}<select data-setting="{{key}}">{{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>{{/if}}
+          {{#if bool}}<input type="checkbox" data-setting="{{key}}" {{#if checked}}checked{{/if}}>{{/if}}
+          {{#if range}}<input type="range" data-setting="{{key}}" min="{{min}}" max="{{max}}" step="{{step}}" value="{{value}}">{{/if}}
+          {{#if number}}<input type="number" data-setting="{{key}}" value="{{value}}">{{/if}}
+          {{#if text}}<input type="text" data-setting="{{key}}" value="{{value}}">{{/if}}
+        </div>
+      </div>
+      {{/each}}
+      {{#if settingsView.reloadNeeded}}<p class="spt-set-reload"><i class="fas fa-rotate"></i> {{spt "Gm.ReloadNeeded"}} <button type="button" data-action="reloadWorld">{{spt "Gm.Reload"}}</button></p>{{/if}}
+      <h3 class="spt-set-title"><i class="fas fa-toolbox"></i> {{spt "Features.Title"}}</h3>
+      <p class="hint">{{spt "Features.Hint"}}</p>
+      {{#each settingsView.features}}
+      <label class="spt-set-row spt-set-feature"><div class="spt-set-label">{{name}}<p class="hint">{{hint}}</p></div><div class="spt-set-field"><input type="checkbox" data-feature="{{key}}" {{#if checked}}checked{{/if}}></div></label>
+      {{/each}}
+      <p class="spt-set-foot"><a data-action="foundrySettings"><i class="fas fa-sliders"></i> {{spt "Gm.FoundrySettings"}}</a></p>
+    </section>
+  </div>
+  {{else}}
   {{!-- Tabs --}}
   <nav class="spt-tabs" role="tablist">
     <a class="spt-tab {{#if (eq tab "send")}}active{{/if}}" data-action="switchTab" data-tab="send" role="tab"><i class="fas fa-paper-plane"></i> {{spt "Gm.TabSend"}}</a>
@@ -177,12 +205,12 @@
       <div class="spt-segmented" role="radiogroup">
         <a class="{{#if (eq watch.view "listen")}}active{{/if}}" data-action="watchView" data-view="listen" role="radio" title="{{spt "Gm.BetweenAgents"}}"><i class="fas fa-headphones"></i> {{spt "Gm.InboxAgents"}}{{#if listenNew}} <span class="spt-count">{{listenNew}}</span>{{/if}}</a>
         <a class="{{#if (eq watch.view "calls")}}active{{/if}}" data-action="watchView" data-view="calls" role="radio"><i class="fas fa-phone"></i> {{spt "Calls.Tab"}}</a>
-        <a class="{{#if (eq watch.view "tracking")}}active{{/if}}" data-action="watchView" data-view="tracking" role="radio" title="{{spt "Track.Hint"}}"><i class="fas fa-location-crosshairs"></i> {{spt "Gm.TabTracking"}}</a>
+        {{#if feat.tracking}}<a class="{{#if (eq watch.view "tracking")}}active{{/if}}" data-action="watchView" data-view="tracking" role="radio" title="{{spt "Track.Hint"}}"><i class="fas fa-location-crosshairs"></i> {{spt "Gm.TabTracking"}}</a>{{/if}}
       </div>
       <div class="spt-chips">
         <a class="spt-chip {{#if watch.allAgents}}active{{/if}}" data-action="watchAgent" data-agent="">{{spt "Gm.All"}}</a>
         {{#each watch.agents}}<a class="spt-chip {{#if active}}active{{/if}}" data-action="watchAgent" data-agent="{{id}}">{{#if img}}<img src="{{img}}" alt="">{{/if}}{{name}}</a>{{/each}}
-        <a class="spt-chip spt-leak {{#if watch.leak}}active{{/if}}" data-action="watchLeak" title="{{spt "Gm.LeakHint"}}"><i class="fas fa-triangle-exclamation"></i> {{spt "Gm.Leak"}}</a>
+        {{#if feat.compromised}}<a class="spt-chip spt-leak {{#if watch.leak}}active{{/if}}" data-action="watchLeak" title="{{spt "Gm.LeakHint"}}"><i class="fas fa-triangle-exclamation"></i> {{spt "Gm.Leak"}}</a>{{/if}}
       </div>
       {{#if (eq watch.view "listen")}}
       {{#if watch.threads.length}}
@@ -375,7 +403,7 @@
               <a data-action="openPhone" data-uuid="{{uuid}}" title="{{spt "Gm.OpenPrepare"}}" aria-label="{{spt "Gm.OpenPrepare"}}"><i class="fas fa-pen-to-square"></i></a>
               {{#unless jammer}}
               <a data-action="toggleLock" data-uuid="{{uuid}}" class="{{#if locked}}spt-locked{{/if}}" title="{{#if locked}}{{spt "Gm.Locked"}}{{else}}{{spt "Gm.Unlocked"}}{{/if}}" aria-label="{{#if locked}}{{spt "Gm.Locked"}}{{else}}{{spt "Gm.Unlocked"}}{{/if}}"><i class="fas {{#if locked}}fa-lock{{else}}fa-lock-open{{/if}}"></i></a>
-              <a data-action="toggleCompromised" data-uuid="{{uuid}}" class="{{#if compromised}}spt-compromised{{/if}}" title="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}" aria-label="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}"><i class="fas fa-triangle-exclamation"></i></a>
+              {{#if @root.feat.compromised}}<a data-action="toggleCompromised" data-uuid="{{uuid}}" class="{{#if compromised}}spt-compromised{{/if}}" title="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}" aria-label="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}"><i class="fas fa-triangle-exclamation"></i></a>{{/if}}
               {{#unless fixed}}<a data-action="toggleSignal" data-uuid="{{uuid}}" class="{{#if noSignal}}spt-nosignal{{/if}}" title="{{#if noSignal}}{{spt "Gm.NoSignal"}}{{else}}{{spt "Gm.SignalOk"}}{{/if}}" aria-label="{{#if noSignal}}{{spt "Gm.NoSignal"}}{{else}}{{spt "Gm.SignalOk"}}{{/if}}"><i class="fas fa-signal"></i></a>{{/unless}}
               <a data-action="contacts" data-uuid="{{uuid}}" title="{{spt "Contacts.Title"}}" aria-label="{{spt "Contacts.Title"}}"><i class="fas fa-address-book"></i></a>
               {{/unless}}
@@ -455,4 +483,5 @@
     <button type="button" data-action="newPhone"><i class="fas fa-plus"></i> {{spt "NewDevice"}}</button>
   </footer>
   {{/if}}
+{{/if}}
 </div>

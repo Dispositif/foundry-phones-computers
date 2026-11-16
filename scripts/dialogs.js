@@ -1,3 +1,4 @@
+import { feature } from "./features.js";
 import { DialogV2, MODULE_ID } from "./constants.js";
 import { DEFAULT_THEME, MODELS, directoryText, createPhone, newTheme, getPhoneData, markPhone, randomAddress, shownTheme, themeChoices } from "./devices.js";
 import { modelAllowed } from "./universes.js";
@@ -17,7 +18,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
   number ??= randomAddress(model, { name: holder });
   // Models of the universe (plus the device's own, kept even if the universe does not offer it).
   const modelOpts = Object.entries(MODELS)
-    .filter(([k]) => k === model || modelAllowed(k))
+    .filter(([k]) => k === model || (modelAllowed(k) && (k !== "jammer" || feature("jammer"))))
     .map(([k, m]) => `<option value="${k}" ${k === model ? "selected" : ""}>${m.label}</option>`)
     .join("");
   // Looks: every look offered for some model, tagged with the models it is offered for.
@@ -132,6 +133,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
 
 /** "Secure (encrypted)" option, in New device and Edit device. */
 function secureRow(checked) {
+  if (!feature("secure")) return "";
   return `<div class="spt-secure-row"><label class="spt-secure-check"><input type="checkbox" name="secure" ${checked ? "checked" : ""}> ${shieldIcon()} ${t("Form.Secure")}</label><p class="hint">${t("Form.SecureHint")}</p></div>`;
 }
 
@@ -193,7 +195,7 @@ async function pickKind() {
       <img src="modules/${MODULE_ID}/icons/${k.icon ?? k.model}.svg" alt="">
       <b>${esc(kindLabel(k))}</b><small>${t(`NewDev.Caps.${k.key}`)}</small></button>`;
   // Only the models (and landline looks) of the world's universe.
-  const kinds = NEW_KINDS.filter((k) => modelAllowed(k.model) && (!k.theme || themeChoices(k.model).includes(k.theme)));
+  const kinds = NEW_KINDS.filter((k) => modelAllowed(k.model) && (!k.theme || themeChoices(k.model).includes(k.theme)) && (k.model !== "jammer" || feature("jammer")));
   let picked = null;
   // DialogV2.wait wires the render callback (a plain constructor ignores it); a tile click closes it.
   await DialogV2.wait({
