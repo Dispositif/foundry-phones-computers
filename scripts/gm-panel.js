@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, landlineUsers, isOffNumber, createPhone, randomAddress } from "./devices.js";
+import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -355,6 +355,11 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       },
       offNumber: async function (event, target) { await nameUnknown(target.closest("[data-unknown]").dataset.unknown, "", { off: true }); },
       dirAdd: function () { this._dirAdd(); },
+      devPub: async function (event, target) {
+        const item = fromUuidSync(target.closest("[data-uuid]")?.dataset.uuid);
+        const phone = item && getPhoneData(item);
+        if (phone) await item.update({ [`flags.${MODULE_ID}.phone.pub`]: !phone.pub });
+      },
       dirPin: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { pin: !e.pin }); },
       dirPub: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { pub: !e.pub }); },
       dirOff: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { off: !e.off }); },
@@ -516,7 +521,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     watchView: "listen", watchAgent: null, watchLeak: false,
     replyAtts: {},
     sendKind: null, sendId: null, addToDir: false, adding: false, draws: null, justCreated: null, createdNote: "",
-    dirName: "", dirNumber: "", dirPinNew: false, dirPubNew: false, dirEdit: null,
+    dirName: "", dirSearch: "", dirPinNew: false, dirPubNew: false, dirEdit: null,
     filesView: "device", filesFilter: "all", filesQuery: ""
   };
 
@@ -542,7 +547,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const box = (name) => el.querySelector(`[name=${name}]`);
     this._state.addToDir = box("addToDir")?.checked ?? this._state.addToDir;
     this._state.dirName = box("dirName")?.value ?? this._state.dirName;
-    this._state.dirNumber = box("dirNumber")?.value ?? this._state.dirNumber;
+    this._state.dirSearch = box("dirSearch")?.value ?? this._state.dirSearch;
     this._state.dirPinNew = box("dirPinNew")?.checked ?? this._state.dirPinNew;
     this._state.dirPubNew = box("dirPubNew")?.checked ?? this._state.dirPubNew;
     for (const input of el.querySelectorAll("[data-draft]")) this._state.drafts[input.dataset.draft] = input.value;
@@ -874,7 +879,13 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       this.element.querySelector(".spt-gm-send textarea[name=text], .spt-gm-send [data-action=ring]")?.focus();
     }
     // Directory: Enter adds (quick add), saves (inline edit) or names an unknown number.
-    for (const input of this.element.querySelectorAll("[name=dirName], [name=dirNumber]")) {
+    // Directory search: filters the rows in place, no re-render.
+    const dirSearch = this.element.querySelector("[name=dirSearch]");
+    if (dirSearch) {
+      dirSearch.addEventListener("input", () => this._dirFilter(dirSearch.value));
+      this._dirFilter(dirSearch.value);
+    }
+    for (const input of this.element.querySelectorAll("[name=dirName]")) {
       input.addEventListener("keydown", (ev) => {
         if (ev.key !== "Enter") return;
         ev.preventDefault();
@@ -965,20 +976,52 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-  /** Directory tab: quick add, numbers to identify, then the directory lines (section titles kept). */
+  /**
+   * Directory tab: quick add, numbers to identify, then three sections: the devices (agents and places,
+   * read from the items), the NPCs (directory lines, section titles kept) and the numbers out of service.
+   */
   _directoryContext(phones) {
     const usage = npcUsage(phones);
     const edit = this._state.dirEdit;
-    const rows = directoryRows().map((r) => {
+    const all = directoryRows().map((r) => {
       if (r.title !== undefined) return { title: r.title, line: r.line };
-      return { ...r, label: npcLabel(r), unnamed: !r.name, editing: r.line === edit, who: [...(usage.get(r.line) ?? [])].join(", ") };
+      const who = [...(usage.get(r.line) ?? [])].join(", ");
+      return { ...r, label: npcLabel(r), unnamed: !r.name, editing: r.line === edit, who, npcId: npcId(r), search: `${r.name} ${r.number}`.toLowerCase() };
     });
+    // A section title is kept only if an active NPC follows it.
+    const rows = all.filter((r, i) => {
+      if (r.title === undefined) return !r.off || r.editing;
+      for (const n of all.slice(i + 1)) {
+        if (n.title !== undefined) return false;
+        if (!n.off || n.editing) return true;
+      }
+      return false;
+    });
+    const off = all.filter((r) => r.title === undefined && r.off && !r.editing);
+    const devices = phones
+      .filter((p) => p.phone.number)
+      .map((p) => {
+        const model = modelOf(p.phone);
+        const name = publicName(p) || p.phone.label || "";
+        return { uuid: p.item.uuid, number: p.phone.number, name, model: model.label, icon: model.icon, place: isFixed(p.phone), pub: !!p.phone.pub, search: `${name} ${p.phone.number}`.toLowerCase() };
+      })
+      .sort((a, b) => a.place - b.place || a.name.localeCompare(b.name));
     const unknown = unknownNumbers(phones).map((u) => ({
       key: u.key,
       who: [...u.who].join(", "),
       count: [u.sms ? tn("Directory.Messages", u.sms) : "", u.calls ? tn("Directory.Calls", u.calls) : ""].filter(Boolean).join(" · ")
     }));
-    return { rows, unknown, name: this._state.dirName, number: this._state.dirNumber, pin: this._state.dirPinNew, pub: this._state.dirPubNew };
+    return { rows, off, devices, unknown, name: this._state.dirName, search: this._state.dirSearch, pin: this._state.dirPinNew, pub: this._state.dirPubNew };
+  }
+
+  /** Directory search: hides the rows that do not match (name or number), and the empty section titles. */
+  _dirFilter(query) {
+    this._state.dirSearch = query;
+    const q = query.trim().toLowerCase();
+    const root = this.element.querySelector(".spt-gm-directory");
+    if (!root) return;
+    for (const row of root.querySelectorAll("[data-search]")) row.hidden = !!q && !row.dataset.search.includes(q);
+    for (const title of root.querySelectorAll(".spt-dir-section")) title.hidden = !!q;
   }
 
   _dirEntry(target) {
@@ -991,11 +1034,12 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     this._readForm();
     const st = this._state;
     const name = st.dirName.trim();
-    if (!name && !st.dirNumber.trim()) return this.element.querySelector("[name=dirName]")?.focus();
-    const number = st.dirNumber.trim() || freeNpcNumber();
+    if (!name) return this.element.querySelector("[name=dirName]")?.focus();
+    // The number is generated: the GM can change it afterwards (click on the name).
+    const number = freeNpcNumber();
     const ok = await saveNpc({ name, number, pin: st.dirPinNew, pub: st.dirPubNew });
     if (!ok) return;
-    Object.assign(st, { dirName: "", dirNumber: "", dirPinNew: false, dirPubNew: false });
+    Object.assign(st, { dirName: "", dirPinNew: false, dirPubNew: false });
     this._skipRead = true;
     await this.render();
     this.element.querySelector("[name=dirName]")?.focus();

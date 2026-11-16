@@ -434,6 +434,22 @@ export function findNpc(str, { all = false } = {}) {
   return npcDirectory().find((e) => (all || e.pub) && (norm(e.name) === s || (e.number && norm(e.number) === s))) ?? null;
 }
 
+/** Name a public device is found under: the agent carrying it, otherwise its own label (a place's landline). */
+export function publicName(p) {
+  return (p.actor && !isFixed(p.phone) ? p.actor.name : p.phone.label) || "";
+}
+
+/** Devices the GM made public (flag "pub"): anyone can look them up by name, like a public NPC. */
+export function publicDevices() {
+  return allPhones().filter((p) => p.phone.pub && p.phone.number).map((p) => ({ name: publicName(p), number: p.phone.number }));
+}
+
+function findPublicDevice(str, { byNumber = false } = {}) {
+  const s = norm(str);
+  if (!s) return null;
+  return publicDevices().find((d) => (d.name && norm(d.name) === s) || (byNumber && norm(d.number) === s)) ?? null;
+}
+
 /**
  * GM side: an NPC directory name (public or not) becomes its number, so the device files it
  * under the agent's own contact for that number. Anything else is returned as is.
@@ -445,7 +461,7 @@ export function npcNumber(str) {
 
 /** Conversation key: the contact's number if any, otherwise its name, otherwise the raw input. Public directory names give their number. */
 export function keyFor(phone, str) {
-  const c = findContact(phone, str) ?? findNpc(str);
+  const c = findContact(phone, str) ?? findNpc(str) ?? findPublicDevice(str);
   if (c) return c.number || numberInText(c.name) || c.name;
   const raw = String(str ?? "").trim();
   return numberInText(raw) || raw;
@@ -481,7 +497,7 @@ export function isUnknownName(phone, str) {
 
 /** Display name for a key, as seen from this device (its contacts, then the public directory). */
 export function displayName(phone, key) {
-  return findContact(phone, key)?.name || findNpc(key)?.name || maskedLabel(key);
+  return findContact(phone, key)?.name || findNpc(key)?.name || findPublicDevice(key, { byNumber: true })?.name || maskedLabel(key);
 }
 
 /** Name for the GM: the whole NPC directory first, otherwise as seen from the device. */

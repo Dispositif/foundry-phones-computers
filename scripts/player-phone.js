@@ -1,7 +1,7 @@
 import { attChipHtml, attHtml, openAttachment, pickImage } from "./attachments.js";
 import { openSystemSheet } from "./item-sheet.js";
 import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
-import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, inboxOf, filesOf, playerUnread } from "./devices.js";
+import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, publicDevices, inboxOf, filesOf, playerUnread } from "./devices.js";
 import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
 import { addContactDialog, contactsDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
@@ -1036,8 +1036,7 @@ function lcdCaller(other) {
 
 /** Public directory numbers (yellow pages): any agent can find them by name. */
 function publicOptions() {
-  return npcDirectory()
-    .filter((e) => e.pub && e.number)
+  return [...npcDirectory().filter((e) => e.pub && e.number && !e.off), ...publicDevices().filter((d) => d.name)]
     .map((e) => `<option value="${esc(e.name)}" label="${esc(e.number)}"></option>`)
     .join("");
 }

@@ -501,6 +501,20 @@
     "PowerOn": "Switch on",
     "PowerOff": "Switch off",
     "Directory": {
+      "OpenMessages": "Show the messages",
+      "OffBack": "Back in service",
+      "OffSectionHint": "nobody answers, you are not disturbed",
+      "OffTitle": "Out of service",
+      "NpcHint": "fake numbers, no device behind them",
+      "NpcTitle": "NPCs (GM answers)",
+      "NoDevices": "No device with a number yet.",
+      "DevicePublicHint": "Public: every agent finds this device by its name",
+      "DevicesHint": "device items, carried by a PC or installed in a scene",
+      "DevicesTitle": "PCs and scenes",
+      "Search": "Search a name or a number…",
+      "AutoNumber": "The number is generated automatically. Click the name afterwards to change it.",
+      "AddShort": "Add",
+      "NewNpc": "New NPC",
       "Title": "Directory",
       "Hint": "One NPC per line: <code>Name | number</code>, then any of: <code>| public</code> (anyone can look it up), <code>| pin</code> (pinned NPC), <code>| off</code> (unassigned number). Lines starting with <code>#</code> are section titles.",
       "Placeholder": "# Scenario&#10;Marlin Hunt | 555-0242&#10;# Public&#10;Pizza Delta | 555-0202 | public",
@@ -510,9 +524,9 @@
       "WhoAnswers": "Who answers? e.g. Mrs Smith",
       "UnknownHint": "This number is linked to nothing: no directory entry, no device.",
       "Name": "Name",
-      "Off": "Unassigned",
-      "OffHint": "Unassigned number: calls and messages get \"not in service\", without bothering you.",
-      "NamePlaceholder": "Name",
+      "Off": "Out of service",
+      "OffHint": "Out of service: calls and messages get \"not in service\", without bothering you.",
+      "NamePlaceholder": "NPC name",
       "NumberPlaceholder": "Number (empty = generated)",
       "PinHint": "Pinned NPC: on top of Messages and of the sender list",
       "PublicHint": "Public: anyone can look it up",
@@ -532,7 +546,7 @@
         "one": "{n} call",
         "other": "{n} calls"
       },
-      "Purpose": "<strong>The directory is optional.</strong> You can text or call under any name or number, and any number an agent dials reaches you: no number to create, no NPC to set up. It only helps you keep track: name a number (who really answers), make it public (players can look it up), pin it (on top of Messages) or switch it off (unassigned)."
+      "Purpose": "<strong>The directory only holds NPCs: fake numbers with no device behind them, answered by you.</strong> It is optional: any number an agent dials reaches you anyway. It helps you keep track: name a number (who really answers), make it public (players can look it up), pin it (on top of Messages) or switch it off (out of service). The agents' and places' numbers come from their devices: they are listed in the Directory tab, where you can make them public."
     },
     "CallOrMessage": "Call / Message",
     "Renamed": {
