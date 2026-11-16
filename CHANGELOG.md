@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+## 1.4.0
+- "What's new" window for the GM after an update.
 - **GM panel redesign**, tools, directory, theme settings…
 - Team setting option: PCs know each other (numbers and emails already shared).
 - GM welcome window; operator welcome message (guide for players).

@@ -1376,3 +1376,8 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
 
 /* Conversation header: the number or address under a known name */
 .spt-phone-top.conv strong .spt-conv-num { display: block; font-size: 0.7em; font-weight: normal; opacity: 0.65; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* GM "What's new" window */
+.spt-news ul { margin: 4px 0 8px; padding-left: 1.2em; }
+.spt-news li { margin: 4px 0; }
+.spt-news-more { margin: 0; font-size: 0.85em; opacity: 0.8; }
