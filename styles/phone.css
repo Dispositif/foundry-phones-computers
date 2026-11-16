@@ -1368,3 +1368,11 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
 .spt-guide .spt-guide-list li { display: flex; gap: 10px; align-items: baseline; }
 .spt-guide .spt-guide-ic { flex: 0 0 44px; display: inline-flex; gap: 6px; justify-content: flex-end; opacity: 0.8; }
 .spt-guide .spt-guide-credit { margin: 12px 0 0; font-size: 0.85em; opacity: 0.6; text-align: center; }
+
+/* Floating button: a device never opened yet pulses gently (halo only, so it adds to ringing) */
+#spt-phone-fab .spt-fab-new { position: absolute; inset: -3px; border-radius: inherit; pointer-events: none; animation: spt-fab-new 1.6s ease-out infinite; }
+@keyframes spt-fab-new { 0% { box-shadow: 0 0 0 0 rgba(255,214,102,0.85); } 100% { box-shadow: 0 0 0 12px rgba(255,214,102,0); } }
+@media (prefers-reduced-motion: reduce) { #spt-phone-fab .spt-fab-new { animation: none; box-shadow: 0 0 0 3px rgba(255,214,102,0.85); } }
+
+/* Conversation header: the number or address under a known name */
+.spt-phone-top.conv strong .spt-conv-num { display: block; font-size: 0.7em; font-weight: normal; opacity: 0.65; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

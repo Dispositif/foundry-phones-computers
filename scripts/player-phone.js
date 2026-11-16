@@ -108,7 +108,7 @@ export class PlayerPhone extends ApplicationV2 {
       contacts: function () { const p = this._current(); if (p && this._canEditContacts(p)) contactsDialog(p.item); },
       addContact: function () {
         const p = this._current();
-        if (p && this._canEditContacts(p)) addContactDialog(p.item, this._state.key);
+        if (p && this._canEditContacts(p)) addContactDialog(p.item, this._state.key, findContact(p.phone, this._state.key)?.name ?? "");
       },
       answer: function () { if (activeCall?.screen) endCall("answer", activeCall); },
       decline: function () { if (activeCall?.screen) endCall("decline", activeCall); },
@@ -765,8 +765,9 @@ export class PlayerPhone extends ApplicationV2 {
       )
       .join("");
     const masked = isMasked(key);
-    // Unknown correspondent: offer to name it.
-    const addBtn = !masked && !findContact(p.phone, key) && this._canEditContacts(p)
+    // Unknown correspondent, or a team contact (computed): offer to name it in the player's own contacts.
+    const contact = masked ? null : findContact(p.phone, key);
+    const addBtn = !masked && (!contact || contact.team) && this._canEditContacts(p)
       ? `<a data-action="addContact" title="${t("Contacts.Add")}"><i class="fas fa-user-plus"></i></a>`
       : "";
     const composer = this.gm
@@ -779,7 +780,7 @@ export class PlayerPhone extends ApplicationV2 {
            <button type="button" data-action="send" title="${t("Send")}"><i class="fas fa-paper-plane"></i></button></div>`;
     return `<header class="spt-phone-top conv">
         <a data-action="back" title="${t("Back")}"><i class="fas fa-chevron-left"></i></a>
-        <strong>${esc(displayName(p.phone, key))}</strong>
+        <strong>${esc(displayName(p.phone, key))}${!masked && displayName(p.phone, key) !== key ? `<small class="spt-conv-num">${esc(key)}</small>` : ""}</strong>
         <span class="spt-top-actions">${addBtn}${this.gm || !entries.length ? "" : `<a data-action="showConv" title="${t("Share.ShowConversation")}"><i class="fas fa-eye"></i></a>`}${masked || this.gm || modelOf(p.phone).noCalls ? "" : `<a data-action="call" title="${t("Call.Call")}"><i class="fas fa-phone"></i></a>`}</span>
       </header>
       <div class="spt-thread ${isComputer(p.phone) ? "mail" : ""}">${bubbles || `<p class="spt-phone-empty">${t("NoMessage")}.</p>`}</div>

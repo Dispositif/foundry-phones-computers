@@ -432,20 +432,20 @@ export async function contactsDialog(item) {
 
 
 /** Names a correspondent: adds a contact with this number (or address). */
-export async function addContactDialog(item, key) {
-  const name = await DialogV2.prompt({
+export async function addContactDialog(item, key, name = "") {
+  const chosen = await DialogV2.prompt({
     window: { title: t("Contacts.Add"), icon: "fas fa-user-plus" },
     position: { width: 340 },
     content: `<div class="spt-phone-form">
-        <label>${t("Contacts.Name")} <input type="text" name="name" autofocus></label>
+        <label>${t("Contacts.Name")} <input type="text" name="name" value="${esc(name)}" autofocus></label>
         <p class="hint">${esc(key)}</p>
       </div>`,
     ok: { label: t("Save"), icon: "fas fa-check", callback: (event, button) => button.form.elements.name.value.trim() },
     rejectClose: false
   });
-  if (!name) return;
+  if (!chosen) return;
   const phone = getPhoneData(item);
-  const contacts = [...(phone.contacts ?? []), { name, number: key }];
+  const contacts = [...(phone.contacts ?? []), { name: chosen, number: key }];
   await item.update({ [`flags.${MODULE_ID}.phone.contacts`]: contacts });
 }
 

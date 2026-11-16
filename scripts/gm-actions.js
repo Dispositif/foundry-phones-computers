@@ -1,4 +1,4 @@
-import { MODULE_ID, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
+import { MODULE_ID, PAGER_MAX, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
 import { addLog, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
@@ -35,8 +35,11 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
   if (!text.trim() && !att) return;
   const extra = { ...(att ? { att } : {}), ...(fwd ? { fwd: true } : {}) };
   const key = keyFor(fromPhone, to);
-  // A pager only gets pages from the GM: an agent writing to one reaches the GM, who decides.
-  const targets = phonesByNumber(key).concat(phonesByNumber(to)).filter((p, i, arr) => p.item !== from && !modelOf(p.phone).pager && arr.findIndex((q) => q.item === p.item) === i);
+  // Between PCs, a pager gets the message directly (cut to its one line), like dialing a pager and keying a callback number.
+  const targets = phonesByNumber(key).concat(phonesByNumber(to)).filter((p, i, arr) => p.item !== from && arr.findIndex((q) => q.item === p.item) === i);
+  if (targets.some((p) => modelOf(p.phone).pager) && text.replace(/\s+/g, " ").trim().length > PAGER_MAX) {
+    game.socket.emit(SOCKET, { type: "smsResult", targetUserId: userId, result: "pagerCut" });
+  }
   const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;
   warnCompromised(fromPhone, ...targets.map((p) => p.phone));
 

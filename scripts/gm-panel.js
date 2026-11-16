@@ -541,7 +541,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Changes the state (tab, mode, recipient…) while keeping the current input. */
   /** Settings view: the module's own settings (read from their registration) and the advanced features. */
   _settingsContext() {
-    const keys = ["universe", "gmLook", "language", "numberPrefix", "ringTimeout", "welcomeMessage", "floatingButton", "gmFloatingButton", "volume"];
+    const keys = ["universe", "gmLook", "language", "numberPrefix", "ringTimeout", "team", "welcomeMessage", "floatingButton", "gmFloatingButton", "volume"];
     const L = (s) => (s ? game.i18n.localize(s) : "");
     const rows = keys.map((key) => {
       const c = game.settings.settings.get(`${MODULE_ID}.${key}`);
