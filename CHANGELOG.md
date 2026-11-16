@@ -6,6 +6,7 @@
 - Floating buttons for several devices: other carried devices as satellites, room devices as squares.
 - Floating buttons styled by universe.
 - UX: Device header, repeat Ctrl+Shift+P
+- Fix: fixed devices follow the scene a player views, not where their token is.
 
 ## 1.3.0
 - New device: **Jammer**. Switched on, it cuts the mobile network and Wi-Fi in its carrier's scene; the GM can make it fail. Switches off when the carrier changes scene.
