@@ -40,7 +40,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
         <div class="spt-if-mobile">${selectHtml}</div>
         <div class="form-group spt-if-landline"><label>${t("Form.Place")}</label>
           <input type="text" name="scene" list="spt-scenes" value="${esc(sceneName)}" placeholder="${t("Form.NoPlace")}">
-          <datalist id="spt-scenes">${scenes}</datalist></div>
+          <datalist id="spt-scenes">${scenes}</datalist><p class="hint">${t("Form.PlaceHint")}</p></div>
         <div class="form-group"><label>${t("Form.DeviceName")}</label><div class="form-fields">
           <input type="text" name="label" value="${esc(label)}" placeholder="${t("Form.DeviceNameHint")}">
           <button type="button" class="spt-dice" data-dice="label" title="${t("NewDev.OtherName")}"><i class="fas fa-dice"></i></button></div></div>
