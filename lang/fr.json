@@ -60,6 +60,7 @@
       "NoRecipient": "Aucun destinataire.",
       "NoCorrespondent": "Indiquez un correspondant.",
       "NameOrNumber": "Indiquez un nom ou un numéro.",
+      "UnknownName": "Aucun contact ni numéro trouvé pour « {name} ».",
       "GmOnlyPanel": "Panneau réservé au MJ.",
       "PagerCut": "message de bipeur coupé à {n} caractères.",
       "NoCalls": "cet appareil ne reçoit pas d'appels.",

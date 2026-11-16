@@ -1,5 +1,5 @@
 import { DialogV2, HANGUP_SRC, MODULE_ID, PICKUP_SRC, RINGBACK_SRC, RING_SRC, SOCKET, VIBRATE_SRC } from "./constants.js";
-import { displayName, findContact, getPhoneData, hasSignal, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf } from "./devices.js";
+import { displayName, findContact, getPhoneData, hasSignal, isUnknownName, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf } from "./devices.js";
 import { updateFab } from "./fab.js";
 import { deviceNotice, esc, isMasked, maskedLabel, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -106,6 +106,7 @@ export function playerSendSms(item, to, text, { att = null, fwd = false, fwdSecu
   to = to?.trim();
   if ((!text && !att) || !to) return false;
   if (isMasked(to)) return deviceNotice(t("Warn.CantReplyMasked"), { warn: true }), false;
+  if (isUnknownName(getPhoneData(item), to)) return deviceNotice(t("Warn.UnknownName", { name: to }), { warn: true }), false;
   if (getPhoneData(item)?.locked) return deviceNotice(t("Warn.Locked"), { warn: true }), false;
   if (modeOf(getPhoneData(item)) === "off") return deviceNotice(t("Warn.PhoneOff"), { warn: true }), false;
   if (!networkUp(getPhoneData(item))) return false;
@@ -120,6 +121,7 @@ export function playerCall(item, to) {
   if (!to) return;
   if (isMasked(to)) return deviceNotice(t("Warn.CantCallMasked"), { warn: true });
   const phone = getPhoneData(item);
+  if (isUnknownName(phone, to)) return deviceNotice(t("Warn.UnknownName", { name: to }), { warn: true });
   if (modelOf(phone).noCalls) return;
   // Dialing the device's own number (or a contact saved with it).
   const bare = (s) => String(s ?? "").toLowerCase().replace(/[\s\-()]/g, "");
