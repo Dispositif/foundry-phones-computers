@@ -112,6 +112,7 @@ export function updateFab() {
   jammerButtons(fab, jammers);
   layoutFab(fab);
   markOpen(fab);
+  markNew(fab, mine);
   animateMoves(fab, before);
 }
 
@@ -133,6 +134,49 @@ function openDeviceUuids() {
 function markOpen(fab) {
   const open = openDeviceUuids();
   for (const b of fab.querySelectorAll(".spt-fab")) b.classList.toggle("open", !b.hidden && open.has(buttonUuid(b)));
+}
+
+/** Devices this player has already opened (this browser), so a new one can draw the eye. */
+function seenKey() {
+  return `${MODULE_ID}.seenDevices.${game.world?.id}.${game.user?.id}`;
+}
+function loadSeen() {
+  try {
+    const raw = localStorage.getItem(seenKey());
+    return raw ? new Set(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+function saveSeen(seen) {
+  try {
+    localStorage.setItem(seenKey(), JSON.stringify([...seen]));
+  } catch {}
+}
+
+/**
+ * A device the player has never opened pulses gently until its window is opened once.
+ * First time on this browser: devices already in use (with a history) count as seen.
+ */
+function markNew(fab, mine) {
+  let seen = loadSeen();
+  let changed = false;
+  if (!seen) {
+    seen = new Set(mine.filter((p) => getLog(p.phone, { includePending: true }).length).map((p) => p.item.uuid));
+    changed = true;
+  }
+  for (const uuid of openDeviceUuids()) {
+    if (!seen.has(uuid)) changed = !!seen.add(uuid);
+  }
+  for (const b of fab.querySelectorAll(".spt-fab:not(.spt-fab-jammer)")) {
+    const uuid = buttonUuid(b);
+    const isNew = !b.hidden && !!uuid && !seen.has(uuid);
+    // A separate halo element: the buttons' ::before / ::after are already used by some looks.
+    const halo = b.querySelector(".spt-fab-new");
+    if (isNew && !halo) b.insertAdjacentHTML("afterbegin", `<span class="spt-fab-new" aria-hidden="true"></span>`);
+    else if (!isNew) halo?.remove();
+  }
+  if (changed) saveSeen(seen);
 }
 
 /** Screen centre and size of each button, by device. */

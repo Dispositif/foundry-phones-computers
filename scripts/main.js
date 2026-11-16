@@ -169,6 +169,15 @@ Hooks.once("init", () => {
     default: DIRECTORY_SAMPLE,
     onChange: () => rerenderAll()
   });
+  game.settings.register(MODULE_ID, "team", {
+    name: "SPT.Settings.team.name",
+    hint: "SPT.Settings.team.hint",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: () => rerenderAll()
+  });
   game.settings.register(MODULE_ID, "welcomeMessage", {
     name: "SPT.Settings.welcomeMessage.name",
     hint: "SPT.Settings.welcomeMessage.hint",

@@ -70,7 +70,8 @@
       "PageType": "Cette page ne peut pas s'afficher sur un appareil (PDF, vidéo…) : utilisez une page de texte ou d'image.",
       "NoVideo": "Les vidéos ne peuvent pas être jointes : utilisez une image.",
       "WrongDrop": "Un objet de type {type} ne peut pas être joint : glissez une page de journal ou une image.",
-      "SmsUnassigned": "Message non distribué : ce numéro n'est pas attribué."
+      "SmsUnassigned": "Message non distribué : ce numéro n'est pas attribué.",
+      "PagerCutSent": "Bipeur : message coupé à {n} caractères."
     },
     "Caller": "Appelant",
     "Info": {
@@ -398,6 +399,10 @@
       "welcomeMessage": {
         "name": "Message de bienvenue de l'opérateur",
         "hint": "La première fois qu'un joueur ouvre un nouvel appareil, son opérateur lui envoie un message de bienvenue (un mail sur un ordinateur)."
+      },
+      "team": {
+        "name": "Équipe : les PJ se connaissent (numéros et mails déjà partagés)",
+        "hint": "Les appareils des PJ affichent ceux des autres PJ dans leurs contacts : numéros sur les téléphones, mails sur les ordinateurs."
       }
     },
     "Migrated": "{n} appareil(s) repris de l'ancienne version.",

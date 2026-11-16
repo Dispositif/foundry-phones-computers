@@ -270,6 +270,46 @@ export function hasSignal(phone) {
  * All devices: items carried by actors + world items (held by nobody).
  * Jammers are left out unless asked for: they are not phones (no number, no messages).
  */
+/* -------------------------------------------- */
+/*  Team: player characters know each other     */
+/* -------------------------------------------- */
+
+let teamCache = null;
+for (const hook of ["createItem", "updateItem", "deleteItem", "updateActor", "updateUser", "updateSetting"]) Hooks.on(hook, () => (teamCache = null));
+
+/** Devices carried by player characters, when the "team" setting is on (cached until something changes). */
+function teamDevices() {
+  if (teamCache) return teamCache;
+  let on = false;
+  try {
+    on = game.settings.get(MODULE_ID, "team");
+  } catch {}
+  teamCache = on ? allPhones().filter((p) => p.actor?.hasPlayerOwner && !isFixed(p.phone) && p.phone.number) : [];
+  return teamCache;
+}
+
+/**
+ * The other player characters' devices, as contacts of a device carried by a player character.
+ * Same channel only: phones see phone numbers, computers see email addresses. Computed, never stored.
+ */
+export function teamContacts(phone) {
+  const team = teamDevices();
+  const self = phone?.number ? team.find((p) => norm(p.phone.number) === norm(phone.number)) : null;
+  if (!self) return [];
+  const mail = !!MODELS[phone.model]?.mail;
+  return team
+    .filter((p) => p.actor !== self.actor && !!MODELS[p.phone.model]?.mail === mail)
+    // "Cole smartphone": a character may carry several devices.
+    .map((p) => ({ name: `${p.actor.name} ${(MODELS[p.phone.model]?.label ?? p.phone.label).toLocaleLowerCase()}`, number: p.phone.number, team: true }));
+}
+
+/** A device's own contacts, then its team contacts (those it does not already have). */
+export function contactsOf(phone) {
+  const own = phone?.contacts ?? [];
+  const known = new Set(own.map((c) => norm(c.number)).filter(Boolean));
+  return [...own, ...teamContacts(phone).filter((c) => !known.has(norm(c.number)))];
+}
+
 export function allPhones({ jammers = false } = {}) {
   const out = [];
   const push = (item) => {
@@ -311,7 +351,7 @@ export function phoneLabel({ item, actor, phone }) {
 export function findContact(phone, str) {
   const s = norm(str);
   if (!s) return null;
-  return (phone?.contacts ?? []).find((c) => norm(c.name) === s || (c.number && norm(c.number) === s)) ?? null;
+  return contactsOf(phone).find((c) => norm(c.name) === s || (c.number && norm(c.number) === s)) ?? null;
 }
 
 /** Directory text, as edited by the GM (a New Orleans sample by default). */
@@ -607,7 +647,7 @@ export function conversations(phone) {
     conv.entries.push(e);
     if (isUnread(e)) conv.unread++;
   }
-  for (const c of phone.contacts ?? []) {
+  for (const c of contactsOf(phone)) {
     const key = c.number || c.name;
     if (!map.has(norm(key))) map.set(norm(key), { key, entries: [], unread: 0 });
   }

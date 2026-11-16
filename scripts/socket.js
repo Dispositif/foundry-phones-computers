@@ -1,4 +1,4 @@
-import { MODULE_ID, SMS_SRC, VIBRATE_SRC } from "./constants.js";
+import { MODULE_ID, PAGER_MAX, SMS_SRC, VIBRATE_SRC } from "./constants.js";
 import { markEntryRead, markRead } from "./devices.js";
 import { openPager } from "./pager.js";
 import { onPlayerCall, onPlayerHangup, onPlayerSms, senderHolds } from "./gm-actions.js";
@@ -45,6 +45,7 @@ export function onSocket(data) {
     case "smsResult":
       // A message to an unassigned number: the device says it was not delivered.
       if (forMe && data.result === "unassigned") deviceNotice(t("Warn.SmsUnassigned"), { warn: true });
+      if (forMe && data.result === "pagerCut") deviceNotice(t("Warn.PagerCutSent", { n: PAGER_MAX }), { warn: true });
       break;
     case "callResult":
       if (forMe) onCallResult(data);

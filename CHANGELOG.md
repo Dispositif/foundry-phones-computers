@@ -1,12 +1,13 @@
 # Changelog
 
 ## Unreleased
-- **GM panel redesign**, tools, theme settings.
-- GM welcome window and guided tour of the GM panel; operator welcome message.
+- **GM panel redesign**, tools, directory, theme settings…
+- Team setting option: PCs know each other (numbers and emails already shared).
+- GM welcome window; operator welcome message (guide for players).
 - Settings in the GM panel (gear); advanced features (secure, compromised, jammer, tracking) off by default.
-- Player guide linked from the operator's welcome message.
-- Random device names, emails, operators and machine names by universe; demo macro removed.
+- Random device names, emails, operators… by universe.
 - **Floating buttons redesign**.
+- PCs can send message to a pager.
 - Device header redesign, Ctrl+Shift+P repeats.
 - Voicemail option removed (the module does not handle it).
 - Fix: fixed devices follow the scene a player views, not where their token is.

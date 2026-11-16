@@ -70,7 +70,8 @@
       "PageType": "This page cannot be shown on a device (PDF, video…): use a text or an image page.",
       "NoVideo": "Videos cannot be attached: use an image.",
       "WrongDrop": "A {type} cannot be attached: drop a journal page or an image.",
-      "SmsUnassigned": "Message not delivered: this number is not in service."
+      "SmsUnassigned": "Message not delivered: this number is not in service.",
+      "PagerCutSent": "Pager: message cut to {n} characters."
     },
     "Caller": "Caller",
     "Info": {
@@ -398,6 +399,10 @@
       "welcomeMessage": {
         "name": "Operator welcome message",
         "hint": "The first time a player opens a new device, its operator sends a welcome message (a mail on a computer)."
+      },
+      "team": {
+        "name": "Team: PCs know each other (numbers and emails already shared)",
+        "hint": "PCs' devices show the other PCs' devices in their contacts: numbers on phones, emails on computers."
       }
     },
     "Migrated": "{n} device(s) recovered from the previous version.",
