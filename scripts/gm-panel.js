@@ -57,7 +57,7 @@ function callRows(phones) {
       compromised: all.some((x) => x.p.phone.compromised),
       secure: all.some((x) => x.e.secure) || !!live?.secure,
       live: live && !live.ended && !live.dialing ? timerHtml(live) : "",
-      result: t(`Calls.${result}`),
+      result: t(`Calls.${result === "voicemail" ? "noanswer" : result}`),
       dur: dur != null ? clock(dur) : ""
     };
   });
@@ -276,7 +276,7 @@ function lastCall(actor, phones) {
   const other = phonesByNumber(keyFor(p.phone, e.with)).find((q) => q.item !== p.item && q.actor?.hasPlayerOwner);
   const who = other ? other.actor.name : gmName(p.phone, e.with);
   const live = e.call ? liveCalls.get(e.call) : null;
-  const state = live && !live.ended && !live.dialing ? t("Live.OnLine") : e.dur != null ? clock(e.dur) : e.result !== "answer" ? t(`Calls.${e.result}`) : "";
+  const state = live && !live.ended && !live.dialing ? t("Live.OnLine") : e.dur != null ? clock(e.dur) : e.result !== "answer" ? t(`Calls.${e.result === "voicemail" ? "noanswer" : e.result}`) : "";
   const mins = Math.floor((Date.now() - e.t) / 60000);
   const ago = mins < 1 ? t("Track.JustNow") : t("Track.MinAgo", { n: mins });
   return `${ago} · ${e.dir === "out" ? "→" : "←"} ${who}${state ? ` · ${state}` : ""}`;

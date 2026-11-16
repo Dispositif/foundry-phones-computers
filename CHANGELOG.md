@@ -6,6 +6,7 @@
 - Random device names, emails, operators and machine names by universe; demo macro removed.
 - **Floating buttons redesign**.
 - Device header redesign, Ctrl+Shift+P repeats.
+- Voicemail option removed (the module does not handle it).
 - Fix: fixed devices follow the scene a player views, not where their token is.
 
 ## 1.3.0

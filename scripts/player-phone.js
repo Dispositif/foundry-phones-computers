@@ -1022,7 +1022,7 @@ export const GM_ENTRY_TYPES = {
 
 export function callLabel(e) {
   if (e.dir === "out") {
-    const out = ["answer", "voicemail", "unassigned", "unreachable", "cancelled", "busy", "neterror"];
+    const out = ["answer", "unassigned", "unreachable", "cancelled", "busy", "neterror"];
     return t(`CallLog.out.${out.includes(e.result) ? e.result : "noanswer"}`);
   }
   return t(`CallLog.in.${["answer", "decline"].includes(e.result) ? e.result : "missed"}`);

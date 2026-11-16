@@ -197,7 +197,6 @@ function stopOutgoingSound(call) {
 }
 
 export const CALLER_RESULTS = {
-  voicemail: (name) => t("CallerResult.voicemail", { name }),
   unassigned: () => t("CallerResult.unassigned"),
   unreachable: () => t("CallerResult.unreachable"),
   noanswer: (name) => t("CallerResult.noanswer", { name }),
