@@ -476,6 +476,7 @@
       "ItemSheet": "Fiche de l'objet"
     },
     "PowerOn": "Allumer",
+    "PowerOff": "Éteindre",
     "Directory": {
       "Title": "Annuaire",
       "Hint": "Un PNJ par ligne : <code>Nom | numéro</code>. Ajoutez <code>| public</code> pour un numéro que tout le monde peut trouver (pizzeria, gare…). Les lignes commençant par <code>#</code> sont des titres.",
