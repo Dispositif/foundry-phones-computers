@@ -105,6 +105,8 @@ export function filesOf(phone, { gm = false } = {}) {
 
 /** Unread count as the player sees it: nothing from a mailbox they cannot open. */
 export function playerUnread(phone) {
+  // A landline has no screen to read anything on: no badge.
+  if (modelOf(phone).sms === false) return 0;
   return inboxOf(phone) === "on" ? unreadCount(phone) : 0;
 }
 

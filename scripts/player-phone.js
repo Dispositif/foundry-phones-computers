@@ -280,7 +280,8 @@ export class PlayerPhone extends ApplicationV2 {
     const i = usable.findIndex((p) => p.item.uuid === this._current()?.item.uuid);
     const next = usable[(i + 1) % usable.length];
     this._state.phoneUuid = next.item.uuid;
-    saveLastDevice(next.item.uuid);
+    // A fixed device is only passed through: the shortcut and the main button keep the carried one.
+    if (!isFixed(next.phone)) saveLastDevice(next.item.uuid);
     this._go("list");
   }
 
@@ -906,6 +907,18 @@ export class PlayerPhone extends ApplicationV2 {
     const banner = { military: cur && isComputer(cur.phone) ? "Theme.Restricted" : null, federal: "Theme.GovSystem" }[skin];
     if (content && banner) content.insertAdjacentHTML("afterbegin", `<div class="spt-banner">${t(banner)}</div>`);
     if (content && this.gm && cur) content.insertAdjacentHTML("beforeend", `<div class="spt-gm-ribbon"><i class="fas fa-pen"></i> ${t("Theme.GmView")}</div>`);
+    // Foundry ignores keybindings while typing in a field (landline number, message):
+    // Ctrl+Shift+P there still moves to the next device. Bound once, on the window.
+    if (!this.gm && !el.dataset.sptNextKey) {
+      el.dataset.sptNextKey = "1";
+      el.addEventListener("keydown", (ev) => {
+        if (!ev.target.matches?.("input, textarea, select, [contenteditable]")) return;
+        if (ev.code !== "KeyP" || !ev.shiftKey || !(ev.ctrlKey || ev.metaKey)) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.nextDevice();
+      });
+    }
     if (!this.gm && cur && isLandline(cur.phone)) {
       el.querySelector("[name=to]")?.addEventListener("keydown", (ev) => {
         if (ev.key === "Enter") { ev.preventDefault(); this._call(); }

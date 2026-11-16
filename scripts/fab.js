@@ -391,7 +391,7 @@ export function createFab() {
       }
       if (uuid) {
         const ph = getPhoneData(fromUuidSync(uuid));
-        if (!game.user.isGM && !isPager(ph) && !isJammer(ph)) saveLastDevice(uuid);
+        if (!game.user.isGM && !isPager(ph) && !isJammer(ph) && !isFixed(ph)) saveLastDevice(uuid);
         openPhone(uuid);
       }
     }
