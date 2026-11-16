@@ -233,14 +233,11 @@ export function holderName(item, phone) {
   return sharedUsers(item).length ? t("Gm.Shared") : "?";
 }
 
-/** An installed device rings for agents with a token on its scene (otherwise, players viewing it). */
+/** An installed device is held by the connected players viewing its scene (tokens are ignored: one may be left behind). */
 export function landlineUsers(phone) {
   const scene = game.scenes.get(phone?.sceneId);
   if (!scene) return [];
-  const players = game.users.filter((u) => !u.isGM && u.active);
-  const actors = scene.tokens.map((t) => t.actor).filter(Boolean);
-  const present = players.filter((u) => actors.some((a) => a.testUserPermission(u, "OWNER")));
-  return present.length ? present : players.filter((u) => u.viewedScene === scene.id);
+  return game.users.filter((u) => !u.isGM && u.active && u.viewedScene === scene.id);
 }
 
 /**
