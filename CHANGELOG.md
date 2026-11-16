@@ -1,11 +1,11 @@
 # Changelog
 
-## unrelease
-- Random device names, emails, operator and machine names by universe; remove demo macro
-- GM welcome window and guided tour of the GM panel. Operator welcome message.
-- Floating buttons for several devices: other carried devices as satellites, room devices as squares.
-- Floating buttons styled by universe.
-- UX: Device header, repeat Ctrl+Shift+P
+## Unreleased
+- **GM panel redesign**, tools, theme settings.
+- GM welcome window and guided tour of the GM panel; operator welcome message.
+- Random device names, emails, operators and machine names by universe; demo macro removed.
+- **Floating buttons redesign**.
+- Device header redesign, Ctrl+Shift+P repeats.
 - Fix: fixed devices follow the scene a player views, not where their token is.
 
 ## 1.3.0

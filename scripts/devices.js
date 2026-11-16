@@ -315,22 +315,114 @@ export function directoryText() {
   return game.settings.get(MODULE_ID, "directory") ?? "";
 }
 
-/* NPC directory (GM): one line per NPC, "Name | number | public"; "#" lines are section titles. */
+/*
+ * NPC directory (GM): one line per NPC, "Name | number | flags"; "#" lines are section titles.
+ * Flags, in any order: "public" (anyone can look it up), "pin" (pinned NPC, GM side), "off" (unassigned number).
+ * The name may be empty for a number not named yet ("| 555-1010 | off").
+ */
 let dirCache = { text: null, list: [] };
+
+/** One directory line read as an entry (null for a blank line or a section title). */
+function parseDirLine(l, line) {
+  l = l.trim();
+  if (!l || l.startsWith("#")) return null;
+  const [name, number = "", ...rest] = l.split("|").map((s) => s.trim());
+  const flags = rest.map((s) => s.toLowerCase());
+  if (!name && !number) return null;
+  return { name, number, pub: flags.includes("public"), pin: flags.includes("pin"), off: flags.includes("off"), line };
+}
+
 export function npcDirectory() {
   const text = directoryText();
   if (dirCache.text === text) return dirCache.list;
-  const list = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l && !l.startsWith("#"))
-    .map((l) => {
-      const [name, number = "", ...rest] = l.split("|").map((s) => s.trim());
-      return { name, number, pub: rest.some((s) => s.toLowerCase() === "public") };
-    })
-    .filter((e) => e.name);
+  const list = text.split("\n").map(parseDirLine).filter(Boolean);
   dirCache = { text, list };
   return list;
+}
+
+/** Directory lines in order, section titles included (GM directory tab). */
+export function directoryRows() {
+  return directoryText().split("\n").map((l, line) => {
+    const tl = l.trim();
+    if (tl.startsWith("#")) return { title: tl.replace(/^#+\s*/, ""), line };
+    return parseDirLine(l, line);
+  }).filter(Boolean);
+}
+
+/** Name of a directory entry for the GM: its name, otherwise its number. */
+export function npcLabel(e) {
+  return e?.name || e?.number || "";
+}
+
+/** Identity of a directory entry, used to match conversations (its number, otherwise its name). */
+export function npcId(e) {
+  return norm(e?.number || e?.name);
+}
+
+function dirLine({ name = "", number = "", pub = false, pin = false, off = false }) {
+  const flags = [pub && "public", pin && "pin", off && "off"].filter(Boolean);
+  return [name.trim(), number.trim(), ...flags].join(" | ").replace(/\s+$/, "");
+}
+
+/**
+ * GM: adds or changes a directory entry. line: the line to replace (undefined: added at the end).
+ * Returns false (with a warning) when the number is already used elsewhere.
+ */
+export async function saveNpc(entry, line) {
+  if (!game.user.isGM) return false;
+  // "|" separates the fields of a directory line.
+  const name = String(entry.name ?? "").replaceAll("|", "/").trim();
+  const number = String(entry.number ?? "").replaceAll("|", "/").trim();
+  if (!name && !number) return false;
+  if (number) {
+    const twin = npcDirectory().find((e) => e.line !== line && e.number && norm(e.number) === norm(number));
+    if (twin) return ui.notifications.warn(t("Directory.Taken", { number, name: npcLabel(twin) })), false;
+    if (phonesByNumber(number).length) return ui.notifications.warn(t("Directory.IsDevice", { number })), false;
+  }
+  const lines = directoryText().split("\n");
+  const text = dirLine({ ...entry, name, number });
+  if (line === undefined || line === null || line >= lines.length) {
+    while (lines.length && !lines.at(-1).trim()) lines.pop();
+    lines.push(text);
+  } else lines[line] = text;
+  await game.settings.set(MODULE_ID, "directory", lines.join("\n"));
+  return true;
+}
+
+/** GM: changes some fields of an existing entry (flags, name…). */
+export function patchNpc(line, patch) {
+  const cur = npcDirectory().find((e) => e.line === line);
+  if (!cur) return false;
+  return saveNpc({ ...cur, ...patch }, line);
+}
+
+/** GM: removes a directory line. */
+export async function deleteNpc(line) {
+  const lines = directoryText().split("\n");
+  if (line < 0 || line >= lines.length) return;
+  lines.splice(line, 1);
+  await game.settings.set(MODULE_ID, "directory", lines.join("\n"));
+}
+
+/** Free number for a new NPC (same generator as devices: world prefix, no collision). */
+export function freeNpcNumber() {
+  return randomAddress("mobile");
+}
+
+/**
+ * GM: names a number nobody knew (or marks it unassigned). A typed name the agent used
+ * instead of a number becomes the entry's name.
+ */
+export function nameUnknown(key, name = "", { off = false } = {}) {
+  const k = String(key ?? "").trim();
+  name = String(name ?? "").trim();
+  if (!k || (!name && !off)) return false;
+  return /\d|@/.test(k) ? saveNpc({ name, number: k, off }) : saveNpc({ name: name || k, off });
+}
+
+/** Number marked "off" in the directory: unassigned, nobody answers. */
+export function isOffNumber(phone, key) {
+  return !!findNpc(keyFor(phone, key), { all: true })?.off;
 }
 
 /** Directory entry for a name or a number (public ones only, unless all = true). */
@@ -357,14 +449,14 @@ export function keyFor(phone, str) {
 
 /** Display name for a key, as seen from this device (its contacts, then the public directory). */
 export function displayName(phone, key) {
-  return findContact(phone, key)?.name ?? findNpc(key)?.name ?? maskedLabel(key);
+  return findContact(phone, key)?.name || findNpc(key)?.name || maskedLabel(key);
 }
 
 /** Name for the GM: the whole NPC directory first, otherwise as seen from the device. */
 export function gmName(phone, key) {
   // The NPC directory wins over the name the agent gave the contact: the GM sees who really answers.
   const npc = findNpc(key, { all: true });
-  if (npc) return npc.number ? `${npc.name} (${npc.number})` : npc.name;
+  if (npc) return npc.name && npc.number ? `${npc.name} (${npc.number})` : npcLabel(npc);
   return displayName(phone, key);
 }
 

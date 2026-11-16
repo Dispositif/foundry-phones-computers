@@ -1,8 +1,8 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone } from "./devices.js";
-import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog } from "./dialogs.js";
+import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, landlineUsers, isOffNumber, createPhone, randomAddress } from "./devices.js";
+import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
 import { sendSms } from "./messages.js";
@@ -10,6 +10,8 @@ import { hangUpAll, pendingCalls, ring } from "./ring.js";
 import { clock, liveCalls, timerHtml } from "./live-call.js";
 import { esc, isMasked, nl2br, norm } from "./util.js";
 import { t, tn } from "./i18n.js";
+import { OPERATORS, deviceName } from "./names.js";
+import { universe } from "./universes.js";
 import { openWelcome } from "./welcome.js";
 /* -------------------------------------------- */
 /*  GM panel                                    */
@@ -47,6 +49,7 @@ function callRows(phones) {
     const dur = all.find((x) => x.e.dur != null)?.e.dur;
     return {
       t: c.t,
+      actorIds: [...new Set(all.map((x) => x.p.actor?.id).filter(Boolean))],
       from,
       to,
       fromAgent: !!out,
@@ -122,6 +125,101 @@ export function gmInbox() {
   return out.sort((a, b) => b.e.t - a.e.t);
 }
 
+/** Threads shown per page in the GM conversations. */
+const THREAD_PAGE = 30;
+
+/**
+ * GM conversations: one thread per agent device and correspondent (NPC), or per pair of agents.
+ * Activity counts both ways (an agent's message, the GM's reply or first message); unread threads first.
+ */
+function collectThreads(phones) {
+  const threads = new Map();
+  // The operator's welcome message is the network talking, not a conversation.
+  const operators = new Set(Object.values(OPERATORS).flat().map(norm));
+  for (const p of phones) {
+    for (const e of getLog(p.phone, { includePending: true })) {
+      if (e.kind !== "sms" || e.prep || e.off || e.net || (e.dir === "in" && operators.has(norm(e.with)))) continue;
+      const key = keyFor(p.phone, e.with);
+      let agents = false;
+      if (e.dir === "out") agents = !!e.pj;
+      // Received from another agent's device: the sender's copy already makes the thread.
+      else if (phonesByNumber(key).some((q) => q.item !== p.item)) continue;
+      const k = norm(key);
+      const id = agents ? `pj|${[norm(p.phone.number), k].sort().join("|")}` : `${p.item.uuid}|${k}`;
+      if (!threads.has(id)) {
+        const npc = agents ? null : findNpc(key, { all: true });
+        threads.set(id, { id, item: p.item, phone: p.phone, actor: p.actor, key: e.with, unread: 0, agents, t: 0, npcId: npc ? npcId(npc) : k });
+      }
+      const th = threads.get(id);
+      th.t = Math.max(th.t, e.t ?? 0);
+      if (e.dir === "out" && e.seen === false) th.unread++;
+    }
+  }
+  return [...threads.values()].sort((a, b) => (b.unread > 0) - (a.unread > 0) || b.t - a.t);
+}
+
+/** Agents: the players' characters, and any player-owned actor carrying a device. */
+function agentActors(phones) {
+  const agents = new Map();
+  for (const u of game.users) if (!u.isGM && u.character) agents.set(u.character.id, u.character);
+  for (const p of phones) if (p.actor?.hasPlayerOwner) agents.set(p.actor.id, p.actor);
+  return [...agents.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Between agents: the actors at both ends of a thread. */
+function threadActors(th) {
+  const ids = new Set([th.actor?.id]);
+  for (const p of phonesByNumber(keyFor(th.phone, th.key))) if (p.actor) ids.add(p.actor.id);
+  return ids;
+}
+
+/** Numbers agents reached that nobody knows (no directory entry, contact or device), most recent first. */
+function unknownNumbers(phones) {
+  const found = new Map();
+  for (const p of phones) {
+    for (const e of getLog(p.phone)) {
+      if (e.dir !== "out" || e.pj || e.prep || !["sms", "call"].includes(e.kind)) continue;
+      const key = keyFor(p.phone, e.with);
+      if (!isUnknownNumber(p.phone, key)) continue;
+      const k = norm(key);
+      if (!found.has(k)) found.set(k, { key, who: new Set(), sms: 0, calls: 0, t: 0 });
+      const u = found.get(k);
+      u.who.add(holderName(p.item, p.phone));
+      u[e.kind === "sms" ? "sms" : "calls"]++;
+      u.t = Math.max(u.t, e.t ?? 0);
+    }
+  }
+  return [...found.values()].sort((a, b) => b.t - a.t);
+}
+
+/** Directory entry -> agents who exchanged with it (messages or calls, either way). */
+function npcUsage(phones) {
+  const usage = new Map();
+  for (const p of phones) {
+    const who = holderName(p.item, p.phone);
+    for (const e of getLog(p.phone)) {
+      if (e.prep || e.pj || !["sms", "call"].includes(e.kind)) continue;
+      const npc = findNpc(keyFor(p.phone, e.with), { all: true });
+      if (!npc) continue;
+      if (!usage.has(npc.line)) usage.set(npc.line, new Set());
+      usage.get(npc.line).add(who);
+    }
+  }
+  return usage;
+}
+
+/** The device an agent used last (their last message or call), otherwise the phone they carry. */
+function lastUsedDevice(user, devices) {
+  let best = null;
+  let bestT = -1;
+  for (const p of devices) {
+    const e = getLog(p.phone).find((x) => x.dir === "out" && !x.prep);
+    if (e && (e.t ?? 0) > bestT) [best, bestT] = [p, e.t ?? 0];
+  }
+  const carried = carriedPhone(user);
+  return best ?? devices.find((p) => p.item === carried?.item) ?? devices[0] ?? null;
+}
+
 /** Device selector (player phone header). */
 export function deviceSelect(mine, p, labelFn) {
   // No model icon: the screen already shows what kind of device it is.
@@ -185,10 +283,7 @@ function lastCall(actor, phones) {
 }
 
 function trackingRows(phones) {
-  const agents = new Map();
-  for (const u of game.users) if (!u.isGM && u.character) agents.set(u.character.id, u.character);
-  for (const p of phones) if (p.actor?.hasPlayerOwner) agents.set(p.actor.id, p.actor);
-  return [...agents.values()]
+  return agentActors(phones)
     .map((actor) => {
       const devices = phones
         .filter((p) => p.actor?.id === actor.id && TRACK_LEVEL[p.phone.model] && modeOf(p.phone) !== "off" && hasSignal(p.phone))
@@ -200,6 +295,7 @@ function trackingRows(phones) {
       for (const d of devices) d.levelLabel = `${t(`Track.${d.level}`)} (${t(`Track.Via.${d.via}`)})`;
       const level = devices[0]?.level ?? "none";
       return {
+        id: actor.id,
         agent: actor.name,
         img: actor.img,
         level,
@@ -234,10 +330,58 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     tag: "form",
     classes: ["spt-phone-panel"],
     window: { title: "Phones & Computers", icon: "fas fa-tower-cell", resizable: true },
-    position: { width: 580, height: 640 },
+    position: { width: 660, height: 780 },
     form: { handler: () => {}, submitOnChange: false, closeOnSubmit: false },
     actions: {
-      switchInbox: function (event, target) { this._setState({ inboxView: target.dataset.view }); },
+      watchView: function (event, target) { this._setState({ watchView: target.dataset.view, inboxLimit: THREAD_PAGE }); },
+      watchAgent: function (event, target) { this._setState({ watchAgent: target.dataset.agent || null, inboxLimit: THREAD_PAGE }); },
+      watchLeak: function () { this._setState({ watchLeak: !this._state.watchLeak }); },
+      filterAgent: function (event, target) { this._setState({ inboxAgent: target.dataset.agent || null, inboxNpc: null, inboxLimit: THREAD_PAGE }); },
+      filterNpc: function (event, target) {
+        const id = target.dataset.npc || null;
+        this._setState({ inboxNpc: this._state.inboxNpc === id ? null : id, inboxAgent: null, tab: "inbox", inboxLimit: THREAD_PAGE });
+      },
+      moreThreads: function () { this._setState({ inboxLimit: this._state.inboxLimit + THREAD_PAGE }); },
+      writeAs: function (event, target) {
+        // "Write as this NPC to…": the Send tab, with the agent and the NPC as sender.
+        this._focusSend = true;
+        this._setState({ tab: "send", sendKind: "agent", sendId: target.dataset.user, target: null, sender: target.dataset.sender ?? "" });
+      },
+      nameNumber: async function (event, target) {
+        const box = target.closest("[data-unknown]");
+        const name = box.querySelector("[data-unknown-name]")?.value ?? "";
+        if (!name.trim()) return box.querySelector("[data-unknown-name]")?.focus();
+        await nameUnknown(box.dataset.unknown, name);
+      },
+      offNumber: async function (event, target) { await nameUnknown(target.closest("[data-unknown]").dataset.unknown, "", { off: true }); },
+      dirAdd: function () { this._dirAdd(); },
+      dirPin: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { pin: !e.pin }); },
+      dirPub: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { pub: !e.pub }); },
+      dirOff: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { off: !e.off }); },
+      dirEdit: function (event, target) { this._setState({ dirEdit: Number(target.closest("[data-line]").dataset.line) }); },
+      dirCancel: function () { this._setState({ dirEdit: null }); },
+      dirSave: function () { this._dirSave(); },
+      dirDelete: async function (event, target) {
+        const e = this._dirEntry(target);
+        if (!e) return;
+        const ok = await DialogV2.confirm({ window: { title: t("Directory.Title"), icon: "fas fa-trash" }, content: `<p>${t("Directory.DeleteConfirm", { name: esc(npcLabel(e)) })}</p>`, rejectClose: false });
+        if (ok) await deleteNpc(e.line);
+      },
+      sendTo: function (event, target) {
+        this._focusSend = true;
+        this._setState({ sendKind: target.dataset.kind, sendId: target.dataset.id ?? null, target: null, adding: false });
+      },
+      pickDevice: function (event, target) { this._focusSend = true; this._setState({ target: target.dataset.target }); },
+      pickSender: function (event, target) { this._focusSend = true; this._setState({ sender: target.dataset.value }); },
+      quickCreate: function (event, target) { this._quickCreate(target.dataset.kind); },
+      reroll: function () { this._setState({ draws: null }); },
+      addDevice: function () { this._setState({ adding: true, draws: null }); },
+      cancelAdd: function () { this._setState({ adding: false }); },
+      moreOptions: async function () {
+        const actor = game.users.get(this._state.sendId)?.character ?? null;
+        const res = await newPhoneDialog({ actor });
+        if (res?.item?.parent === actor) this._created(res.item);
+      },
       switchTab: function (event, target) { this._focusSend = true; this._setState({ tab: target.dataset.tab }); },
       mode: function (event, target) { this._focusSend = true; this._setState({ mode: target.dataset.mode }); },
       ring: function () { this._doRing(); },
@@ -309,8 +453,15 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         this._skipRead = true;
         this.render();
       },
-      clearAtt: function () {
+      clearAtt: function (event, target) {
         this._readForm();
+        // In a thread: the attachment waiting in its reply line.
+        const th = target.closest("[data-thread]");
+        if (th) {
+          delete this._state.replyAtts[th.dataset.thread];
+          this._skipRead = true;
+          return this.render();
+        }
         this._state.att = null;
         this._skipRead = true;
         this.render();
@@ -359,7 +510,15 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static recentSenders = [];
 
-  _state = { target: null, sender: "", text: "", att: null, tab: "send", mode: "message", drafts: {}, inboxView: "npc", filesView: "device", filesFilter: "all", filesQuery: "" };
+  _state = {
+    target: null, sender: "", text: "", att: null, tab: "send", mode: "message", drafts: {},
+    inboxAgent: null, inboxNpc: null, inboxLimit: THREAD_PAGE,
+    watchView: "listen", watchAgent: null, watchLeak: false,
+    replyAtts: {},
+    sendKind: null, sendId: null, addToDir: false, adding: false, draws: null, justCreated: null, createdNote: "",
+    dirName: "", dirNumber: "", dirPinNew: false, dirPubNew: false, dirEdit: null,
+    filesView: "device", filesFilter: "all", filesQuery: ""
+  };
 
   /** Changes the state (tab, mode, recipient…) while keeping the current input. */
   _setState(patch) {
@@ -380,6 +539,12 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     this._state.sender = el.querySelector("[name=sender]")?.value ?? this._state.sender;
     this._state.text = el.querySelector("[name=text]")?.value ?? this._state.text;
     this._state.filesQuery = el.querySelector("[name=filesQuery]")?.value ?? this._state.filesQuery;
+    const box = (name) => el.querySelector(`[name=${name}]`);
+    this._state.addToDir = box("addToDir")?.checked ?? this._state.addToDir;
+    this._state.dirName = box("dirName")?.value ?? this._state.dirName;
+    this._state.dirNumber = box("dirNumber")?.value ?? this._state.dirNumber;
+    this._state.dirPinNew = box("dirPinNew")?.checked ?? this._state.dirPinNew;
+    this._state.dirPubNew = box("dirPubNew")?.checked ?? this._state.dirPubNew;
     for (const input of el.querySelectorAll("[data-draft]")) this._state.drafts[input.dataset.draft] = input.value;
   }
 
@@ -395,62 +560,140 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const phones = allPhones().sort((a, b) => phoneLabel(a).localeCompare(phoneLabel(b)));
     const players = game.users.filter((u) => !u.isGM);
     // Direct to a player: only with an assigned character, who carries (or gets) the phone.
-    const reachable = players.filter((u) => u.character).sort((a, b) => Number(b.active) - Number(a.active));
+    const reachable = players.filter((u) => u.character).sort((a, b) => Number(b.active) - Number(a.active) || a.character.name.localeCompare(b.character.name));
     const countByNumber = phones.reduce((m, p) => m.set(norm(p.phone.number), (m.get(norm(p.phone.number)) ?? 0) + 1), new Map());
 
-    // Recipients: one line per number, however it is written (555-133 = 555133).
+    // "Other devices": one line per number, however it is written (555-133 = 555133).
     // Order: agents' devices first, then other carried devices, then fixed ones (by label within each group).
     const rank = (p) => (isFixed(p.phone) ? 2 : p.actor?.hasPlayerOwner ? 0 : 1);
     const byRank = [...phones].sort((a, b) => rank(a) - rank(b));
     const numbers = [...new Map(byRank.map((p) => [norm(p.phone.number), p.phone.number])).values()];
-    const targets = [...reachable.map((u) => `user:${u.id}`), ...numbers.map((n) => `phone:${n}`)];
-    if (!targets.includes(this._state.target)) this._state.target = targets[0] ?? "";
     const targetDevices = numbers.map((n) => {
       const ps = phones.filter((p) => norm(p.phone.number) === norm(n));
       const label = ps.length > 1 ? `${n} — ${ps.map((p) => p.actor?.name ?? "?").join(" + ")} (${t("Gm.Cloned")})` : phoneLabel(ps[0]);
       return { value: `phone:${n}`, label, icon: modelOf(ps[0].phone).icon, selected: this._state.target === `phone:${n}` };
     });
-    const targetPlayers = reachable.map((u) => ({
-      value: `user:${u.id}`,
-      label: `${u.name} — ${u.character.name}${u.active ? "" : ` (${t("Gm.Offline")})`}`,
-      selected: this._state.target === `user:${u.id}`
-    }));
 
-    // Agents' messages: one thread per device and NPC correspondent, most recent first.
-    const inboxAll = gmInbox();
-    const threads = new Map();
-    for (const { item, phone, e } of inboxAll) {
-      // Between agents: one thread per pair of numbers, whichever of the two wrote last.
-      const id = e.pj ? `pj|${[norm(phone.number), norm(keyFor(phone, e.with))].sort().join("|")}` : `${item.uuid}|${norm(keyFor(phone, e.with))}`;
-      if (!threads.has(id)) threads.set(id, { id, item, phone, key: e.with, unread: 0, agents: !!e.pj });
-      if (e.seen === false) threads.get(id).unread++;
+    // Send: an agent, or a place where agents are, then one of its devices.
+    const places = new Map();
+    for (const p of phones) {
+      if (!isFixed(p.phone) || !game.scenes.get(p.phone.sceneId) || !landlineUsers(p.phone).length) continue;
+      if (!places.has(p.phone.sceneId)) places.set(p.phone.sceneId, { id: p.phone.sceneId, name: game.scenes.get(p.phone.sceneId).name, devices: [] });
+      places.get(p.phone.sceneId).devices.push(p);
     }
-    // Sub-tabs: messages to NPCs (the GM answers) or between agents (read only).
-    const agentThreads = [...threads.values()].filter((th) => th.agents);
-    const npcThreads = [...threads.values()].filter((th) => !th.agents);
-    const inbox = (this._state.inboxView === "agents" ? agentThreads : npcThreads).slice(0, 20).map((th) => {
-      const conv = getLog(th.phone, { includePending: true }).filter((e) => e.kind === "sms" && sameConv(th.phone, e.with, th.key));
+    const st = this._state;
+    const validKind = (st.sendKind === "agent" && reachable.some((u) => u.id === st.sendId)) || (st.sendKind === "place" && places.has(st.sendId)) || st.sendKind === "other";
+    if (!validKind) Object.assign(st, reachable.length ? { sendKind: "agent", sendId: reachable[0].id } : { sendKind: "other", sendId: null });
+    const sendUser = st.sendKind === "agent" ? game.users.get(st.sendId) : null;
+    let tiles = [];
+    if (sendUser) tiles = phones.filter((p) => p.actor?.id === sendUser.character.id && !modelOf(p.phone).fixed);
+    else if (st.sendKind === "place") tiles = places.get(st.sendId).devices;
+    const tileValue = (p) => `phone:${p.phone.number}`;
+    if (st.sendKind === "other") {
+      if (!targetDevices.some((d) => d.value === st.target)) st.target = targetDevices[0]?.value ?? "";
+    } else if (!tiles.some((p) => tileValue(p) === st.target)) {
+      const pick = sendUser ? lastUsedDevice(sendUser, tiles) : tiles[0];
+      st.target = pick ? tileValue(pick) : "";
+    }
+    for (const d of targetDevices) d.selected = d.value === st.target;
+    const capability = (p) => {
+      const m = modelOf(p.phone);
+      if (m.pager) return t("Gm.CanPage");
+      const msg = msgOn(p.phone) ? (m.mail ? t("Gm.Mail") : t("Gm.ModeMessage")) : null;
+      return [msg, m.noCalls ? null : t("Gm.ModeCall")].filter(Boolean).join(" · ");
+    };
+    const selectedTile = tiles.find((p) => tileValue(p) === st.target);
+    const sendAgents = reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img, offline: !u.active, active: st.sendKind === "agent" && st.sendId === u.id }));
+    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, active: st.sendKind === "place" && st.sendId === pl.id }));
+    const sendTiles = tiles.map((p) => ({
+      target: tileValue(p),
+      label: p.phone.label,
+      icon: modelOf(p.phone).icon,
+      // An agent's device: its number or address; a place's: who is there.
+      sub: st.sendKind === "place" ? landlineUsers(p.phone).map((u) => u.character?.name ?? u.name).join(", ") : p.phone.number,
+      secure: isSecure(p.phone),
+      selected: p === selectedTile,
+      fresh: p.item.uuid === st.justCreated
+    }));
+    // An agent without a device (or "+"): pick a model, one click creates it with a drawn name and number.
+    let createCard = null;
+    if (sendUser && (!tiles.length || st.adding)) {
+      const actor = sendUser.character;
+      if (st.draws?.user !== sendUser.id) st.draws = { user: sendUser.id, list: {} };
+      const rec = universe().defaultModel;
+      createCard = {
+        name: actor.name,
+        canCancel: tiles.length > 0,
+        kinds: quickKinds().map((k) => {
+          st.draws.list[k.key] ??= { label: deviceName(k.model) ?? k.label, number: randomAddress(k.model, { name: actor.name }) };
+          const d = st.draws.list[k.key];
+          return { ...k, drawLabel: d.label, drawNumber: d.number, recommended: k.model === rec };
+        })
+      };
+    }
+    const createdNote = st.createdNote;
+    st.createdNote = "";
+    st.justCreated = null;
+    // Button: "Send to Cole (Smartphone)", "Ring Motel Starlite (Landline)": who, then the kind of device.
+    const who = sendUser ? sendUser.character.name : st.sendKind === "place" ? places.get(st.sendId)?.name : "";
+    const targetName = selectedTile && who ? t("Gm.DeviceOf", { name: who, device: modelOf(selectedTile.phone).label }) : selectedTile?.phone.label ?? "";
+
+    // Conversations: agents with NPCs (the GM answers), and listening to agents between themselves.
+    const allThreads = collectThreads(phones);
+    const npcThreads = allThreads.filter((th) => !th.agents);
+    const agentThreads = allThreads.filter((th) => th.agents);
+    const actors = agentActors(phones);
+    if (st.inboxAgent && !actors.some((a) => a.id === st.inboxAgent)) st.inboxAgent = null;
+    let shown = npcThreads;
+    if (st.inboxAgent) shown = shown.filter((th) => th.actor?.id === st.inboxAgent);
+    if (st.inboxNpc) shown = shown.filter((th) => th.npcId === st.inboxNpc);
+    const inboxAgents = actors
+      .map((a) => ({ id: a.id, name: a.name, img: a.img, active: st.inboxAgent === a.id, unread: npcThreads.filter((th) => th.actor?.id === a.id).reduce((n, th) => n + th.unread, 0) }))
+      .filter((a) => npcThreads.some((th) => th.actor?.id === a.id));
+    const pinned = npcDirectory().filter((e) => e.pin).map((e) => {
+      const id = npcId(e);
+      return { id, name: npcLabel(e), active: st.inboxNpc === id, unread: npcThreads.filter((th) => th.npcId === id).reduce((n, th) => n + th.unread, 0) };
+    });
+    // Filtered on one NPC: "write as this NPC to…" any agent, thread or not.
+    let npcFocus = null;
+    if (st.inboxNpc) {
+      const npc = npcDirectory().find((e) => npcId(e) === st.inboxNpc);
+      const th = npcThreads.find((x) => x.npcId === st.inboxNpc);
+      const name = npc ? npcLabel(npc) : th ? gmName(th.phone, th.key) : st.inboxNpc;
+      npcFocus = { name, number: npc?.name ? npc.number : "", sender: npc ? npc.name || npc.number : th?.key ?? "", agents: reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img })) };
+    }
+    const threadView = (th) => {
+      const conv = getLog(th.phone, { includePending: true }).filter((e) => e.kind === "sms" && !e.prep && sameConv(th.phone, e.with, th.key));
+      const unknown = !th.agents && isUnknownNumber(th.phone, th.key);
       return {
         id: th.id,
         uuid: th.item.uuid,
         key: th.key,
+        npcId: th.npcId,
         who: holderName(th.item, th.phone),
         // The agent's device icon: the GM sees at a glance a text (phone) or an email (computer).
         icon: modelOf(th.phone).icon,
         modelLabel: modelOf(th.phone).label,
+        // Channel of the thread (text or email): replies always go back the same way.
+        channel: isComputer(th.phone) ? "fa-envelope" : "fa-comment",
+        channelLabel: isComputer(th.phone) ? t("Gm.Mail") : t("Gm.ModeMessage"),
         // Between agents: the other agent's name (with their device icon); to an NPC: the directory name.
         others: th.agents ? otherAgents(th) : [],
         to: th.agents ? "" : gmName(th.phone, th.key),
+        // The NPC's number or email, shown small after a known name.
+        addr: th.agents || isMasked(th.key) || gmName(th.phone, th.key) === th.key ? "" : th.key,
+        pinned: !th.agents && !!findNpc(keyFor(th.phone, th.key), { all: true })?.pin,
         agents: th.agents,
-        unknown: !th.agents && isUnknownNumber(th.phone, th.key),
+        unknown,
         compromised: !!th.phone.compromised,
         // Secure device: the shield switches the secure line with this NPC (between agents: shown only).
         canSecure: !th.agents && isSecure(th.phone),
-        secure: th.agents ? !!conv.at(-1)?.secure : secureWith(th.phone, th.key),
+        secure: th.agents ? !!conv[0]?.secure : secureWith(th.phone, th.key),
         unread: th.unread,
         canCall: !th.agents && !modelOf(th.phone).noCalls,
         draft: this._state.drafts[th.id] ?? "",
-        bubbles: conv.slice(-INBOX_BUBBLES).map((e) => ({
+        attChip: attChipHtml(this._state.replyAtts[th.id]),
+        bubbles: conv.slice(0, INBOX_BUBBLES).reverse().map((e) => ({
           dir: e.dir,
           fwd: !!e.fwd,
           secure: !!e.secure,
@@ -460,7 +703,46 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         })),
         more: Math.max(0, conv.length - INBOX_BUBBLES)
       };
-    });
+    };
+    const inbox = shown.slice(0, st.inboxLimit).map(threadView);
+    const inboxUnread = npcThreads.reduce((n, th) => n + th.unread, 0);
+
+    // Wiretaps: messages between agents the GM has not looked at yet (reset when the GM opens Wiretaps).
+    const listenSeen = game.user.getFlag(MODULE_ID, "listenSeen") ?? 0;
+    const viewingListen = st.tab === "watch" && (st.watchView ?? "listen") === "listen";
+    let listenNew = 0;
+    for (const p of phones) listenNew += getLog(p.phone).filter((e) => e.kind === "sms" && e.dir === "out" && e.pj && (e.t ?? 0) > listenSeen).length;
+    if (viewingListen && listenNew) {
+      this._markListenSeen = true;
+      listenNew = 0;
+    }
+
+    // Surveillance (read only): wiretaps between agents, calls, tracking; one agent filter for all three,
+    // and "what the enemy sees" (compromised devices only).
+    let watch = null;
+    if (st.tab === "watch") {
+      const agentOk = (ids) => !st.watchAgent || ids.has(st.watchAgent);
+      const leakOk = (th) => !st.watchLeak || th.phone.compromised || phonesByNumber(keyFor(th.phone, th.key)).some((p) => p.phone.compromised);
+      const view = ["listen", "calls", "tracking"].includes(st.watchView) ? st.watchView : "listen";
+      watch = {
+        view,
+        leak: st.watchLeak,
+        allAgents: !st.watchAgent,
+        agents: actors.map((a) => ({ id: a.id, name: a.name, img: a.img, active: st.watchAgent === a.id }))
+      };
+      if (view === "listen") {
+        const list = agentThreads.filter((th) => agentOk(threadActors(th)) && leakOk(th));
+        watch.threads = list.slice(0, st.inboxLimit).map(threadView);
+        watch.more = list.length > st.inboxLimit;
+      } else if (view === "calls") {
+        watch.calls = callGroups(callRows(phones).filter((r) => agentOk(new Set(r.actorIds)) && (!st.watchLeak || r.compromised)));
+      } else {
+        watch.tracking = trackingRows(phones)
+          .filter((r) => !st.watchAgent || r.id === st.watchAgent)
+          .map((r) => (st.watchLeak ? { ...r, devices: r.devices.filter((d) => d.compromised) } : r))
+          .filter((r) => !st.watchLeak || r.devices.length);
+      }
+    }
 
     // Devices grouped: by holder, then by place, then "held by nobody".
     const groups = new Map();
@@ -531,21 +813,40 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       pending: phones.reduce((n, p) => n + getLog(p.phone, { includePending: true }).filter((e) => e.pending).length, 0),
       ringing: [...pendingCalls.values()].map((c) => c.label).join(", "),
       targetDevices,
-      targetPlayers,
+      sendAgents,
+      sendPlaces,
+      sendTiles,
+      sendKind: st.sendKind,
+      sendUserId: sendUser?.id ?? "",
+      createCard,
+      createdNote,
+      // No agent to write to: no player account, or no player with an assigned character.
+      noAgents: reachable.length ? "" : players.length ? t("Gm.NoAgents") : t("Gm.NoPlayers"),
+      targetName,
       sender: this._state.sender,
       senderOptions: this._senderOptions(phones, kind, id),
+      pinnedSenders: npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })),
+      knownSenders: JSON.stringify(this._knownSenders(phones)),
+      addToDir: this._state.addToDir,
       text: this._state.text,
       attChip: attChipHtml(this._state.att),
       inbox,
-      inboxUnread: inboxAll.filter((x) => x.e.seen === false).length,
-      inboxView: this._state.inboxView,
-      showMarkAll: this._state.inboxView === "npc" && inboxAll.some((x) => x.e.seen === false),
+      inboxUnread,
+
+      inboxAgents,
+      inboxAllAgents: !st.inboxAgent,
+      pinned,
+      npcFocus,
+      moreThreads: shown.length > st.inboxLimit,
+      showMarkAll: inboxUnread > 0,
       npcThreadCount: npcThreads.length,
       agentThreadCount: agentThreads.length,
+      directory: this._state.tab === "directory" ? this._directoryContext(phones) : null,
+      unknownCount: unknownNumbers(phones).length,
       groups: sortedGroups,
       deviceCount: phones.length,
-      tracking: this._state.tab === "tracking" ? trackingRows(phones) : [],
-      calls: this._state.tab === "calls" ? callGroups(callRows(phones)) : [],
+      watch,
+      listenNew,
       files: this._state.tab === "files" ? this._filesContext(phones) : null,
       fileCount: phones.reduce((n, p) => n + (isComputer(p.phone) ? (p.phone.files ?? []).length + getLog(p.phone, { includePending: true }).filter((e) => e.att?.type === "doc").length : 0), 0)
     };
@@ -554,6 +855,10 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   _onRender(context, options) {
     super._onRender?.(context, options);
     PhonePanel.instance = this;
+    if (this._markListenSeen) {
+      this._markListenSeen = false;
+      game.user.setFlag(MODULE_ID, "listenSeen", Date.now());
+    }
     bindIconSelects(this.element);
     const search = this.element.querySelector("[name=filesQuery]");
     if (search) {
@@ -568,11 +873,64 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       this._focusSend = false;
       this.element.querySelector(".spt-gm-send textarea[name=text], .spt-gm-send [data-action=ring]")?.focus();
     }
+    // Directory: Enter adds (quick add), saves (inline edit) or names an unknown number.
+    for (const input of this.element.querySelectorAll("[name=dirName], [name=dirNumber]")) {
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Enter") return;
+        ev.preventDefault();
+        this._dirAdd();
+      });
+    }
+    for (const input of this.element.querySelectorAll("[name=dirEditName], [name=dirEditNumber]")) {
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") return ev.preventDefault(), this._setState({ dirEdit: null });
+        if (ev.key !== "Enter") return;
+        ev.preventDefault();
+        this._dirSave();
+      });
+    }
+    for (const input of this.element.querySelectorAll("[data-unknown-name]")) {
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key !== "Enter") return;
+        ev.preventDefault();
+        if (input.value.trim()) nameUnknown(input.closest("[data-unknown]").dataset.unknown, input.value);
+      });
+    }
+    // Quick creation: hovering a model shows the name and number it will get.
+    const preview = this.element.querySelector("[data-quick-preview]");
+    if (preview) {
+      const idle = preview.textContent;
+      for (const b of this.element.querySelectorAll(".spt-quick-kinds [data-preview]")) {
+        b.addEventListener("mouseenter", () => (preview.textContent = b.dataset.preview));
+        b.addEventListener("mouseleave", () => (preview.textContent = idle));
+      }
+    }
+    // "From": "add to directory" only for a sender nobody knows yet.
+    const sender = this.element.querySelector("[name=sender]");
+    const addBox = this.element.querySelector(".spt-add-dir");
+    if (sender && addBox) {
+      const known = new Set(JSON.parse(sender.dataset.known || "[]"));
+      const sync = () => {
+        const v = sender.value.trim();
+        addBox.hidden = !v || known.has(norm(v)) || isMasked(v);
+      };
+      sender.addEventListener("input", sync);
+      sync();
+    }
     for (const input of this.element.querySelectorAll("[data-draft]")) {
       input.addEventListener("keydown", (ev) => {
         if (ev.key !== "Enter" || ev.shiftKey) return;
         ev.preventDefault();
         this._sendReply(input.closest("[data-thread]"));
+      });
+    }
+    // A journal page or an image dropped on a thread's reply line: sent with the next reply.
+    for (const zone of this.element.querySelectorAll(".spt-reply-drop")) {
+      bindDrop(zone, (att) => {
+        this._readForm();
+        this._state.replyAtts[zone.closest("[data-thread]").dataset.thread] = att;
+        this._skipRead = true;
+        this.render();
       });
     }
     bindDrop(this.element.querySelector(".spt-drop"), (att) => {
@@ -583,25 +941,116 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
+  /** Quick creation from the Send tab: the drawn name and number, for the selected agent. */
+  async _quickCreate(key) {
+    const user = game.users.get(this._state.sendId);
+    const actor = user?.character;
+    const kind = quickKinds().find((k) => k.key === key);
+    if (!actor || !kind) return;
+    const draw = this._state.draws?.user === user.id ? this._state.draws.list[key] : null;
+    const item = await createPhone(actor, { model: kind.model, label: draw?.label, number: draw?.number });
+    if (item) this._created(item);
+  }
+
+  /** A device was just created for the selected agent: it becomes the recipient, its tile lights up. */
+  _created(item) {
+    const phone = getPhoneData(item);
+    this._focusSend = true;
+    this._setState({
+      target: `phone:${phone.number}`,
+      adding: false,
+      draws: null,
+      justCreated: item.uuid,
+      createdNote: t("Gm.Created", { label: phone.label, number: phone.number, name: item.parent?.name ?? "" })
+    });
+  }
+
+  /** Directory tab: quick add, numbers to identify, then the directory lines (section titles kept). */
+  _directoryContext(phones) {
+    const usage = npcUsage(phones);
+    const edit = this._state.dirEdit;
+    const rows = directoryRows().map((r) => {
+      if (r.title !== undefined) return { title: r.title, line: r.line };
+      return { ...r, label: npcLabel(r), unnamed: !r.name, editing: r.line === edit, who: [...(usage.get(r.line) ?? [])].join(", ") };
+    });
+    const unknown = unknownNumbers(phones).map((u) => ({
+      key: u.key,
+      who: [...u.who].join(", "),
+      count: [u.sms ? tn("Directory.Messages", u.sms) : "", u.calls ? tn("Directory.Calls", u.calls) : ""].filter(Boolean).join(" · ")
+    }));
+    return { rows, unknown, name: this._state.dirName, number: this._state.dirNumber, pin: this._state.dirPinNew, pub: this._state.dirPubNew };
+  }
+
+  _dirEntry(target) {
+    const line = Number(target.closest("[data-line]")?.dataset.line);
+    return npcDirectory().find((e) => e.line === line) ?? null;
+  }
+
+  /** Quick add: an empty number gets a free one. */
+  async _dirAdd() {
+    this._readForm();
+    const st = this._state;
+    const name = st.dirName.trim();
+    if (!name && !st.dirNumber.trim()) return this.element.querySelector("[name=dirName]")?.focus();
+    const number = st.dirNumber.trim() || freeNpcNumber();
+    const ok = await saveNpc({ name, number, pin: st.dirPinNew, pub: st.dirPubNew });
+    if (!ok) return;
+    Object.assign(st, { dirName: "", dirNumber: "", dirPinNew: false, dirPubNew: false });
+    this._skipRead = true;
+    await this.render();
+    this.element.querySelector("[name=dirName]")?.focus();
+  }
+
+  async _dirSave() {
+    const row = this.element.querySelector("[data-line].editing");
+    const e = row && npcDirectory().find((x) => x.line === Number(row.dataset.line));
+    if (!e) return this._setState({ dirEdit: null });
+    const name = row.querySelector("[name=dirEditName]")?.value ?? e.name;
+    const number = row.querySelector("[name=dirEditNumber]")?.value ?? e.number;
+    if (await saveNpc({ ...e, name, number }, e.line)) this._setState({ dirEdit: null });
+  }
+
+  /** Names and numbers the "From" field already knows (no "add to directory" for them). */
+  _knownSenders(phones) {
+    const known = new Set([norm(t("Masked"))]);
+    for (const e of npcDirectory()) for (const v of [e.name, e.number]) if (v) known.add(norm(v));
+    for (const p of phones) {
+      known.add(norm(p.phone.number));
+      for (const c of p.phone.contacts ?? []) for (const v of [c.name, c.number]) if (v) known.add(norm(v));
+    }
+    return [...known];
+  }
+
+  /** "Add to directory" ticked: the typed sender becomes an entry (a name, or a number to name later). */
+  async _senderToDirectory() {
+    const s = this._state.sender.trim();
+    if (!this._state.addToDir || !s || isMasked(s) || findNpc(s, { all: true })) return;
+    this._state.addToDir = false;
+    await saveNpc(/^[\d\s()+.-]+$/.test(s) || s.includes("@") ? { number: s } : { name: s });
+  }
+
   /** Inline reply in a thread: sent as the NPC, and the thread is marked read. */
   async _sendReply(th) {
     const input = th?.querySelector("[data-draft]");
-    const text = input?.value.trim();
-    if (!text) return;
+    const text = input?.value.trim() ?? "";
+    const att = this._state.replyAtts[th?.dataset.thread] ?? null;
+    if (!text && !att) return;
     const item = await fromUuid(th.dataset.uuid);
     const phone = getPhoneData(item);
     const key = th.dataset.key;
     input.value = "";
     delete this._state.drafts[th.dataset.thread];
+    delete this._state.replyAtts[th.dataset.thread];
     await patchLog(item, (e) => e.dir === "out" && sameConv(phone, e.with, key), { seen: true });
-    await sendSms(`phone:${phone.number}`, text, { sender: displayName(phone, key) });
+    await sendSms(`phone:${phone.number}`, text, { sender: displayName(phone, key), att });
   }
 
   /** secure: the "secure" button (secure recipient only); the plain button is a line in clear. */
-  _doRing(secure = false) {
+  async _doRing(secure = false) {
     this._readForm();
     if (!this._state.target) return ui.notifications.warn(t("Warn.NoRecipient"));
     this._rememberSender();
+    await this._senderToDirectory();
     ring(this._state.target, { caller: this._normSender(), secure });
   }
 
@@ -640,8 +1089,9 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       if (value && !opts.has(norm(value))) opts.set(norm(value), { value, label });
     };
     add(t("Masked"));
+    for (const e of npcDirectory()) if (e.pin) add(e.number || e.name, `★ ${npcLabel(e)}`);
     // NPC directory first: the value is the number, so a secret NPC shows as a number on the agent's side.
-    for (const e of npcDirectory()) add(e.number || e.name, e.number ? `${e.name} · ${t("Directory.Title")}` : t("Directory.Title"));
+    for (const e of npcDirectory()) if (!e.off) add(e.number || e.name, e.name && e.number ? `${e.name} · ${t("Directory.Title")}` : t("Directory.Title"));
     for (const p of recipient) for (const c of p.phone.contacts ?? []) add(c.name, c.number ? `${c.number} · ${t("Gm.InContacts")}` : t("Gm.InContacts"));
     for (const s of PhonePanel.recentSenders) add(s, t("Gm.Recent"));
     const mine = new Set(recipient.map((p) => p.item.uuid));
@@ -669,6 +1119,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     this._readForm();
     if (!this._state.target) return ui.notifications.warn(t("Warn.NoRecipient"));
     this._rememberSender();
+    await this._senderToDirectory();
     await sendSms(this._state.target, this._state.text, { sender: this._normSender(), att: this._state.att, secure });
     this._state.text = "";
     this._state.att = null;

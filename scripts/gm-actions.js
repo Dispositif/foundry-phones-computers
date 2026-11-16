@@ -1,5 +1,5 @@
-import { MODULE_ID, RING_SRC, SECURE_ICON, SMS_SRC } from "./constants.js";
-import { addLog, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber } from "./devices.js";
+import { MODULE_ID, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
+import { addLog, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
 import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js";
@@ -46,6 +46,10 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
     if (fwd && fwdSecure && !secure) warnLeak(who, targets.map((p) => holderName(p.item, p.phone)).join(", "));
     await addLog(from, { kind: "sms", dir: "out", with: key, text, pj: true, ...extra, ...(secure ? { secure: true } : {}) });
     for (const p of targets) await deliverToPhone(p, fromPhone.number, text, att, { fwd, secure });
+  } else if (isOffNumber(fromPhone, key)) {
+    // Unassigned number (directory "off"): not delivered, the agent's device says so. Nothing for the GM.
+    await addLog(from, { kind: "sms", dir: "out", with: key, text, off: true, ...extra });
+    game.socket.emit(SOCKET, { type: "smsResult", targetUserId: userId, result: "unassigned" });
   } else {
     // To an NPC: lands with the GM. Encrypted if the GM set a secure line with this NPC.
     const secure = secureWith(fromPhone, key);
@@ -93,6 +97,8 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     ring(`phone:${number}`, { caller: fromPhone.number, origin, callId });
     return;
   }
+  // Unassigned number (directory "off"): the network answers, the GM is not disturbed.
+  if (!targets.length && isOffNumber(fromPhone, key)) return finishOrigin(origin, "unassigned");
   const place = emptyRooms ? `📍 ${targets.map((p) => `${p.phone.label} (${game.scenes.get(p.phone.sceneId)?.name ?? t("NoPlace")})`).join(", ")}` : "";
 
   // To an NPC: the GM picks the outcome.
@@ -103,6 +109,7 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   // Secure device: "Answer secure" puts the NPC on a secure line (remembered for this NPC, then the default button).
   const canSecure = isSecure(fromPhone);
   const remembered = secureWith(fromPhone, key);
+  const unknown = isUnknownNumber(fromPhone, key);
   let secure = false;
   const finish = (result) => {
     if (result === "answerSecure") {
@@ -116,6 +123,8 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     rerenderAll();
     if (call.dialog?.rendered) call.dialog.close();
     if (result !== "cancelled") finishOrigin(origin, result);
+    // Unknown number: the name typed in the window goes to the directory; "Unassigned" marks it off.
+    if (unknown && result !== "cancelled" && (call.npcName?.trim() || result === "unassigned")) nameUnknown(key, call.npcName, { off: result === "unassigned" });
     if (result === "answer") {
       if (canSecure) setSecureWith(from, key, secure);
       startLive(callId, agentSide(from, userId), npcSide(key, origin.name, gmName(fromPhone, key), secure));
@@ -126,7 +135,7 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     window: { title: emptyRooms ? t("Gm.EmptyLandlineCall") : t("Gm.AgentCalling"), icon: emptyRooms ? "fas fa-phone" : "fas fa-mobile-screen" },
     classes: ["spt-phone-ring-dialog"],
     position: { width: 520 },
-    content: `<div class="spt-phone-ring"><i class="fas fa-phone-volume"></i><p class="spt-caller">${esc(gmName(fromPhone, key))}${isUnknownNumber(fromPhone, key) ? ` <small>(${t("Directory.Unknown")})</small>` : ""}</p>${place ? `<p><strong>${esc(place)}</strong><br><em>${t("Gm.NobodyThere")}</em></p>` : ""}<p>${t("Gm.CalledBy", { who: `<strong>${esc(who)}</strong>` })}</p>${fromPhone.compromised ? `<p class="spt-compromised"><i class="fas fa-triangle-exclamation"></i> ${t("Gm.CompromisedDevice", { label: esc(fromPhone.label) })}</p>` : ""}</div>`,
+    content: `<div class="spt-phone-ring"><i class="fas fa-phone-volume"></i><p class="spt-caller">${esc(gmName(fromPhone, key))}${unknown ? ` <small>(${t("Directory.Unknown")})</small>` : ""}</p>${unknown ? `<p class="spt-unknown-name"><input type="text" name="sptNpcName" placeholder="${esc(t("Directory.WhoAnswers"))}" aria-label="${esc(t("Directory.WhoAnswers"))}" autocomplete="off"></p>` : ""}${place ? `<p><strong>${esc(place)}</strong><br><em>${t("Gm.NobodyThere")}</em></p>` : ""}<p>${t("Gm.CalledBy", { who: `<strong>${esc(who)}</strong>` })}</p>${fromPhone.compromised ? `<p class="spt-compromised"><i class="fas fa-triangle-exclamation"></i> ${t("Gm.CompromisedDevice", { label: esc(fromPhone.label) })}</p>` : ""}</div>`,
     buttons: Object.entries(NPC_OUTCOMES).flatMap(([action, o]) => {
       const button = { action, label: o.label, icon: o.icon, default: action === "answer" && !(canSecure && remembered), callback: () => action };
       if (action !== "answer" || !canSecure) return [button];
@@ -140,7 +149,10 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   dialog.onClosed = () => finish("noanswer");
   call.dialog = dialog;
   call.finish = finish;
-  dialog.render({ force: true });
+  dialog.render({ force: true }).then(() => {
+    // Unknown number: the name the GM types is kept for the directory.
+    dialog.element?.querySelector("[name=sptNpcName]")?.addEventListener("input", (ev) => (call.npcName = ev.target.value));
+  });
   call.sound = await playLocal(RING_SRC, { loop: true });
   if (call.done) call.sound?.stop();
 }

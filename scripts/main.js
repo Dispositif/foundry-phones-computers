@@ -19,7 +19,7 @@ import { PhonePanel } from "./gm-panel.js";
 import { registerEnrichers, runJournalLink } from "./journal-links.js";
 import { flushAll, flushPending, sendSms } from "./messages.js";
 import { restoreLive } from "./live-call.js";
-import { UNIVERSES, universeKey } from "./universes.js";
+import { UNIVERSES, applyGmLook, universeKey } from "./universes.js";
 import { PlayerPhone } from "./player-phone.js";
 import { registerTour } from "./tour.js";
 import { maybeWelcome, openWelcome } from "./welcome.js";
@@ -85,6 +85,16 @@ Hooks.once("init", () => {
     choices: Object.fromEntries(Object.keys(UNIVERSES).map((k) => [k, `SPT.UniverseName.${k}`])),
     default: "all",
     requiresReload: true
+  });
+  game.settings.register(MODULE_ID, "gmLook", {
+    name: "SPT.Settings.gmLook.name",
+    hint: "SPT.Settings.gmLook.hint",
+    scope: "world",
+    config: true,
+    type: String,
+    choices: Object.fromEntries(["auto", "ops", "haze", "classic"].map((k) => [k, `SPT.Settings.gmLook.${k}`])),
+    default: "auto",
+    onChange: () => applyGmLook()
   });
   game.settings.register(MODULE_ID, "language", {
     name: "SPT.Settings.language.name",
@@ -268,6 +278,7 @@ function renamedNotice(n, oldActive) {
 Hooks.once("ready", async () => {
   // Universe accent on the GM panel and floating buttons (CSS: body[data-spt-universe]).
   document.body.dataset.sptUniverse = universeKey();
+  applyGmLook();
   game.socket.on(SOCKET, onSocket);
   await loadLanguages();
   document.body.addEventListener("click", (ev) => {

@@ -13,7 +13,7 @@ const PANEL = "#spt-phone-panel";
 /** Steps: the panel tab to show, and the element to point at. */
 const STEPS = [
   { id: "send", tab: "send", selector: `${PANEL} .spt-tab[data-tab="send"]` },
-  { id: "recipient", tab: "send", selector: `${PANEL} .spt-gm-send .form-group:has([name="target"])` },
+  { id: "recipient", tab: "send", selector: `${PANEL} .spt-gm-send .spt-send-to` },
   { id: "sender", tab: "send", selector: `${PANEL} .spt-gm-send .form-group:has([name="sender"])` },
   { id: "mode", tab: "send", selector: `${PANEL} .spt-gm-send .spt-segmented, ${PANEL} .spt-gm-send .spt-phone-row` },
   { id: "inbox", tab: "inbox", selector: `${PANEL} .spt-tab[data-tab="inbox"]` },
