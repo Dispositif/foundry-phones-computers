@@ -55,6 +55,14 @@ export function openPhone(phoneUuid = null) {
     if (!phoneUuid && !mine.length && myJammers().length) return myJammers().map((p) => openJammer(p.item.uuid));
   }
   const app = PlayerPhone.instance ?? new PlayerPhone();
+  // Reopened with no device named (shortcut, main button): back to the carried device, not a landline left open.
+  if (!phoneUuid && !game.user.isGM && !app.rendered && app._state.phoneUuid) {
+    const last = fromUuidSync(app._state.phoneUuid);
+    if (!last || isFixed(getPhoneData(last))) {
+      app._state.phoneUuid = null;
+      app._state.view = "list";
+    }
+  }
   if (phoneUuid) {
     app._state.phoneUuid = phoneUuid;
     app._state.view = "list";
