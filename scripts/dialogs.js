@@ -176,6 +176,17 @@ const NEW_KINDS = [
 ];
 const kindLabel = (k) => (k.key === "landline" || k.key === "rotary" ? t(`NewDev.${k.key}`) : MODELS[k.model].label);
 
+/** Carried models of the world's universe, as the new-device tiles show them (GM panel quick creation). */
+export function quickKinds() {
+  return NEW_KINDS.filter((k) => k.carried && !MODELS[k.model].jammer && modelAllowed(k.model)).map((k) => ({
+    key: k.key,
+    model: k.model,
+    img: `modules/${MODULE_ID}/icons/${k.icon ?? k.model}.svg`,
+    label: kindLabel(k),
+    caps: t(`NewDev.Caps.${k.key}`)
+  }));
+}
+
 /** Step 1: resolves with the chosen kind, or null. */
 async function pickKind() {
   const tile = (k) => `<button type="button" class="spt-kind" data-kind="${k.key}">
@@ -211,12 +222,12 @@ async function pickKind() {
 }
 
 /** Step 2: short form for the chosen kind. Resolves with { ...data, open } or "back" or false. */
-function kindForm(kind) {
+function kindForm(kind, { actor = null } = {}) {
   const model = MODELS[kind.model];
   const fixed = !!model.fixed;
   const pcs = playerActors();
   const npcs = game.actors.filter((a) => !pcs.includes(a)).sort((a, b) => a.name.localeCompare(b.name));
-  const first = pcs[0] ?? null;
+  const first = (actor && pcs.includes(actor) ? actor : pcs[0]) ?? null;
   // Name: a random brand and model of the universe ("Motorola R33").
   const randomName = () => deviceName(kind.model) ?? kindLabel(kind);
   const chip = (value, inner, checked = false) => `<label class="spt-chip"><input type="radio" name="holder" value="${value}" ${checked ? "checked" : ""}>${inner}</label>`;
@@ -226,7 +237,7 @@ function kindForm(kind) {
         .join("")}<option value="">${t("Form.NoPlace")}</option></select></div>
       <p class="hint">${t("Form.NoPlaceHint")}</p>`
     : `<div class="spt-row"><label>${t("Form.HeldBy")}</label><div class="spt-chips">
-        ${pcs.map((a, i) => chip(a.id, `<img src="${esc(a.img)}" alt="">${esc(a.name)}`, i === 0)).join("")}
+        ${pcs.map((a) => chip(a.id, `<img src="${esc(a.img)}" alt="">${esc(a.name)}`, a === first)).join("")}
         ${chip("npc", `<i class="fas fa-user"></i> ${t("NewDev.Npc")}`)}
         ${chip("", `<i class="fas fa-ban"></i> ${t("NewDev.Nobody")}`, !first)}
       </div>
@@ -316,11 +327,13 @@ function kindForm(kind) {
 }
 
 /** GM: new device in two steps. Resolves with { item, open } or nothing. */
-export async function newPhoneDialog() {
+export async function newPhoneDialog({ actor = null, kind: preset = null } = {}) {
   for (;;) {
-    const kind = await pickKind();
+    // A preset model (GM panel quick creation, "More options…") skips step 1 the first time.
+    const kind = preset ? NEW_KINDS.find((k) => k.key === preset) : await pickKind();
+    preset = null;
     if (!kind) return;
-    const res = await kindForm(kind);
+    const res = await kindForm(kind, { actor });
     if (res === "back") continue;
     if (!res || typeof res !== "object") return;
     if (res.actor === undefined) return ui.notifications.warn(t("Warn.ActorNotFound", { name: res.npcName }));
@@ -441,6 +454,7 @@ export async function directoryDialog() {
     classes: ["spt-text-dialog"],
     position: { width: 640, height: 560 },
     content: `<div class="spt-phone-form">
+        <p class="spt-dir-purpose">${t("Directory.Purpose")}</p>
         <p class="hint">${t("Directory.Hint")}</p>
         <textarea name="directory" rows="16" placeholder="${t("Directory.Placeholder")}">${esc(directoryText())}</textarea>
       </div>`,

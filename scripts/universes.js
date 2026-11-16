@@ -77,3 +77,21 @@ export function modelAllowed(model) {
   const models = universe().models;
   return !models || models.includes(model);
 }
+
+/** GM panel look: the "gmLook" setting, or by universe when "auto" (cyberpunk: haze; vintage: classic; else ops room). */
+export function gmLook() {
+  let look = "auto";
+  try {
+    look = game.settings.get(MODULE_ID, "gmLook");
+  } catch {}
+  if (["ops", "haze", "classic"].includes(look)) return look;
+  const key = universeKey();
+  return key === "cyberpunk" ? "haze" : key === "retro" ? "classic" : "ops";
+}
+
+/** Put the look on <body> (CSS: body[data-spt-gm-look]); the classic look has none. */
+export function applyGmLook() {
+  const look = gmLook();
+  if (look === "classic") delete document.body.dataset.sptGmLook;
+  else document.body.dataset.sptGmLook = look;
+}

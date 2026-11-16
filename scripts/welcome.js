@@ -1,18 +1,15 @@
 import { ApplicationV2, MODULE_ID } from "./constants.js";
-import { addLog, allPhones, createPhone, getLog, hasSignal, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
+import { addLog, allPhones, getLog, hasSignal, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
 import { operatorName } from "./names.js";
 import { openPanel } from "./main.js";
 import { startTour, tourAvailable } from "./tour.js";
-import { modelAllowed, universe, universeKey } from "./universes.js";
+import { universeKey } from "./universes.js";
 import { esc } from "./util.js";
 import { t } from "./i18n.js";
 
 /* -------------------------------------------- */
 /*  GM welcome: "you are the network"           */
 /* -------------------------------------------- */
-
-/** Models a character can carry, offered when equipping player characters. */
-const CARRIED = ["smartphone", "mobile", "pager", "computer"];
 
 /** Characters assigned to players, once each, with their players' names. */
 function playerCharacters() {
@@ -42,15 +39,6 @@ export class WelcomeApp extends ApplicationV2 {
     position: { width: 540, height: "auto" },
     form: { handler: () => {}, submitOnChange: false, closeOnSubmit: false },
     actions: {
-      equip: async function () {
-        for (const row of this.element.querySelectorAll("[data-actor]")) {
-          if (!row.querySelector("input[type=checkbox]")?.checked) continue;
-          const actor = game.actors.get(row.dataset.actor);
-          const model = row.querySelector("select")?.value;
-          if (actor && MODELS[model]) await createPhone(actor, { model });
-        }
-        this.render();
-      },
       tour: function () {
         this.close();
         startTour();
@@ -72,32 +60,26 @@ export class WelcomeApp extends ApplicationV2 {
 
   async _renderHTML() {
     const panel = t("Gm.PanelTitle");
-    const models = CARRIED.filter(modelAllowed);
-    const def = models.includes(universe().defaultModel) ? universe().defaultModel : models[0];
-    const rows = playerCharacters().map(({ actor, players }) => {
-      const has = carriedBy(actor);
-      const options = models.map((m) => `<option value="${m}" ${m === def ? "selected" : ""}>${esc(MODELS[m].label)}</option>`).join("");
-      const owned = has.map((p) => `<span class="spt-wl-has"><i class="fas ${MODELS[p.phone.model]?.icon ?? "fa-mobile-screen"}"></i> ${esc(p.item.name)}</span>`).join("");
-      return `<li class="spt-wl-row ${has.length ? "equipped" : ""}" data-actor="${actor.id}">
-          <label class="spt-wl-who"><input type="checkbox" ${has.length ? "" : "checked"}>
-            <strong>${esc(actor.name)}</strong> <span class="spt-wl-player">${esc(players.join(", "))}</span></label>
-          <span class="spt-wl-state">${owned}</span>
-          <select aria-label="${esc(t("Form.Model"))}">${options}</select>
-        </li>`;
-    });
-    const equip = rows.length
-      ? `<ul class="spt-wl-list">${rows.join("")}</ul>
-         <div class="spt-wl-actions"><button type="button" class="spt-primary" data-action="equip"><i class="fas fa-mobile-screen"></i> ${t("Welcome.Equip")}</button></div>`
-      : `<p class="spt-wl-empty"><i class="fas fa-circle-info"></i> ${t("Welcome.NoCharacters")}</p>`;
+    // Ready to play: players with a character, agents with a device (a listing only, nothing to click).
+    const players = game.users.filter((u) => !u.isGM);
+    const agents = playerCharacters();
+    const bare = agents.filter(({ actor }) => !carriedBy(actor).length).length;
+    const check = (ok, text) => `<li class="${ok ? "ok" : "warn"}"><i class="fas ${ok ? "fa-check" : "fa-triangle-exclamation"}"></i> ${text}</li>`;
+    const withChar = players.filter((u) => u.character).length;
+    const ready = [
+      players.length ? check(withChar === players.length, t("Welcome.ReadyPlayers", { n: players.length, m: withChar })) : check(false, t("Welcome.ReadyNoPlayers")),
+      agents.length ? check(!bare, bare ? t("Welcome.ReadyBare", { n: bare }) : t("Welcome.ReadyDevices")) : ""
+    ].join("");
     return `<div class="spt-wl">
       <p class="spt-wl-lead"><i class="fas fa-tower-cell"></i> ${t("Welcome.Lead")}</p>
       <ul class="spt-wl-points">
         <li><i class="fas fa-mobile-screen"></i> ${t("Welcome.PointDevice")}</li>
         <li><i class="fas fa-user-secret"></i> ${t("Welcome.PointNpc", { panel })}</li>
         <li><i class="fas fa-reply"></i> ${t("Welcome.PointReply")}</li>
+        <li><i class="fas fa-address-book"></i> ${t("Welcome.PointDirectory")}</li>
       </ul>
-      <h3><i class="fas fa-users"></i> ${t("Welcome.EquipTitle")}</h3>
-      ${equip}
+      <h3><i class="fas fa-list-check"></i> ${t("Welcome.ReadyTitle")}</h3>
+      <ul class="spt-wl-ready">${ready}</ul>
       <p class="spt-wl-universe">${t("Welcome.Universe")} <strong>${esc(t(`UniverseName.${universeKey()}`))}</strong>
         <a data-action="settings">${t("Welcome.Change")}</a></p>
       <footer class="spt-wl-footer">
@@ -155,5 +137,5 @@ export async function welcomeDevice(p) {
   const operator = operatorName(phone);
   const text = t(MODELS[phone.model]?.mail ? "Welcome.Mail" : "Welcome.Sms", { operator });
   await p.item.update({ [`flags.${MODULE_ID}.phone.welcomed`]: true });
-  await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(phone, operator), text, read: false });
+  await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(phone, operator), text, read: false, net: true });
 }

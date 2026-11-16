@@ -8,7 +8,8 @@ import { closeDial, endLive, openDial, openLive, openRinging } from "./live-call
 import { receiveShow } from "./share.js";
 import { onDocRequest, onFileContent, onFileRequest } from "./files.js";
 import { onJamSound, onJammerRequest } from "./jammer.js";
-import { isActiveGM, playLocal } from "./util.js";
+import { deviceNotice, isActiveGM, playLocal } from "./util.js";
+import { t } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Socket                                      */
 /* -------------------------------------------- */
@@ -40,6 +41,10 @@ export function onSocket(data) {
         playLocal(data.silent ? VIBRATE_SRC : data.notif ? `modules/${MODULE_ID}/sounds/${data.notif}` : SMS_SRC);
         if (data.open) openPager(data.open, { latest: true });
       }
+      break;
+    case "smsResult":
+      // A message to an unassigned number: the device says it was not delivered.
+      if (forMe && data.result === "unassigned") deviceNotice(t("Warn.SmsUnassigned"), { warn: true });
       break;
     case "callResult":
       if (forMe) onCallResult(data);

@@ -68,7 +68,8 @@
       "WholeJournal": "Glissez une seule page, pas le journal entier : ouvrez le journal et glissez la page depuis sa table des matières.",
       "PageType": "Cette page ne peut pas s'afficher sur un appareil (PDF, vidéo…) : utilisez une page de texte ou d'image.",
       "NoVideo": "Les vidéos ne peuvent pas être jointes : utilisez une image.",
-      "WrongDrop": "Un objet de type {type} ne peut pas être joint : glissez une page de journal ou une image."
+      "WrongDrop": "Un objet de type {type} ne peut pas être joint : glissez une page de journal ou une image.",
+      "SmsUnassigned": "Message non distribué : ce numéro n'est pas attribué."
     },
     "Caller": "Appelant",
     "Info": {
@@ -139,11 +140,38 @@
       "Compromised": "Compromis (sur écoute, connu de l'ennemi…)",
       "NotCompromised": "Marquer comme compromis",
       "CompromisedDevice": "Appareil compromis : {label}",
-      "BetweenAgents": "Entre PJ (lecture seule)",
-      "InboxNpc": "PNJ",
-      "InboxAgents": "Entre PJ",
+      "BetweenAgents": "Entre agents (lecture seule)",
+      "InboxNpc": "Conversations",
+      "InboxAgents": "Écoutes",
       "DropJournal": "Glissez une page de journal ou une image sur le message : l'agent la lira sur son appareil.",
-      "LeakedForward": "{who} a transféré un message chiffré en clair à {to}."
+      "LeakedForward": "{who} a transféré un message chiffré en clair à {to}.",
+      "Agents": "Agents",
+      "OtherDevices": "Autres appareils…",
+      "CanPage": "une ligne",
+      "DeviceOf": "{name} ({device})",
+      "SendTo": "Envoyer à {name}",
+      "RingTo": "Faire sonner {name}",
+      "All": "Tous",
+      "WriteAs": "Écrire en tant que {name} à",
+      "FilterNpc": "Voir seulement ce correspondant",
+      "ShowMore": "Afficher plus",
+      "NoListen": "Aucun message entre agents.",
+      "NoAgents": "Aucun agent : aucun joueur n'a de personnage assigné. Messages et appels arrivent sur l'appareil que porte le personnage d'un joueur.",
+      "NoPlayers": "Aucun joueur dans ce monde. Messages et appels arrivent sur l'appareil du personnage d'un joueur : créez d'abord un compte joueur.",
+      "AddDevice": "Autre appareil",
+      "AnotherDevice": "Un autre appareil pour {name}",
+      "NoDeviceFor": "{name} n'a pas encore d'appareil",
+      "QuickHint": "Un clic lui en donne un. Nom et numéro sont tirés au sort selon l'univers.",
+      "Recommended": "conseillé",
+      "Reroll": "Nouveau tirage",
+      "QuickPreview": "Survolez un modèle pour voir son nom et son numéro",
+      "MoreOptions": "Plus d'options…",
+      "Created": "{label} ({number}) donné à {name}",
+      "TabWatch": "Surveillance",
+      "WatchHint": "Ce que le réseau sait des agents : messages entre eux, appels, localisation. Lecture seule.",
+      "Leak": "Ce que voit l'ennemi",
+      "LeakHint": "Seulement les appareils compromis : ce qui a fuité",
+      "ListenNew": "Nouveaux messages entre agents"
     },
     "Document": "Document",
     "RemoveAttachment": "Retirer la pièce jointe",
@@ -355,6 +383,14 @@
         "name": "Univers",
         "hint": "Époque ou genre de la partie : fixe les appareils proposés, leurs habillages par défaut, le téléphone créé pour un personnage qui n'en a pas (un mobile en Vintage, un smartphone sinon) et certains mots. Tous univers : tout, comme avant."
       },
+      "gmLook": {
+        "name": "Thème du panel MJ",
+        "hint": "Apparence du panel MJ. Auto : selon l'univers (Brume orange en Cyberpunk, Classique en Vintage, Salle d'opérations sinon).",
+        "auto": "Auto (selon l'univers)",
+        "ops": "Salle d'opérations",
+        "haze": "Brume orange",
+        "classic": "Classique"
+      },
       "welcomeMessage": {
         "name": "Message de bienvenue de l'opérateur",
         "hint": "La première fois qu'un joueur ouvre un nouvel appareil, son opérateur lui envoie un message de bienvenue (un mail sur un ordinateur)."
@@ -479,9 +515,37 @@
     "PowerOff": "Éteindre",
     "Directory": {
       "Title": "Annuaire",
-      "Hint": "Un PNJ par ligne : <code>Nom | numéro</code>. Ajoutez <code>| public</code> pour un numéro que tout le monde peut trouver (pizzeria, gare…). Les lignes commençant par <code>#</code> sont des titres.",
+      "Hint": "Un PNJ par ligne : <code>Nom | numéro</code>, puis au choix : <code>| public</code> (tout le monde peut le trouver), <code>| pin</code> (PNJ épinglé), <code>| off</code> (numéro non attribué). Les lignes commençant par <code>#</code> sont des titres.",
       "Placeholder": "# Scénario&#10;Marlin Hunt | 555-0242&#10;# Public&#10;Pizza Delta | 555-0202 | public",
-      "Unknown": "numéro inconnu"
+      "Unknown": "numéro inconnu",
+      "Taken": "{number} est déjà dans l'annuaire ({name}).",
+      "IsDevice": "{number} est déjà le numéro d'un appareil.",
+      "WhoAnswers": "Qui répond ? ex. Madame Michou",
+      "UnknownHint": "Ce numéro n'est rattaché à rien : ni annuaire, ni appareil.",
+      "Name": "Nommer",
+      "Off": "Non attribué",
+      "OffHint": "Numéro non attribué : appels et messages reçoivent « non attribué », sans vous déranger.",
+      "NamePlaceholder": "Nom",
+      "NumberPlaceholder": "Numéro (vide = généré)",
+      "PinHint": "PNJ épinglé : en tête de Messages et des expéditeurs",
+      "PublicHint": "Public : tout le monde peut le trouver",
+      "Public": "public",
+      "Add": "Ajouter à l'annuaire",
+      "ToIdentify": "À identifier",
+      "Empty": "L'annuaire est vide.",
+      "EditText": "Éditer en texte",
+      "NoPrep": "Rien à préparer : tout numéro composé par un agent arrive chez vous.",
+      "AddSender": "ajouter à l'annuaire",
+      "DeleteConfirm": "Retirer {name} de l'annuaire ?",
+      "Messages": {
+        "one": "{n} message",
+        "other": "{n} messages"
+      },
+      "Calls": {
+        "one": "{n} appel",
+        "other": "{n} appels"
+      },
+      "Purpose": "<strong>L'annuaire est facultatif.</strong> Vous pouvez écrire ou appeler sous n'importe quel nom ou numéro, et tout numéro composé par un agent arrive chez vous : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver : nommer un numéro (qui répond vraiment), le rendre public (les joueurs peuvent le trouver), l'épingler (en tête de Messages) ou le couper (non attribué)."
     },
     "CallOrMessage": "Appeler / Écrire",
     "Renamed": {
@@ -660,11 +724,9 @@
       "Title": "Bienvenue dans Phones & Computers",
       "Help": "Bienvenue et visite guidée",
       "Lead": "Vous êtes le réseau.",
-      "PointDevice": "Pour être appelé ou recevoir un message, un joueur a seulement besoin d'un appareil. S'il n'en a pas, son personnage en reçoit un automatiquement la première fois que vous le contactez.",
+      "PointDevice": "Pour être appelé ou recevoir un message, le personnage d'un joueur a seulement besoin d'un appareil. Donnez-le en un clic depuis l'onglet Envoyer du panneau.",
       "PointNpc": "Depuis le panneau {panel}, appelez ou écrivez sous le nom ou le numéro que vous voulez. Pas besoin de créer d'appareil PNJ ni de remplir l'annuaire.",
       "PointReply": "Les joueurs peuvent appeler ou écrire à n'importe quel numéro, même inventé et absent de l'annuaire : c'est vous qui répondez, au nom de qui vous voulez.",
-      "EquipTitle": "Équiper vos PJ",
-      "Equip": "Équiper",
       "NoCharacters": "Aucun joueur n'a de personnage assigné. Assignez un personnage à chaque joueur (Configuration de l'utilisateur), puis rouvrez cette fenêtre.",
       "Universe": "Univers :",
       "Change": "Changer",
@@ -672,7 +734,13 @@
       "OpenPanel": "Ouvrir le panneau {panel}",
       "Reopen": "Pour rouvrir cette fenêtre : bouton ? du panneau {panel}.",
       "Sms": "Bienvenue sur le réseau {operator}. Votre ligne est active : vos conversations et vos contacts sont sur l'écran d'accueil.",
-      "Mail": "Bienvenue chez {operator}\nVotre boîte mail est active. Vos messages arriveront ici."
+      "Mail": "Bienvenue chez {operator}\nVotre boîte mail est active. Vos messages arriveront ici.",
+      "ReadyTitle": "Prêt à jouer",
+      "ReadyPlayers": "{n} joueur(s), {m} avec un personnage",
+      "ReadyNoPlayers": "Aucun compte joueur pour l'instant",
+      "ReadyDevices": "Chaque agent a un appareil",
+      "ReadyBare": "{n} agent(s) sans appareil : donnez-le depuis l'onglet Envoyer",
+      "PointDirectory": "L'<strong>Annuaire</strong> est facultatif : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver (nommer un numéro, le rendre public, l'épingler, le couper) et se remplit au fil de la partie."
     },
     "Tour": {
       "Title": "Phones & Computers : le panneau du MJ",
@@ -683,7 +751,7 @@
       },
       "recipient": {
         "title": "Destinataire",
-        "content": "Choisissez un joueur. S'il n'a pas encore d'appareil, son personnage en reçoit un automatiquement."
+        "content": "Choisissez un agent, puis un de ses appareils ; ou un lieu où se trouvent des agents, et son fixe. Un agent sans appareil en reçoit un ici, en un clic."
       },
       "sender": {
         "title": "Expéditeur",
@@ -699,7 +767,7 @@
       },
       "devices": {
         "title": "Appareils",
-        "content": "Tous les appareils : modifier, donner, verrouiller, ou en créer d'autres (fixe, terminal, bipeur…). L'annuaire des PNJ est facultatif."
+        "content": "Tous les appareils : modifier, donner, verrouiller, ou en créer d'autres (fixe, terminal, bipeur…)."
       },
       "network": {
         "title": "Réseau",

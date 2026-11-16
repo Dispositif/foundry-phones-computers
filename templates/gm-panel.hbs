@@ -18,28 +18,64 @@
   <nav class="spt-tabs" role="tablist">
     <a class="spt-tab {{#if (eq tab "send")}}active{{/if}}" data-action="switchTab" data-tab="send" role="tab"><i class="fas fa-paper-plane"></i> {{spt "Gm.TabSend"}}</a>
     <a class="spt-tab {{#if (eq tab "inbox")}}active{{/if}}" data-action="switchTab" data-tab="inbox" role="tab"><i class="fas fa-inbox"></i> {{spt "Gm.TabInbox"}}{{#if inboxUnread}} <span class="spt-badge">{{inboxUnread}}</span>{{/if}}</a>
-    <a class="spt-tab {{#if (eq tab "calls")}}active{{/if}}" data-action="switchTab" data-tab="calls" role="tab"><i class="fas fa-phone"></i> {{spt "Calls.Tab"}}</a>
+    <a class="spt-tab {{#if (eq tab "directory")}}active{{/if}}" data-action="switchTab" data-tab="directory" role="tab"><i class="fas fa-address-book"></i> {{spt "Directory.Title"}}{{#if unknownCount}} <span class="spt-badge" title="{{spt "Directory.ToIdentify"}}">{{unknownCount}}</span>{{/if}}</a>
     <a class="spt-tab {{#if (eq tab "devices")}}active{{/if}}" data-action="switchTab" data-tab="devices" role="tab"><i class="fas fa-mobile-screen"></i> {{spt "Gm.TabDevices"}} <span class="spt-count">{{deviceCount}}</span></a>
     <a class="spt-tab {{#if (eq tab "files")}}active{{/if}}" data-action="switchTab" data-tab="files" role="tab"><i class="fas fa-folder-tree"></i> {{spt "Files.Tab"}}{{#if fileCount}} <span class="spt-count">{{fileCount}}</span>{{/if}}</a>
-    <a class="spt-tab {{#if (eq tab "tracking")}}active{{/if}}" data-action="switchTab" data-tab="tracking" role="tab" title="{{spt "Track.Hint"}}"><i class="fas fa-location-crosshairs"></i> {{spt "Gm.TabTracking"}}</a>
+    <a class="spt-tab {{#if (eq tab "watch")}}active{{/if}}" data-action="switchTab" data-tab="watch" role="tab" title="{{spt "Gm.WatchHint"}}"><i class="fas fa-eye"></i> {{spt "Gm.TabWatch"}}{{#if listenNew}} <span class="spt-count" title="{{spt "Gm.ListenNew"}}">{{listenNew}}</span>{{/if}}</a>
   </nav>
 
   <div class="spt-tab-body">
   {{#if (eq tab "send")}}
     <section class="spt-gm-send">
-      <div class="form-group">
-        <label>{{spt "Gm.Recipient"}}</label>
+      <div class="spt-send-to">
+        {{#if noAgents}}<p class="spt-no-agents"><i class="fas fa-triangle-exclamation"></i> {{noAgents}}</p>{{/if}}
+        {{#if sendAgents.length}}
+        <div class="spt-agent-cards" role="radiogroup" aria-label="{{spt "Gm.Agents"}}">
+          {{#each sendAgents}}<a class="spt-agent-card {{#if active}}active{{/if}} {{#if offline}}offline{{/if}}" data-action="sendTo" data-kind="agent" data-id="{{id}}" role="radio" title="{{name}}{{#if offline}} ({{spt "Gm.Offline"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></a>{{/each}}
+        </div>
+        {{/if}}
+        <div class="spt-chips" role="radiogroup" aria-label="{{spt "Gm.Places"}}">
+          {{#each sendPlaces}}<a class="spt-chip spt-chip-place {{#if active}}active{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio"><i class="fas fa-location-dot"></i> {{name}}</a>{{/each}}
+          <a class="spt-chip spt-chip-other {{#if (eq sendKind "other")}}active{{/if}}" data-action="sendTo" data-kind="other" role="radio">{{spt "Gm.OtherDevices"}}</a>
+        </div>
+        {{#if (eq sendKind "other")}}
         <div class="spt-icon-select"><i class="fas fa-mobile-screen"></i>
           <select name="target" data-icon-select>
-            {{#if targetPlayers.length}}<optgroup label="{{spt "Gm.PlayersDirect"}}">{{#each targetPlayers}}<option value="{{value}}" data-icon="fa-user" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</optgroup>{{/if}}
-            {{#if targetDevices.length}}<optgroup label="{{spt "Devices"}}">{{#each targetDevices}}<option value="{{value}}" data-icon="{{icon}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</optgroup>{{/if}}
+            {{#each targetDevices}}<option value="{{value}}" data-icon="{{icon}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}
           </select>
         </div>
+        {{else}}
+        {{#if sendTiles.length}}
+        <div class="spt-tiles" role="radiogroup">
+          {{#each sendTiles}}<a class="spt-tile {{#if selected}}active{{/if}} {{#if fresh}}fresh{{/if}}" data-action="pickDevice" data-target="{{target}}" role="radio"><i class="fas {{icon}}"></i><strong>{{label}}{{#if secure}} <i class="fas fa-shield-halved spt-secure"></i>{{/if}}</strong><small>{{sub}}</small></a>{{/each}}
+          {{#if (eq sendKind "agent")}}{{#unless createCard}}<a class="spt-tile spt-tile-add" data-action="addDevice" title="{{spt "Gm.AddDevice"}}" aria-label="{{spt "Gm.AddDevice"}}"><i class="fas fa-plus"></i></a>{{/unless}}{{/if}}
+        </div>
+        {{/if}}
+        {{/if}}
+        {{#if createdNote}}<p class="spt-created-note"><i class="fas fa-check"></i> {{createdNote}}</p>{{/if}}
       </div>
+      {{#if createCard}}
+      <div class="spt-quick-new">
+        <strong>{{#if createCard.canCancel}}{{spt "Gm.AnotherDevice" name=createCard.name}}{{else}}{{spt "Gm.NoDeviceFor" name=createCard.name}}{{/if}}</strong>
+        <small class="spt-dim">{{spt "Gm.QuickHint"}}</small>
+        <div class="spt-quick-kinds">
+          {{#each createCard.kinds}}<button type="button" class="spt-kind {{#if recommended}}recommended{{/if}}" data-action="quickCreate" data-kind="{{key}}" data-preview="{{drawLabel}} · {{drawNumber}}">{{#if recommended}}<span class="spt-quick-tag">{{spt "Gm.Recommended"}}</span>{{/if}}<img src="{{img}}" alt=""><b>{{label}}</b><small>{{caps}}</small></button>{{/each}}
+        </div>
+        <div class="spt-quick-preview"><a data-action="reroll" title="{{spt "Gm.Reroll"}}" aria-label="{{spt "Gm.Reroll"}}"><i class="fas fa-dice"></i></a> <span data-quick-preview>{{spt "Gm.QuickPreview"}}</span></div>
+        <div class="spt-quick-links">
+          {{#if createCard.canCancel}}<a data-action="cancelAdd">{{spt "Cancel"}}</a>{{/if}}
+          <a data-action="moreOptions">{{spt "Gm.MoreOptions"}}</a>
+        </div>
+      </div>
+      {{else}}
       <div class="form-group">
         <label>{{spt "Gm.Sender"}}</label>
-        <input type="text" name="sender" value="{{sender}}" placeholder="{{spt "Masked"}}" list="spt-senders" autocomplete="off">
+        <input type="text" name="sender" value="{{sender}}" placeholder="{{spt "Masked"}}" list="spt-senders" autocomplete="off" data-known="{{knownSenders}}">
         <datalist id="spt-senders">{{#each senderOptions}}<option value="{{value}}" label="{{label}}"></option>{{/each}}</datalist>
+      </div>
+      <div class="spt-sender-extra">
+        {{#each pinnedSenders}}<a class="spt-chip spt-chip-npc" data-action="pickSender" data-value="{{value}}"><i class="fas fa-star"></i> {{label}}</a>{{/each}}
+        <label class="spt-add-dir" hidden><input type="checkbox" name="addToDir" {{#if addToDir}}checked{{/if}}> {{spt "Directory.AddSender"}}</label>
       </div>
 
       {{#if messaging}}
@@ -59,49 +95,216 @@
         <button type="button" class="spt-icon-btn" data-action="attach" title="{{spt "AttachImage"}}" aria-label="{{spt "AttachImage"}}"><i class="fas fa-paperclip"></i></button>
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
         {{#if canSecure}}<button type="button" class="spt-icon-btn spt-secure-link" data-action="copySecureLink" title="{{spt "Secure.CopyLink"}}" aria-label="{{spt "Secure.CopyLink"}}"><i class="fas fa-link"></i><i class="fas fa-shield-halved"></i></button>{{/if}}
-        <button type="button" class="spt-primary" data-action="sms"><i class="fas fa-paper-plane"></i> {{spt "Send"}}</button>
+        <button type="button" class="spt-primary" data-action="sms"><i class="fas fa-paper-plane"></i> {{#if targetName}}{{spt "Gm.SendTo" name=targetName}}{{else}}{{spt "Send"}}{{/if}}</button>
         {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="smsSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Send"}}</button>{{/if}}
       </div>
       {{else}}
       <div class="spt-phone-row">
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
         {{#if canSecure}}<button type="button" class="spt-icon-btn spt-secure-link" data-action="copySecureLink" title="{{spt "Secure.CopyLink"}}" aria-label="{{spt "Secure.CopyLink"}}"><i class="fas fa-link"></i><i class="fas fa-shield-halved"></i></button>{{/if}}
-        <button type="button" class="spt-primary" data-action="ring"><i class="fas fa-phone-volume"></i> {{spt "Gm.Ring"}}</button>
+        <button type="button" class="spt-primary" data-action="ring"><i class="fas fa-phone-volume"></i> {{#if targetName}}{{spt "Gm.RingTo" name=targetName}}{{else}}{{spt "Gm.Ring"}}{{/if}}</button>
         {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="ringSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Ring"}}</button>{{/if}}
       </div>
+      {{/if}}
       {{/if}}
     </section>
   {{/if}}
 
   {{#if (eq tab "inbox")}}
     <section class="spt-gm-inbox">
-      <nav class="spt-subtabs">
-        <a class="spt-subtab {{#if (eq inboxView "npc")}}active{{/if}}" data-action="switchInbox" data-view="npc"><i class="fas fa-user-secret"></i> {{spt "Gm.InboxNpc"}}{{#if inboxUnread}} <span class="spt-badge">{{inboxUnread}}</span>{{/if}}</a>
-        <a class="spt-subtab {{#if (eq inboxView "agents")}}active{{/if}}" data-action="switchInbox" data-view="agents"><i class="fas fa-user-group"></i> {{spt "Gm.InboxAgents"}}</a>
-      </nav>
+      {{#if inboxAgents.length}}
+      <div class="spt-chips">
+        <a class="spt-chip {{#if inboxAllAgents}}active{{/if}}" data-action="filterAgent" data-agent="">{{spt "Gm.All"}}</a>
+        {{#each inboxAgents}}<a class="spt-chip {{#if active}}active{{/if}}" data-action="filterAgent" data-agent="{{id}}">{{#if img}}<img src="{{img}}" alt="">{{/if}}{{name}}{{#if unread}} <span class="spt-badge">{{unread}}</span>{{/if}}</a>{{/each}}
+      </div>
+      {{/if}}
+      {{#if pinned.length}}
+      <div class="spt-chips">
+        {{#each pinned}}<a class="spt-chip spt-chip-npc {{#if active}}active{{/if}}" data-action="filterNpc" data-npc="{{id}}"><i class="fas fa-star"></i> {{name}}{{#if unread}} <span class="spt-badge">{{unread}}</span>{{/if}}</a>{{/each}}
+      </div>
+      {{/if}}
+      {{#if npcFocus}}
+      <div class="spt-npc-focus">
+        <strong>{{npcFocus.name}}</strong>{{#if npcFocus.number}} <small class="spt-dim">{{npcFocus.number}}</small>{{/if}}
+        <a class="spt-npc-close" data-action="filterNpc" data-npc="" title="{{spt "Gm.All"}}"><i class="fas fa-xmark"></i></a>
+        <div class="spt-chips"><span class="spt-dim">{{spt "Gm.WriteAs" name=npcFocus.name}}</span>
+          {{#each npcFocus.agents}}<a class="spt-chip" data-action="writeAs" data-user="{{id}}" data-sender="{{../npcFocus.sender}}">{{#if img}}<img src="{{img}}" alt="">{{/if}}{{name}}</a>{{/each}}
+        </div>
+      </div>
+      {{/if}}
       {{#if inbox.length}}
       <div class="spt-gthreads">
         {{#each inbox}}
         <div class="spt-gthread {{#if unread}}unread{{/if}} {{#if agents}}agents{{/if}}" data-thread="{{id}}" data-uuid="{{uuid}}" data-key="{{key}}">
-          <div class="spt-gthread-head">{{#if agents}}<i class="fas fa-user-group spt-dim" title="{{spt "Gm.BetweenAgents"}}"></i> {{/if}}<i class="fas {{icon}} spt-dim" title="{{modelLabel}}"></i> <strong>{{who}}</strong>{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}} <i class="fas fa-arrow-right" aria-hidden="true"></i> {{#if agents}}{{#each others}}{{#unless @first}}, {{/unless}}{{#if icon}}<i class="fas {{icon}} spt-dim" title="{{modelLabel}}"></i> {{/if}}{{name}}{{/each}}{{else}}{{to}}{{/if}}{{#if canSecure}} <a data-action="toggleSecureWith" class="spt-secure-toggle {{#if secure}}on{{/if}}" title="{{#if secure}}{{spt "Secure.On"}}{{else}}{{spt "Secure.Off"}}{{/if}}"><i class="fas fa-shield-halved"></i></a>{{else if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Line"}}"></i>{{/if}}{{#if unknown}} <small class="spt-dim">({{spt "Directory.Unknown"}})</small>{{/if}}{{#if unread}} <span class="spt-badge">{{unread}}</span>{{/if}}</div>
+          <div class="spt-gthread-head">{{#if agents}}<i class="fas fa-headphones spt-dim" title="{{spt "Gm.BetweenAgents"}}"></i> {{/if}}<i class="fas {{channel}} spt-dim spt-channel" title="{{channelLabel}}"></i> <strong>{{who}}</strong>{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}} <i class="fas fa-arrow-right" aria-hidden="true"></i> {{#if agents}}{{#each others}}{{#unless @first}}, {{/unless}}{{#if icon}}<i class="fas {{icon}} spt-dim" title="{{modelLabel}}"></i> {{/if}}{{name}}{{/each}}{{else}}<a class="spt-npc-link" data-action="filterNpc" data-npc="{{npcId}}" title="{{spt "Gm.FilterNpc"}}">{{#if pinned}}<i class="fas fa-star spt-star"></i> {{/if}}{{to}}</a>{{#if addr}} <span class="spt-addr">{{addr}}</span>{{/if}}{{/if}}{{#if canSecure}} <a data-action="toggleSecureWith" class="spt-secure-toggle {{#if secure}}on{{/if}}" title="{{#if secure}}{{spt "Secure.On"}}{{else}}{{spt "Secure.Off"}}{{/if}}"><i class="fas fa-shield-halved"></i></a>{{else if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Line"}}"></i>{{/if}}{{#if unknown}} <span class="spt-unknown-pill">? {{spt "Directory.Unknown"}}</span>{{/if}}{{#if unread}} <span class="spt-badge">{{unread}}</span>{{/if}}</div>
           {{#if more}}<div class="spt-gthread-more">…</div>{{/if}}
           {{#each bubbles}}
           <div class="spt-bb {{dir}} {{#if pending}}pending{{/if}}">{{#if secure}}<i class="fas fa-shield-halved spt-secure spt-bb-secure" title="{{spt "Secure.Message"}}"></i>{{/if}}{{#if fwd}}<span class="spt-bb-fwd"><i class="fas fa-share"></i> {{spt "Fwd.Forwarded"}}</span>{{/if}}{{{att}}}{{#if text}}<div>{{{text}}}</div>{{/if}}</div>
           {{/each}}
+          {{#if unknown}}
+          <div class="spt-unknown-box" data-unknown="{{key}}">
+            <div><i class="fas fa-circle-question"></i> {{spt "Directory.UnknownHint"}}</div>
+            <div class="spt-gthread-reply">
+              <input type="text" data-unknown-name placeholder="{{spt "Directory.WhoAnswers"}}" aria-label="{{spt "Directory.WhoAnswers"}}" autocomplete="off">
+              <button type="button" class="spt-text-btn" data-action="nameNumber">{{spt "Directory.Name"}}</button>
+              <button type="button" class="spt-text-btn" data-action="offNumber" title="{{spt "Directory.OffHint"}}"><i class="fas fa-ban"></i> {{spt "Directory.Off"}}</button>
+            </div>
+          </div>
+          {{/if}}
           {{#unless agents}}
+          <div class="spt-reply-drop" title="{{spt "DropHere"}}">
+          {{{attChip}}}
           <div class="spt-gthread-reply">
             <input type="text" data-draft="{{id}}" value="{{draft}}" placeholder="{{spt "Gm.ReplyAs" name=to}}" aria-label="{{spt "Gm.ReplyAs" name=to}}">
             <button type="button" data-action="sendReply" aria-label="{{spt "Send"}}" data-tooltip="{{spt "Send"}}"><i class="fas fa-paper-plane"></i></button>
             {{#if canCall}}<button type="button" data-action="callBack" aria-label="{{spt "Gm.CallBack"}}" data-tooltip="{{spt "Gm.CallBack"}}"><i class="fas fa-phone"></i></button>{{/if}}
           </div>
+          </div>
           {{/unless}}
         </div>
         {{/each}}
       </div>
+      {{#if moreThreads}}<a class="spt-mark-all" data-action="moreThreads">{{spt "Gm.ShowMore"}}</a>{{/if}}
       {{#if showMarkAll}}<a class="spt-mark-all" data-action="markAllSeen">{{spt "Gm.MarkAllSeen"}}</a>{{/if}}
       {{else}}
       <p class="spt-phone-status">{{spt "Gm.NoInbox"}}</p>
       {{/if}}
+    </section>
+  {{/if}}
+
+  {{#if (eq tab "watch")}}
+    <section class="spt-gm-watch">
+      <div class="spt-segmented" role="radiogroup">
+        <a class="{{#if (eq watch.view "listen")}}active{{/if}}" data-action="watchView" data-view="listen" role="radio" title="{{spt "Gm.BetweenAgents"}}"><i class="fas fa-headphones"></i> {{spt "Gm.InboxAgents"}}{{#if listenNew}} <span class="spt-count">{{listenNew}}</span>{{/if}}</a>
+        <a class="{{#if (eq watch.view "calls")}}active{{/if}}" data-action="watchView" data-view="calls" role="radio"><i class="fas fa-phone"></i> {{spt "Calls.Tab"}}</a>
+        <a class="{{#if (eq watch.view "tracking")}}active{{/if}}" data-action="watchView" data-view="tracking" role="radio" title="{{spt "Track.Hint"}}"><i class="fas fa-location-crosshairs"></i> {{spt "Gm.TabTracking"}}</a>
+      </div>
+      <div class="spt-chips">
+        <a class="spt-chip {{#if watch.allAgents}}active{{/if}}" data-action="watchAgent" data-agent="">{{spt "Gm.All"}}</a>
+        {{#each watch.agents}}<a class="spt-chip {{#if active}}active{{/if}}" data-action="watchAgent" data-agent="{{id}}">{{#if img}}<img src="{{img}}" alt="">{{/if}}{{name}}</a>{{/each}}
+        <a class="spt-chip spt-leak {{#if watch.leak}}active{{/if}}" data-action="watchLeak" title="{{spt "Gm.LeakHint"}}"><i class="fas fa-triangle-exclamation"></i> {{spt "Gm.Leak"}}</a>
+      </div>
+      {{#if (eq watch.view "listen")}}
+      {{#if watch.threads.length}}
+      <div class="spt-gthreads">
+        {{#each watch.threads}}
+        <div class="spt-gthread agents" data-thread="{{id}}">
+          <div class="spt-gthread-head"><i class="fas {{icon}} spt-dim" title="{{modelLabel}}"></i> <strong>{{who}}</strong>{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}} <i class="fas fa-arrow-right" aria-hidden="true"></i> {{#each others}}{{#unless @first}}, {{/unless}}{{#if icon}}<i class="fas {{icon}} spt-dim" title="{{modelLabel}}"></i> {{/if}}{{name}}{{/each}}{{#if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Line"}}"></i>{{/if}}</div>
+          {{#if more}}<div class="spt-gthread-more">…</div>{{/if}}
+          {{#each bubbles}}
+          <div class="spt-bb {{dir}} {{#if pending}}pending{{/if}}">{{#if secure}}<i class="fas fa-shield-halved spt-secure spt-bb-secure" title="{{spt "Secure.Message"}}"></i>{{/if}}{{#if fwd}}<span class="spt-bb-fwd"><i class="fas fa-share"></i> {{spt "Fwd.Forwarded"}}</span>{{/if}}{{{att}}}{{#if text}}<div>{{{text}}}</div>{{/if}}</div>
+          {{/each}}
+        </div>
+        {{/each}}
+      </div>
+      {{#if watch.more}}<a class="spt-mark-all" data-action="moreThreads">{{spt "Gm.ShowMore"}}</a>{{/if}}
+      {{else}}
+      <p class="spt-phone-status">{{spt "Gm.NoListen"}}</p>
+      {{/if}}
+      {{/if}}
+      {{#if (eq watch.view "calls")}}
+      {{#if watch.calls.length}}
+      {{#each watch.calls}}
+      <h4 class="spt-call-when">{{label}}</h4>
+      <ul class="spt-call-list">
+        {{#each rows}}
+        <li class="spt-call-row {{#if answered}}answered{{/if}} {{#if live}}live{{/if}}">
+          <i class="fas {{#if answered}}fa-phone{{else}}fa-phone-slash{{/if}} spt-call-icon"></i>
+          <span class="spt-call-who">{{#unless fromAgent}}<i class="fas fa-user-secret spt-dim" title="{{spt "Calls.FromGm"}}"></i> {{/unless}}{{from}} <i class="fas fa-arrow-right" aria-hidden="true"></i> {{to}}{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}}{{#if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Line"}}"></i>{{/if}}</span>
+          {{#if live}}
+          <span class="spt-call-res spt-call-live"><i class="fas fa-circle"></i> {{spt "Live.OnLine"}} {{{live}}}</span>
+          {{else}}
+          <span class="spt-call-res">{{result}}{{#if dur}} <span class="spt-call-dur">{{dur}}</span>{{/if}}</span>
+          {{/if}}
+        </li>
+        {{/each}}
+      </ul>
+      {{/each}}
+      {{else}}
+      <p class="spt-phone-status">{{spt "Calls.None"}}</p>
+      {{/if}}
+      {{/if}}
+      {{#if (eq watch.view "tracking")}}
+      <p class="spt-track-hint"><span class="spt-exp-tag"><i class="fas fa-flask"></i> {{spt "Track.Experimental"}}</span> {{spt "Track.Hint"}}</p>
+      {{#each watch.tracking}}
+      <div class="spt-dev-group spt-track-group">
+        <header class="spt-dev-group-head">
+          {{#if img}}<img src="{{img}}" alt="">{{/if}}
+          <strong>{{agent}}</strong>
+          {{#if location}}<span class="spt-track-scene"><i class="fas fa-question"></i> {{location}}</span>{{/if}}
+          <span class="spt-track-level spt-track-{{level}}">{{levelLabel}}</span>
+        </header>
+        {{#if lastCall}}<div class="spt-track-call" title="{{spt "Track.LastCall"}}"><i class="fas fa-phone"></i> {{lastCall}}</div>{{/if}}
+        {{#if devices.length}}
+        <ul class="spt-dev-list">
+          {{#each devices}}
+          <li class="spt-dev spt-track">
+            <i class="fas {{icon}}" title="{{modelLabel}}"></i>
+            <span class="spt-dev-label">{{label}}{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}}{{#if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Device"}}"></i>{{/if}}</span>
+            <span class="spt-track-small">{{levelLabel}}</span>
+          </li>
+          {{/each}}
+        </ul>
+        {{/if}}
+      </div>
+      {{else}}
+      <p class="spt-phone-status">{{spt "Track.None"}}</p>
+      {{/each}}
+      {{/if}}
+    </section>
+  {{/if}}
+
+  {{#if (eq tab "directory")}}
+    <section class="spt-gm-directory">
+      <div class="spt-dir-add">
+        <input type="text" name="dirName" value="{{directory.name}}" placeholder="{{spt "Directory.NamePlaceholder"}}" aria-label="{{spt "Directory.NamePlaceholder"}}" autocomplete="off">
+        <input type="text" name="dirNumber" value="{{directory.number}}" placeholder="{{spt "Directory.NumberPlaceholder"}}" aria-label="{{spt "Directory.NumberPlaceholder"}}" autocomplete="off">
+        <label title="{{spt "Directory.PinHint"}}"><input type="checkbox" name="dirPinNew" {{#if directory.pin}}checked{{/if}}> <i class="fas fa-star"></i></label>
+        <label title="{{spt "Directory.PublicHint"}}"><input type="checkbox" name="dirPubNew" {{#if directory.pub}}checked{{/if}}> {{spt "Directory.Public"}}</label>
+        <button type="button" class="spt-primary" data-action="dirAdd" aria-label="{{spt "Directory.Add"}}" title="{{spt "Directory.Add"}}"><i class="fas fa-plus"></i></button>
+      </div>
+      {{#if directory.unknown.length}}
+      <h4 class="spt-call-when">{{spt "Directory.ToIdentify"}}</h4>
+      <ul class="spt-dir-list">
+        {{#each directory.unknown}}
+        <li class="spt-dir-row" data-unknown="{{key}}">
+          <span class="spt-dir-num">{{key}}</span>
+          <input type="text" data-unknown-name placeholder="{{spt "Directory.WhoAnswers"}}" aria-label="{{spt "Directory.WhoAnswers"}}" autocomplete="off">
+          <small class="spt-dim">{{who}} · {{count}}</small>
+          <a class="spt-dir-act" data-action="nameNumber" title="{{spt "Directory.Name"}}"><i class="fas fa-check"></i></a>
+          <a class="spt-dir-act" data-action="offNumber" title="{{spt "Directory.OffHint"}}"><i class="fas fa-ban"></i></a>
+        </li>
+        {{/each}}
+      </ul>
+      {{/if}}
+      <h4 class="spt-call-when">{{spt "Directory.Title"}}</h4>
+      <ul class="spt-dir-list">
+        {{#each directory.rows}}
+        {{#if title}}
+        <li class="spt-dir-section">{{title}}</li>
+        {{else if editing}}
+        <li class="spt-dir-row editing" data-line="{{line}}">
+          <input type="text" name="dirEditNumber" value="{{number}}" placeholder="{{spt "Number"}}" class="spt-dir-num" autocomplete="off">
+          <input type="text" name="dirEditName" value="{{name}}" placeholder="{{spt "Directory.NamePlaceholder"}}" autocomplete="off">
+          <a class="spt-dir-act" data-action="dirSave" title="{{spt "Save"}}"><i class="fas fa-check"></i></a>
+          <a class="spt-dir-act" data-action="dirCancel" title="{{spt "Cancel"}}"><i class="fas fa-xmark"></i></a>
+        </li>
+        {{else}}
+        <li class="spt-dir-row {{#if off}}off{{/if}}" data-line="{{line}}">
+          <span class="spt-dir-num">{{#if number}}{{number}}{{else}}—{{/if}}</span>
+          <a class="spt-dir-star {{#if pin}}on{{/if}}" data-action="dirPin" title="{{spt "Directory.PinHint"}}"><i class="fa{{#if pin}}s{{else}}r{{/if}} fa-star"></i></a>
+          <a class="spt-dir-name" data-action="dirEdit" title="{{spt "Gm.Edit"}}">{{#if unnamed}}<span class="spt-dim">—</span>{{else}}{{name}}{{/if}}</a>
+          <a class="spt-dir-flag {{#if pub}}on pub{{/if}}" data-action="dirPub" title="{{spt "Directory.PublicHint"}}">{{spt "Directory.Public"}}</a>
+          <a class="spt-dir-flag {{#if off}}on off{{/if}}" data-action="dirOff" title="{{spt "Directory.OffHint"}}">{{spt "Directory.Off"}}</a>
+          <small class="spt-dim spt-dir-who">{{who}}</small>
+          <a class="spt-dir-act" data-action="dirDelete" title="{{spt "Delete"}}"><i class="fas fa-trash"></i></a>
+        </li>
+        {{/if}}
+        {{else}}
+        <li class="spt-phone-status">{{spt "Directory.Empty"}}</li>
+        {{/each}}
+      </ul>
+      <p class="spt-dir-foot"><button type="button" data-action="directory"><i class="fas fa-align-left"></i> {{spt "Directory.EditText"}}</button> <span class="spt-dim">{{spt "Directory.NoPrep"}}</span></p>
     </section>
   {{/if}}
 
@@ -155,30 +358,6 @@
       {{else}}
       <p class="spt-phone-status">{{spt "Gm.NoDevices"}}</p>
       {{/each}}
-    </section>
-  {{/if}}
-  {{#if (eq tab "calls")}}
-    <section class="spt-gm-calls">
-      {{#if calls.length}}
-      {{#each calls}}
-      <h4 class="spt-call-when">{{label}}</h4>
-      <ul class="spt-call-list">
-        {{#each rows}}
-        <li class="spt-call-row {{#if answered}}answered{{/if}} {{#if live}}live{{/if}}">
-          <i class="fas {{#if answered}}fa-phone{{else}}fa-phone-slash{{/if}} spt-call-icon"></i>
-          <span class="spt-call-who">{{#unless fromAgent}}<i class="fas fa-user-secret spt-dim" title="{{spt "Calls.FromGm"}}"></i> {{/unless}}{{from}} <i class="fas fa-arrow-right" aria-hidden="true"></i> {{to}}{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}}{{#if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Line"}}"></i>{{/if}}</span>
-          {{#if live}}
-          <span class="spt-call-res spt-call-live"><i class="fas fa-circle"></i> {{spt "Live.OnLine"}} {{{live}}}</span>
-          {{else}}
-          <span class="spt-call-res">{{result}}{{#if dur}} <span class="spt-call-dur">{{dur}}</span>{{/if}}</span>
-          {{/if}}
-        </li>
-        {{/each}}
-      </ul>
-      {{/each}}
-      {{else}}
-      <p class="spt-phone-status">{{spt "Calls.None"}}</p>
-      {{/if}}
     </section>
   {{/if}}
   {{#if (eq tab "files")}}
@@ -237,41 +416,11 @@
       {{/if}}
     </section>
   {{/if}}
-  {{#if (eq tab "tracking")}}
-    <section class="spt-gm-tracking">
-      <p class="spt-track-hint"><span class="spt-exp-tag"><i class="fas fa-flask"></i> {{spt "Track.Experimental"}}</span> {{spt "Track.Hint"}}</p>
-      {{#each tracking}}
-      <div class="spt-dev-group spt-track-group">
-        <header class="spt-dev-group-head">
-          {{#if img}}<img src="{{img}}" alt="">{{/if}}
-          <strong>{{agent}}</strong>
-          {{#if location}}<span class="spt-track-scene"><i class="fas fa-question"></i> {{location}}</span>{{/if}}
-          <span class="spt-track-level spt-track-{{level}}">{{levelLabel}}</span>
-        </header>
-        {{#if lastCall}}<div class="spt-track-call" title="{{spt "Track.LastCall"}}"><i class="fas fa-phone"></i> {{lastCall}}</div>{{/if}}
-        {{#if devices.length}}
-        <ul class="spt-dev-list">
-          {{#each devices}}
-          <li class="spt-dev spt-track">
-            <i class="fas {{icon}}" title="{{modelLabel}}"></i>
-            <span class="spt-dev-label">{{label}}{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}}{{#if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Device"}}"></i>{{/if}}</span>
-            <span class="spt-track-small">{{levelLabel}}</span>
-          </li>
-          {{/each}}
-        </ul>
-        {{/if}}
-      </div>
-      {{else}}
-      <p class="spt-phone-status">{{spt "Track.None"}}</p>
-      {{/each}}
-    </section>
-  {{/if}}
   </div>
 
   {{#if (eq tab "devices")}}
   <footer class="spt-phone-row spt-gm-foot">
     <button type="button" data-action="newPhone"><i class="fas fa-plus"></i> {{spt "NewDevice"}}</button>
-    <button type="button" data-action="directory"><i class="fas fa-book-open"></i> {{spt "Directory.Title"}}</button>
   </footer>
   {{/if}}
 </div>
