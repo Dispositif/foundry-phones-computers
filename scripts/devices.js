@@ -446,7 +446,37 @@ export function npcNumber(str) {
 /** Conversation key: the contact's number if any, otherwise its name, otherwise the raw input. Public directory names give their number. */
 export function keyFor(phone, str) {
   const c = findContact(phone, str) ?? findNpc(str);
-  return c ? c.number || c.name : String(str ?? "").trim();
+  if (c) return c.number || numberInText(c.name) || c.name;
+  const raw = String(str ?? "").trim();
+  return numberInText(raw) || raw;
+}
+
+/**
+ * A device number typed with other words ("Paul - 555-1234", or a contact saved that way).
+ * Only when the input itself is no device address, never inside an email, only a group of
+ * 4 digits or more, and only if it points to a single number. Names are never resolved.
+ */
+export function numberInText(str) {
+  const s = String(str ?? "");
+  if (s.includes("@") || !/\p{L}/u.test(s) || s.replace(/\D/g, "").length < 4 || phonesByNumber(s).length) return null;
+  const found = new Set();
+  for (const [group] of s.matchAll(/\d+(?:[\s\-.\/\u2010-\u2015\u2212]?\d+)*/g)) {
+    if (group.replace(/\D/g, "").length < 4) continue;
+    for (const p of phonesByNumber(group)) found.add(p.phone.number);
+  }
+  return found.size === 1 ? [...found][0] : null;
+}
+
+/**
+ * Agent side: a text that leads nowhere (a name with no contact, no directory entry, no device,
+ * no conversation on this device). Numbers and emails are always allowed: any number reaches the GM.
+ */
+export function isUnknownName(phone, str) {
+  const raw = String(str ?? "").trim();
+  if (!raw || raw.includes("@") || !/\p{L}/u.test(raw) || isMasked(raw)) return false;
+  const key = keyFor(phone, raw);
+  if (findContact(phone, raw) || findNpc(key, { all: true }) || phonesByNumber(key).length) return false;
+  return !getLog(phone, { includePending: true }).some((e) => sameConv(phone, e.with, key));
 }
 
 /** Display name for a key, as seen from this device (its contacts, then the public directory). */

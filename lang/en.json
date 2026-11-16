@@ -60,6 +60,7 @@
       "NoRecipient": "No recipient.",
       "NoCorrespondent": "Enter a contact.",
       "NameOrNumber": "Enter a name or a number.",
+      "UnknownName": "No contact or number found for “{name}”.",
       "GmOnlyPanel": "GM only panel.",
       "PagerCut": "pager message cut to {n} characters.",
       "NoCalls": "this device does not take calls.",
