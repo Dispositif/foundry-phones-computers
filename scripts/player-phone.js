@@ -11,7 +11,7 @@ import { dismissEnded, hangUpLive, liveOn, otherEnd, phoneClosed, statusHtml } f
 import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./share.js";
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
 import { openPager } from "./pager.js";
-import { BOOT_MS, bootText, hostName } from "./names.js";
+import { BOOT_MS, bootText, hostName, operatorName } from "./names.js";
 import { welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
 /* -------------------------------------------- */
@@ -660,17 +660,11 @@ export class PlayerPhone extends ApplicationV2 {
   _renderHeader(p, mine) {
     const mode = modeOf(p.phone);
     const phoneSel = this.gm ? deviceSelect(mine, p, phoneLabel) : this._deviceTitle(p);
+    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode);
     // Player, mobile device switched off: only the power button, which switches it on.
     if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {
-      // The ring/silent buttons keep their space (hidden) so the power button stays in place.
-      const btns = Object.entries(MODES).map(([k, m]) => k === "off"
-        ? `<button type="button" class="spt-mode" data-mode="on" title="${t("PowerOn")}" aria-label="${t("PowerOn")}"><i class="fas ${m.icon}"></i></button>`
-        : `<button type="button" class="spt-mode" style="visibility:hidden" tabindex="-1" aria-hidden="true"><i class="fas ${m.icon}"></i></button>`).join("");
-      return `<header class="spt-phone-top">${phoneSel}<div class="spt-modes">${btns}</div></header>`;
+      return `<header class="spt-phone-top">${phoneSel}<div class="spt-modes">${modeBtns}</div></header>`;
     }
-    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : Object.entries(MODES)
-      .map(([k, m]) => `<button type="button" class="spt-mode ${k === mode ? "active" : ""}" data-mode="${k}" title="${m.label}"><i class="fas ${m.icon}"></i></button>`)
-      .join("");
     const gmOffline = !this.gm && !game.users.activeGM;
     // Signal icon: bars (or Wi-Fi on a laptop), red without network. Installed devices always have a line.
     const netIcon = isComputer(p.phone) ? "fa-wifi" : "fa-signal";
@@ -679,7 +673,7 @@ export class PlayerPhone extends ApplicationV2 {
       : isFixed(p.phone)
         ? ""
         : hasSignal(p.phone)
-        ? `<i class="fas ${netIcon} spt-signal" title="${t("Net.Signal")}"></i>`
+        ? `<i class="fas ${netIcon} spt-signal" title="${esc(isComputer(p.phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(p.phone)}`)}"></i>`
         : `<i class="fas ${netIcon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
     const contactsBtn = !isLandline(p.phone) && this._canEditContacts(p)
       ? `<a data-action="contacts" title="${t("Contacts.Title")}" aria-label="${t("Contacts.Title")}"><i class="fas fa-address-book"></i></a>`
@@ -690,6 +684,21 @@ export class PlayerPhone extends ApplicationV2 {
     // Secure device: a shield next to the signal.
     const secure = isSecure(p.phone) ? shieldIcon({ title: t("Secure.Device"), cls: "spt-secure-badge" }) : "";
     return `<header class="spt-phone-top">${phoneSel}${secure}${signal}${gmTools}<div class="spt-modes">${modeBtns}</div></header>`;
+  }
+
+  /**
+   * Two buttons: ring/silent (one toggle showing the current state) and power.
+   * Switched off, the toggle keeps its space (hidden) so the power button stays in place.
+   */
+  _modeButtons(mode) {
+    const off = mode === "off";
+    const ring = mode === "silent" ? MODES.silent : MODES.on;
+    const toggle = off && !this.gm
+      ? `<button type="button" class="spt-mode" style="visibility:hidden" tabindex="-1" aria-hidden="true"><i class="fas ${ring.icon}"></i></button>`
+      : `<button type="button" class="spt-mode ${off ? "" : "active"}" data-mode="${mode === "on" ? "silent" : "on"}" title="${ring.label}" aria-label="${ring.label}"><i class="fas ${ring.icon}"></i></button>`;
+    const powerTitle = t(off ? "PowerOn" : "PowerOff");
+    const power = `<button type="button" class="spt-mode ${off ? "active" : ""}" data-mode="${off ? "on" : "off"}" title="${powerTitle}" aria-label="${powerTitle}"><i class="fas ${MODES.off.icon}"></i></button>`;
+    return toggle + power;
   }
 
   _renderList(p, mine) {

@@ -476,6 +476,7 @@
       "ItemSheet": "Item sheet"
     },
     "PowerOn": "Switch on",
+    "PowerOff": "Switch off",
     "Directory": {
       "Title": "Directory",
       "Hint": "One NPC per line: <code>Name | number</code>. Add <code>| public</code> for numbers anyone can look up (pizzeria, station…). Lines starting with <code>#</code> are section titles.",
