@@ -501,6 +501,20 @@
     "PowerOn": "Allumer",
     "PowerOff": "Éteindre",
     "Directory": {
+      "OpenMessages": "Voir les messages",
+      "OffBack": "Remettre en service",
+      "OffSectionHint": "personne ne répond, vous n'êtes pas dérangé",
+      "OffTitle": "Hors service",
+      "NpcHint": "faux numéros, sans appareil derrière",
+      "NpcTitle": "PNJ (MJ répond)",
+      "NoDevices": "Aucun appareil numéroté pour l'instant.",
+      "DevicePublicHint": "Public : tous les agents trouvent cet appareil par son nom",
+      "DevicesHint": "les objets Appareil, portés par un PJ ou installés dans une scène",
+      "DevicesTitle": "PJ et scènes",
+      "Search": "Rechercher un nom, un numéro…",
+      "AutoNumber": "Le numéro est attribué automatiquement. Cliquez ensuite sur le nom pour le changer.",
+      "AddShort": "Ajouter",
+      "NewNpc": "Nouveau PNJ",
       "Title": "Annuaire",
       "Hint": "Un PNJ par ligne : <code>Nom | numéro</code>, puis au choix : <code>| public</code> (tout le monde peut le trouver), <code>| pin</code> (PNJ épinglé), <code>| off</code> (numéro non attribué). Les lignes commençant par <code>#</code> sont des titres.",
       "Placeholder": "# Scénario&#10;Marlin Hunt | 555-0242&#10;# Public&#10;Pizza Delta | 555-0202 | public",
@@ -510,9 +524,9 @@
       "WhoAnswers": "Qui répond ? ex. Madame Michou",
       "UnknownHint": "Ce numéro n'est rattaché à rien : ni annuaire, ni appareil.",
       "Name": "Nommer",
-      "Off": "Non attribué",
-      "OffHint": "Numéro non attribué : appels et messages reçoivent « non attribué », sans vous déranger.",
-      "NamePlaceholder": "Nom",
+      "Off": "Hors service",
+      "OffHint": "Hors service : appels et messages reçoivent « non attribué », sans vous déranger.",
+      "NamePlaceholder": "Nom du PNJ",
       "NumberPlaceholder": "Numéro (vide = généré)",
       "PinHint": "PNJ épinglé : en tête de Messages et des expéditeurs",
       "PublicHint": "Public : tout le monde peut le trouver",
@@ -532,7 +546,7 @@
         "one": "{n} appel",
         "other": "{n} appels"
       },
-      "Purpose": "<strong>L'annuaire est facultatif.</strong> Vous pouvez écrire ou appeler sous n'importe quel nom ou numéro, et tout numéro composé par un agent arrive chez vous : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver : nommer un numéro (qui répond vraiment), le rendre public (les joueurs peuvent le trouver), l'épingler (en tête de Messages) ou le couper (non attribué)."
+      "Purpose": "<strong>L'annuaire ne contient que des PNJ : des faux numéros, sans appareil derrière, auxquels vous répondez vous-même.</strong> Il est facultatif : tout numéro composé par un agent arrive chez vous de toute façon. Il sert à vous y retrouver : nommer un numéro (qui répond vraiment), le rendre public (les joueurs peuvent le trouver), l'épingler (en tête de Messages) ou le couper (hors service). Les numéros des agents et des lieux viennent de leurs appareils : ils sont listés dans l'onglet Annuaire, où vous pouvez les rendre publics."
     },
     "CallOrMessage": "Appeler / Écrire",
     "Renamed": {

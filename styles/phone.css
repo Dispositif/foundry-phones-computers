@@ -1224,10 +1224,18 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm .spt-unknown-box .fa-circle-question { color: var(--spt-warn); }
 .spt-gm .spt-gthread-reply button.spt-text-btn { flex: 0 0 auto; width: auto; padding: 0 8px; white-space: nowrap; }
 .spt-phone-ring .spt-unknown-name input { width: 100%; }
-.spt-gm-directory .spt-dir-add { display: flex; align-items: center; gap: 4px; padding: 6px; border: 1px solid var(--spt-line); border-radius: 6px; background: var(--spt-soft); }
-.spt-gm-directory .spt-dir-add input[type="text"] { flex: 1; min-width: 0; height: 26px; }
+.spt-gm-directory .spt-dir-add { margin: 0 0 6px; padding: 4px 8px 6px; border: 1px solid var(--spt-accent, var(--spt-line)); border-radius: 6px; background: var(--spt-soft); }
+.spt-gm-directory .spt-dir-add legend { padding: 0 4px; font-size: 0.85em; font-weight: 600; }
+.spt-gm-directory .spt-dir-add-row { display: flex; align-items: center; gap: 6px; }
+.spt-gm-directory .spt-dir-add-row input[type="text"] { flex: 1; min-width: 0; height: 26px; }
+.spt-gm-directory .spt-dir-auto { margin: 4px 0 0; font-size: 0.8em; }
+.spt-gm-directory .spt-dir-search { display: flex; align-items: center; gap: 6px; margin: 4px 0; padding: 0 6px; opacity: 0.9; }
+.spt-gm-directory .spt-dir-search input { flex: 1; min-width: 0; height: 26px; }
+.spt-gm-directory .spt-dir-sub { font-weight: normal; text-transform: none; letter-spacing: 0; margin-left: 4px; }
+.spt-gm-directory .spt-dir-icon { flex: 0 0 1.2em; text-align: center; }
+.spt-gm-directory .spt-dir-row[hidden], .spt-gm-directory .spt-dir-section[hidden] { display: none; }
 .spt-gm-directory .spt-dir-add label { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 0.85em; }
-.spt-gm-directory .spt-dir-add button { flex: 0 0 2.4em; }
+.spt-gm-directory .spt-dir-add button { flex: 0 0 auto; white-space: nowrap; }
 .spt-gm-directory .spt-dir-list { list-style: none; margin: 0; padding: 0; }
 .spt-gm-directory .spt-dir-section { padding: 6px 4px 2px; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.6; }
 .spt-gm-directory .spt-dir-row { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-bottom: 1px solid var(--spt-line); }
