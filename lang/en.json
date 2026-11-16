@@ -231,6 +231,7 @@
       "Inbox_locked": "Locked",
       "Inbox_none": "None (files only)",
       "NoPlace": "No location (network access)",
+      "PlaceHint": "No location + item shared as Observer: reachable from anywhere.",
       "NoPlaceHint": "Without a location, the device is reached over the network only: give players access to it from the Items sidebar (Observer). Handy for a shared case-file database.",
       "Secure": "Secure (encrypted)",
       "SecureHint": "Calls and messages are encrypted when the other end is secure too."
