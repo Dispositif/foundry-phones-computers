@@ -172,7 +172,13 @@
       "WatchHint": "What the network knows about the agents: messages between them, calls, location. Read only.",
       "Leak": "What the enemy sees",
       "LeakHint": "Only compromised devices: what has leaked",
-      "ListenNew": "New messages between agents"
+      "ListenNew": "New messages between agents",
+      "Settings": "Settings",
+      "Back": "Back",
+      "ThisComputer": "this computer only",
+      "ReloadNeeded": "This change applies after a reload.",
+      "Reload": "Reload",
+      "FoundrySettings": "All settings in Foundry"
     },
     "Document": "Document",
     "RemoveAttachment": "Remove attachment",
@@ -416,8 +422,15 @@
           "Line": "Secure voice"
         },
         "Welcome": {
-          "Sms": "{operator}: your line is now active. Welcome to the network.",
-          "Mail": "{operator}: welcome\nYour access is active. Your messages will arrive here."
+          "Sms": "{operator}: your line {number} is now active. Welcome to the network.",
+          "Mail": "{operator}: welcome\nYour access {number} is active. Your messages will arrive here."
+        },
+        "Gm": {
+          "PanelTitle": "Switchboard"
+        },
+        "Guide": {
+          "Title": "Subscriber's guide",
+          "Link": "Subscriber's guide"
         }
       },
       "modern": {},
@@ -471,8 +484,12 @@
           "Line": "Encrypted channel"
         },
         "Welcome": {
-          "Sms": "NODE ONLINE. {operator} wishes you a traceless connection.",
-          "Mail": "{operator} // NODE ONLINE\nChannel open. Incoming packets will show here."
+          "Sms": "NODE ONLINE // {number}. {operator} wishes you a traceless connection.",
+          "Mail": "{operator} // NODE ONLINE\nChannel {number} open. Incoming packets will show here."
+        },
+        "Guide": {
+          "Title": "User manual",
+          "Link": "User manual"
         }
       }
     },
@@ -733,14 +750,15 @@
       "Tour": "Guided tour",
       "OpenPanel": "Open the {panel} panel",
       "Reopen": "To reopen this window: ? button in the {panel} panel.",
-      "Sms": "Welcome to the {operator} network. Your line is active: your conversations and contacts are on the home screen.",
-      "Mail": "Welcome to {operator}\nYour mailbox is active. Your messages will arrive here.",
+      "Sms": "Welcome to the {operator} network. Your line is active, your number: {number}.",
+      "Mail": "Welcome to {operator}\nYour mailbox {number} is active. Your messages will arrive here.",
       "ReadyTitle": "Ready to play",
       "ReadyPlayers": "{n} players, {m} with a character",
       "ReadyNoPlayers": "No player account yet",
       "ReadyDevices": "Every agent has a device",
       "ReadyBare": "{n} agent(s) without a device: give one from the Send tab",
-      "PointDirectory": "The <strong>Directory</strong> is optional: no number to create, no NPC to set up. It only helps you keep track (name a number, make it public, pin it, switch it off), and fills up as you play."
+      "PointDirectory": "The <strong>Directory</strong> is optional: no number to create, no NPC to set up. It only helps you keep track (name a number, make it public, pin it, switch it off), and fills up as you play.",
+      "MoreTools": "More tools: secure devices, jammer, tracking…"
     },
     "Tour": {
       "Title": "Phones & Computers: the GM panel",
@@ -773,6 +791,31 @@
         "title": "Network",
         "content": "Cut the network for the whole table. Messages wait until it is back. The ? button reopens the welcome window."
       }
-    }
+    },
+    "Features": {
+      "Title": "Advanced features",
+      "Hint": "Off, they are hidden from the panel and the device windows. Nothing is deleted: switched back on, everything returns.",
+      "secure": "Secure devices",
+      "secureHint": "Encrypted calls and messages between secure devices, secure lines with NPCs.",
+      "compromised": "Compromised devices",
+      "compromisedHint": "Mark a device as tapped by the enemy; \"what the enemy sees\" filter.",
+      "jammer": "Jammer",
+      "jammerHint": "A carried device that cuts the network in its scene.",
+      "tracking": "Tracking",
+      "trackingHint": "How precisely the network can locate each agent (experimental)."
+    },
+    "Guide": {
+      "Title": "Getting started",
+      "Link": "Getting started",
+      "Ok": "Got it",
+      "Open": "<strong>Ctrl+Shift+P</strong> or the floating button opens your device. Press again: your next device.",
+      "Call": "<strong>Call</strong>: type a number or a name, then the phone button. Any number works, even a made-up one.",
+      "Text": "<strong>Text</strong>: open a conversation, or start a new one with any number.",
+      "Contacts": "<strong>Contacts</strong>: the address book in the top bar. In a conversation, add the sender to your contacts.",
+      "Show": "<strong>Show</strong> your screen to the agents in the same scene, or <strong>forward</strong> a message.",
+      "Next": "Nothing ever goes to the chat: everything stays on your devices.",
+      "Credit": "Phones & Computers, a Foundry VTT module by Soren"
+    },
+    "DeleteEntryConfirm": "Delete it permanently? It cannot be undone."
   }
 }

@@ -22,10 +22,11 @@ import { restoreLive } from "./live-call.js";
 import { UNIVERSES, applyGmLook, universeKey } from "./universes.js";
 import { PlayerPhone } from "./player-phone.js";
 import { registerTour } from "./tour.js";
-import { maybeWelcome, openWelcome } from "./welcome.js";
+import { maybeWelcome, openWelcome, welcomeOwnedDevices } from "./welcome.js";
 import { hangUp, ring } from "./ring.js";
 import { onSocket } from "./socket.js";
 import { isActiveGM, norm, rerenderAll } from "./util.js";
+import { initFeatures } from "./features.js";
 import { loadLanguages, t, tn } from "./i18n.js";
 
 // Both languages are loaded at startup ("Module language" setting).
@@ -36,10 +37,11 @@ loadLanguages();
 /*  Opening                                     */
 /* -------------------------------------------- */
 
-export function openPanel({ tab = null } = {}) {
+export function openPanel({ tab = null, settings = false } = {}) {
   if (!game.user.isGM) return ui.notifications.warn(t("Warn.GmOnlyPanel"));
   const panel = PhonePanel.instance ?? new PhonePanel();
   if (tab) panel._state.tab = tab;
+  panel._state.settingsOpen = settings;
   panel.render({ force: true });
   return panel;
 }
@@ -94,6 +96,8 @@ Hooks.once("init", () => {
     default: "all",
     requiresReload: true
   });
+  // Advanced features (secure, compromised, jammer, tracking): set on first start, see features.js.
+  game.settings.register(MODULE_ID, "features", { scope: "world", config: false, type: Object, default: null, onChange: () => rerenderAll() });
   game.settings.register(MODULE_ID, "gmLook", {
     name: "SPT.Settings.gmLook.name",
     hint: "SPT.Settings.gmLook.hint",
@@ -287,8 +291,10 @@ Hooks.once("ready", async () => {
   // Universe accent on the GM panel and floating buttons (CSS: body[data-spt-universe]).
   document.body.dataset.sptUniverse = universeKey();
   applyGmLook();
+  initFeatures(allPhones({ jammers: true }).length > 0);
   game.socket.on(SOCKET, onSocket);
   await loadLanguages();
+  welcomeOwnedDevices();
   document.body.addEventListener("click", (ev) => {
     const link = ev.target.closest?.("a.spt-link");
     if (!link || !game.user.isGM) return;

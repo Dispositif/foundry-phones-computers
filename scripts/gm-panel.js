@@ -11,8 +11,9 @@ import { clock, liveCalls, timerHtml } from "./live-call.js";
 import { esc, isMasked, nl2br, norm } from "./util.js";
 import { t, tn } from "./i18n.js";
 import { OPERATORS, deviceName } from "./names.js";
-import { universe } from "./universes.js";
+import { universe, universeKey } from "./universes.js";
 import { openWelcome } from "./welcome.js";
+import { FEATURES, feature, setFeature } from "./features.js";
 /* -------------------------------------------- */
 /*  GM panel                                    */
 /* -------------------------------------------- */
@@ -400,6 +401,18 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       },
       directory: function () { directoryDialog(); },
       welcome: function () { openWelcome(); },
+      // Module settings: a view of the panel instead of the tabs (gear in the status bar).
+      openSettings: function () { this._setState({ settingsOpen: !this._state.settingsOpen }); },
+      closeSettings: function () { this._setState({ settingsOpen: false }); },
+      foundrySettings: function () {
+        const sheet = game.settings.sheet ?? new foundry.applications.settings.SettingsConfig();
+        sheet.render({ force: true });
+      },
+      reloadWorld: function () {
+        const SC = foundry.applications.settings?.SettingsConfig;
+        if (SC?.reloadConfirm) return SC.reloadConfirm({ world: true });
+        foundry.utils.debouncedReload();
+      },
       editPhone: async function (event, target) { editPhoneDialog(await fromUuid(target.dataset.uuid)); },
       contacts: async function (event, target) { contactsDialog(await fromUuid(target.dataset.uuid)); },
       give: async function (event, target) { giveDialog(await fromUuid(target.dataset.uuid)); },
@@ -526,6 +539,25 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   };
 
   /** Changes the state (tab, mode, recipient…) while keeping the current input. */
+  /** Settings view: the module's own settings (read from their registration) and the advanced features. */
+  _settingsContext() {
+    const keys = ["universe", "gmLook", "language", "numberPrefix", "ringTimeout", "welcomeMessage", "floatingButton", "gmFloatingButton", "volume"];
+    const L = (s) => (s ? game.i18n.localize(s) : "");
+    const rows = keys.map((key) => {
+      const c = game.settings.settings.get(`${MODULE_ID}.${key}`);
+      if (!c) return null;
+      const value = game.settings.get(MODULE_ID, key);
+      const row = { key, name: L(c.name), hint: L(c.hint), reload: !!c.requiresReload, client: c.scope === "client" };
+      if (c.choices) return { ...row, select: true, options: Object.entries(c.choices).map(([v, label]) => ({ value: v, label: L(label), selected: v === value })) };
+      if (c.type === Boolean) return { ...row, bool: true, checked: !!value };
+      if (c.type === Number && c.range) return { ...row, range: true, value, ...c.range };
+      if (c.type === Number) return { ...row, number: true, value };
+      return { ...row, text: true, value: value ?? "" };
+    }).filter(Boolean);
+    const features = FEATURES.map((k) => ({ key: k, name: t(`Features.${k}`), hint: t(`Features.${k}Hint`), checked: feature(k) }));
+    return { rows, features, reloadNeeded: !!this._reloadNeeded };
+  }
+
   _setState(patch) {
     this._readForm();
     Object.assign(this._state, patch);
@@ -535,6 +567,14 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   get title() {
     return t("Gm.PanelTitle");
+  }
+
+  /** Window icon by universe: switchboard (vintage), the Net (cyberpunk), otherwise a cell tower. */
+  _initializeApplicationOptions(options) {
+    options = super._initializeApplicationOptions(options);
+    const icon = { retro: "fas fa-tty", cyberpunk: "fas fa-network-wired" }[universeKey()];
+    if (icon) options.window.icon = icon;
+    return options;
   }
 
   _readForm() {
@@ -727,8 +767,9 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     let watch = null;
     if (st.tab === "watch") {
       const agentOk = (ids) => !st.watchAgent || ids.has(st.watchAgent);
-      const leakOk = (th) => !st.watchLeak || th.phone.compromised || phonesByNumber(keyFor(th.phone, th.key)).some((p) => p.phone.compromised);
-      const view = ["listen", "calls", "tracking"].includes(st.watchView) ? st.watchView : "listen";
+      const leakOk = (th) => !st.watchLeak || !feature("compromised") || th.phone.compromised || phonesByNumber(keyFor(th.phone, th.key)).some((p) => p.phone.compromised);
+      const views = ["listen", "calls", ...(feature("tracking") ? ["tracking"] : [])];
+      const view = views.includes(st.watchView) ? st.watchView : "listen";
       watch = {
         view,
         leak: st.watchLeak,
@@ -806,6 +847,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const tpUser = kind === "user" ? carriedPhone(game.users.get(id)) : null;
     const canSecure = [...tp, ...(tpUser ? [tpUser] : [])].some((p) => isSecure(p.phone));
     return {
+      settingsView: st.settingsOpen ? this._settingsContext() : null,
+      feat: Object.fromEntries(FEATURES.map((k) => [k, feature(k)])),
       tab: this._state.tab,
       mode: this._state.mode,
       messaging,
@@ -860,6 +903,20 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   _onRender(context, options) {
     super._onRender?.(context, options);
     PhonePanel.instance = this;
+    // Settings view: each field saves on change.
+    for (const el of this.element.querySelectorAll("[data-setting]")) {
+      el.addEventListener("change", async () => {
+        const key = el.dataset.setting;
+        const c = game.settings.settings.get(`${MODULE_ID}.${key}`);
+        const value = el.type === "checkbox" ? el.checked : c?.type === Number ? Number(el.value) : el.value;
+        if (c?.requiresReload) this._reloadNeeded = true;
+        await game.settings.set(MODULE_ID, key, value);
+        this.render();
+      });
+    }
+    for (const el of this.element.querySelectorAll("[data-feature]")) {
+      el.addEventListener("change", () => setFeature(el.dataset.feature, el.checked));
+    }
     if (this._markListenSeen) {
       this._markListenSeen = false;
       game.user.setFlag(MODULE_ID, "listenSeen", Date.now());
