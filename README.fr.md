@@ -1,3 +1,5 @@
+🇬🇧 [English version](README.md)
+
 # Phones & Computers
 
 *Le téléphone et l'ordinateur comme outils narratifs. Le réseau, c'est vous.*
@@ -8,15 +10,12 @@ Un module Foundry VTT qui donne aux personnages des téléphones, des ordinateur
 
 - **Ctrl+Shift+P** ouvre le panneau MJ, ou le téléphone du joueur (appuis multiples). Il y a aussi des boutons flottants.
 - **Rien à configurer :** le MJ peut tout de suite appeler un joueur ou lui écrire ; un téléphone est créé pour son personnage si besoin.
-- **Les agents communiquent entre eux** directement, sans le MJ. Rien ne passe jamais par le chat.
-- **Pas d'horloge :** aucune date ni heure n'est affichée, pour ne jamais contredire la fiction.
+- **Les agents communiquent entre eux** directement. Rien ne passe jamais par le chat.
 - N'importe quel système de jeu. Français et anglais.
 
-<img src="docs/call-screen-en.webp" alt="Appel en cours : le smartphone de l'agent et la fenêtre du reste de la table" width="760">
+<img src="docs/call-screen-en.webp" alt="Appel en cours : le smartphone du joueur, la fenêtre du reste de la table et le bouton flottant" width="760">
 
 > **Le MJ doit être connecté.** Son navigateur fait office de réseau. Sans MJ en ligne, les joueurs relisent leurs messages mais ne peuvent ni écrire ni appeler.
-
-[English version](README.md)
 
 ---
 
@@ -48,21 +47,10 @@ https://github.com/Dispositif/foundry-phones-computers/releases/latest/download/
 
 Un appareil est un objet porté par un personnage, ou installé dans un lieu (une scène) et utilisé par ceux qui s'y trouvent. On le crée depuis le panneau MJ.
 
-| Modèle | | Appels | Messages |
-|---|---|---|---|
-| **Smartphone** | porté | oui | SMS, photos, documents |
-| **Téléphone mobile** (années 1990-2000) | porté | oui | SMS texte |
-| **Bipeur** (années 1980-1990) | porté | non | une ligne du MJ |
-| **Ordinateur portable** | porté | non | mails et fichiers |
-| **Terminal** | installé | non | mails et fichiers |
-| **Téléphone fixe** | installé | oui | non |
-| **Brouilleur** | porté | non | non : allumé, il coupe le réseau mobile et le Wi-Fi dans la scène de son porteur |
-
 <img src="docs/devices.webp" alt="Les six modèles d'appareils : smartphone, mobile, bipeur, fixe, portable et terminal" width="900">
 
-- **Univers** (réglage du monde) : Vintage, Moderne ou Cyberpunk fixe les appareils proposés, leurs habillages par défaut et quelques mots. 
+- **Univers** (réglage du monde) : Vintage, Moderne ou Cyberpunk. 
 - **Fichiers** (portable, terminal) : glissez des pages de journal ou des images sur l'appareil. Les joueurs les lisent dans l'écran, sans accès à vos journaux Foundry. Chaque fichier peut être verrouillé ou masqué.
-- **États :** silencieux ou éteint, verrouillé, sans réseau (aussi sur les scènes marquées zone blanche), compromis (sur écoute, visible du MJ seul).
 - **Appareils partagés :** donnez un appareil de la barre Objets à plusieurs joueurs. Un terminal sans lieu devient une base de données qu'ils consultent de n'importe où.
 - **Donner à…** passe un appareil à un autre personnage avec son numéro, ses contacts et son historique.
 
@@ -70,30 +58,31 @@ Un appareil est un objet porté par un personnage, ou installé dans un lieu (un
 
 ---
 
-## Côté joueur
+## Fonctionnalités pour joueurs
 
-- Conversations par correspondant, réponses, appels, contacts. Un bip discret et une pastille à l'arrivée.
+- Conversations par correspondant, réponses, appels, carnet de contacts. 
 - **Montrer l'écran** aux agents dans la même pièce, ou **transférer** un message par le réseau.
 - **Toute la table voit l'appel :** les portraits des agents, « Appel en cours… », puis qui est en ligne avec un chrono.
-- Un petit bouton apparaît pour le fixe ou le terminal de la pièce où se trouve l'agent.
 
 ---
 
 ## Côté MJ
 
-![Panneau MJ](docs/gm.png)
+<img src="docs/gm.webp" alt="Panneau MJ : onglets Envoyer, Messages, Appareils et Fichiers, avec la fenêtre Nouvel appareil" width="900">
 
-Le panneau **Réseau** (Ctrl+Shift+P, ou le bouton télécom) :
+Le panneau **Réseau** (Ctrl+Shift+P, ou le bouton télécom).
 
-- **Envoyer :** faire sonner un appareil ou lui écrire sous n'importe quelle identité (PNJ, numéro, numéro masqué), avec une image ou une page de journal jointe.
-- **Messages :** répondre aux messages des agents vers les PNJ ; lire leurs messages entre eux.
-- **Appels :** tous les appels, leur issue et leur durée. Quand un agent appelle un PNJ, vous choisissez : décrocher, pas de réponse, injoignable, numéro non attribué.
+- **Envoyer :** choisissez un agent, puis un de ses appareils (ou le fixe d'un lieu), et faites-le sonner ou écrivez-lui sous n'importe quelle identité (PNJ, numéro, numéro masqué), avec une image ou une page de journal jointe. Un agent sans appareil en reçoit un en un clic.
+- **Messages :** les messages des agents vers les PNJ, non lus en premier, avec une icône SMS ou mail. Répondez en tant que PNJ ; nommez un numéro inconnu ou marquez-le non attribué en un clic.
+- **Annuaire :** vos PNJ et leurs numéros (facultatif, voir plus bas).
 - **Appareils :** tous les appareils par porteur ou par lieu. Verrouiller, couper le réseau, donner, modifier, préparer l'historique.
 - **Fichiers :** tous les fichiers des ordinateurs, par ordinateur ou par journal d'origine : visibles, verrouillés ou masqués.
-- **Traçage** (expérimental) : avec quelle précision le réseau peut localiser chaque agent.
+- **Surveillance :** écoutes (les messages des agents entre eux, en lecture seule), tous les appels avec leur issue et leur durée, et traçage (expérimental : avec quelle précision le réseau peut localiser chaque agent).
+- Quand un agent appelle un PNJ, vous choisissez : décrocher, pas de réponse, injoignable, numéro non attribué.
 - **Couper le réseau** mobile pour tous, ou **couper la ligne** d'un appel en cours.
+- Le bouton **?** ouvre la fenêtre d'accueil MJ et une visite guidée du panneau. Le réglage **Thème du panel MJ** choisit son apparence (Salle d'opérations, Brume orange, Classique, ou Auto selon l'univers).
 
-**Annuaire PNJ :** listez vos PNJ une fois, un par ligne (`Marlin Hunt | 555-0242`). Vous voyez qui les agents appellent, et les numéros `public` (pizzeria, taxi, hôpital) servent de pages jaunes aux joueurs.
+**Annuaire PNJ (facultatif) :** vous pouvez écrire ou appeler sous n'importe quel nom, et tout numéro composé par un agent arrive chez vous : rien à préparer. L'onglet Annuaire sert seulement à vous y retrouver : nommer un numéro, le rendre `public` (pizzeria, taxi, hôpital : pages jaunes pour les joueurs), l'épingler (`pin`) en haut des Messages, ou le couper (`off` : appels et messages tombent sur « numéro non attribué »).
 
 **Liens dans les journaux :** `@SMS[destinataire|expéditeur]{texte}` et `@Call[destinataire|expéditeur]` (aussi `@Mail`, `@SecureSMS`, `@SecureMail`, `@SecureCall`) deviennent des boutons dans vos notes de scénario. Le bouton lien du panneau les écrit pour vous. Les joueurs ne voient que le texte.
 

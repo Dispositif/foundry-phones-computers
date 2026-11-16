@@ -1,3 +1,5 @@
+🇫🇷 [Version française](README.fr.md)
+
 # Phones & Computers
 
 *For modern or sci-fi settings: Delta Green, Cthulhu, Vampire, Blade Runner, Cyberpunk…*
@@ -6,15 +8,12 @@ A <a href="https://foundryvtt.com" target="_blank">Foundry VTT</a> module that g
 
 - **Ctrl+Shift+P** opens the GM panel, or the player's phone (multiple presses). Floating buttons too.
 - **No setup needed:** the GM can ring a player or text them right away; a phone is created for their character if needed.
-- **Agents talk to each other** directly, without the GM. Nothing ever goes to the chat.
-- **No clock:** no date or time is ever shown, so nothing contradicts your fiction.
+- **Agents talk to each other** directly. Nothing ever goes to the chat.
 - Any game system. English and French.
 
-<img src="docs/call-screen-en.webp" alt="Call in progress: the agent's smartphone and the window for the rest of the table" width="760">
+<img src="docs/call-screen-en.webp" alt="Call in progress: the player's smartphone, the window for the rest of the table, and the floating button" width="760">
 
 > **The GM must be connected.** The GM's browser acts as the network. Without a GM online, players can read their messages but cannot write or call.
-
-[Version française](README.fr.md)
 
 ---
 
@@ -46,21 +45,10 @@ https://github.com/Dispositif/foundry-phones-computers/releases/latest/download/
 
 A device is an item carried by a character, or installed in a place (a scene) and used by whoever stands there. Create one from the GM panel.
 
-| Model | | Calls | Messages |
-|---|---|---|---|
-| **Smartphone** | carried | yes | texts, photos, documents |
-| **Mobile phone** (1990s-2000s) | carried | yes | plain texts |
-| **Pager** (1980s-1990s) | carried | no | one line from the GM |
-| **Laptop** | carried | no | emails and files |
-| **Terminal** | installed | no | emails and files |
-| **Landline** | installed | yes | no |
-| **Jammer** | carried | no | no: switched on, it cuts the mobile network and Wi-Fi in its carrier's scene |
-
 <img src="docs/devices.webp" alt="The six device models: smartphone, mobile phone, pager, landline, laptop and terminal" width="900">
 
-- **Universe** (world setting): Vintage, Modern or Cyberpunk sets the devices offered, their default looks.
+- **Universe** (world setting): Vintage, Modern or Cyberpunk.
 - **Files** (laptop, terminal): drop journal pages or images on the device. Players read them inside the screen, without access to your Foundry journals. Lock or hide each file.
-- **States:** silent or off, locked, no signal (also on scenes marked as dead zones), compromised (tapped, GM only).
 - **Shared devices:** give a device from the Items sidebar to several players. A terminal with no location becomes a database they reach from anywhere.
 - **Give to…** passes a device to another character with its number, contacts and history.
 
@@ -68,30 +56,31 @@ A device is an item carried by a character, or installed in a place (a scene) an
 
 ---
 
-## Player side
+## Features for players
 
-- Conversations by correspondent, replies, calls, contacts. A discreet beep and a badge on arrival.
+- Conversations by correspondent, replies, calls, contact book.
 - **Show the screen** to the agents in the same room, or **forward** a message over the network.
 - **The whole table sees the call:** the agents' portraits, "Calling…", then who is on the line with a timer.
-- A small button appears for the landline or terminal of the room the agent stands in.
 
 ---
 
 ## GM side
 
-![GM panel](docs/gm.png)
+<img src="docs/gm.webp" alt="GM panel: Send, Messages, Devices and Files tabs, with the New device window" width="900">
 
-The **Network** panel (Ctrl+Shift+P, or the telecom button):
+The **Network** panel (Ctrl+Shift+P, or the telecom button).
 
-- **Send:** ring a device or text it under any identity (NPC, number, hidden number), with an image or a journal page attached.
-- **Messages:** answer the agents' messages to NPCs; read their messages to each other.
-- **Calls:** every call, its outcome and duration. When an agent calls an NPC, you choose: answer, no answer, unreachable, unassigned (not in service).
+- **Send:** pick an agent, then one of their devices (or a place's landline), and ring it or text it under any identity (NPC, number, hidden number), with an image or a journal page attached. An agent without a device gets one in a click.
+- **Messages:** the agents' messages to NPCs, unread first, with a text or email icon. Reply as the NPC; name an unknown number or mark it unassigned in one click.
+- **Directory:** your NPCs and their numbers (optional, see below).
 - **Devices:** every device by holder or place. Lock, no signal, give, edit, prepare its history.
 - **Files:** every computer file, by computer or by source journal: visible, locked or hidden.
-- **Tracking** (experimental): how precisely the network can locate each agent.
+- **Intel:** wiretaps (the agents' messages to each other, read only), every call with its outcome and duration, and tracking (experimental, how precisely the network can locate each agent).
+- When an agent calls an NPC, you choose: answer, no answer, unreachable, unassigned (not in service).
 - **Cut network** for the whole mobile network, or **cut the line** of any call in progress.
+- The **?** button opens the GM welcome window and a guided tour of the panel. The **GM panel theme** setting picks its look (Ops room, Orange haze, Classic, or Auto by universe).
 
-**NPC directory:** list your NPCs once, one per line (`Marlin Hunt | 555-0242`). You see who the agents call, and `public` numbers (pizzeria, taxi, hospital) work as yellow pages for the players.
+**NPC directory (optional):** you can text or call under any name, and any number an agent dials reaches you, so there is nothing to set up. The Directory tab only helps you keep track: name a number, make it `public` (pizzeria, taxi, hospital: yellow pages for the players), `pin` it on top of Messages, or switch it `off` (calls and texts get "not in service").
 
 **Journal links:** `@SMS[recipient|sender]{text}` and `@Call[recipient|sender]` (also `@Mail`, `@SecureSMS`, `@SecureMail`, `@SecureCall`) become buttons in your scenario notes. The panel's link button writes them for you. Players see only the text.
 
