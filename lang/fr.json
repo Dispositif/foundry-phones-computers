@@ -821,6 +821,11 @@
       "Next": "Rien ne passe jamais par le chat : tout reste sur vos appareils.",
       "Credit": "Phones & Computers, un module Foundry VTT par Soren"
     },
-    "DeleteEntryConfirm": "Supprimer définitivement ? Impossible d'annuler."
+    "DeleteEntryConfirm": "Supprimer définitivement ? Impossible d'annuler.",
+    "News": {
+      "Title": "Nouveautés de Phones & Computers {version}",
+      "Changelog": "Toutes les modifications (en anglais)",
+      "Lines": "**Grande refonte du panneau MJ** : réglages, nouvel annuaire, messages…\nOption Équipe : les PJ se connaissent (numéros et mails partagés dans les appareils).\nNombreuses corrections et améliorations de l'interface."
+    }
   }
 }

@@ -23,6 +23,7 @@ import { UNIVERSES, applyGmLook, universeKey } from "./universes.js";
 import { PlayerPhone } from "./player-phone.js";
 import { registerTour } from "./tour.js";
 import { maybeWelcome, openWelcome, welcomeOwnedDevices } from "./welcome.js";
+import { maybeNews, openNews } from "./news.js";
 import { hangUp, ring } from "./ring.js";
 import { onSocket } from "./socket.js";
 import { isActiveGM, norm, rerenderAll } from "./util.js";
@@ -316,8 +317,9 @@ Hooks.once("ready", async () => {
   updateFab();
   restoreLive();
   registerTour();
-  game.modules.get(MODULE_ID).api = { openPanel, openPhone, openWelcome, ring, hangUp, sendSms, allPhones, createPhone, markPhone, transferPhone };
+  game.modules.get(MODULE_ID).api = { openPanel, openPhone, openWelcome, openNews, ring, hangUp, sendSms, allPhones, createPhone, markPhone, transferPhone };
   maybeWelcome();
+  maybeNews();
 });
 
 Hooks.on("userConnected", rerenderAll);

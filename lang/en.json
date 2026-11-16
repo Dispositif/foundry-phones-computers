@@ -821,6 +821,11 @@
       "Next": "Nothing ever goes to the chat: everything stays on your devices.",
       "Credit": "Phones & Computers, a Foundry VTT module by Soren"
     },
-    "DeleteEntryConfirm": "Delete it permanently? It cannot be undone."
+    "DeleteEntryConfirm": "Delete it permanently? It cannot be undone.",
+    "News": {
+      "Title": "What's new in Phones & Computers {version}",
+      "Changelog": "Full changelog",
+      "Lines": "**GM panel big redesign**: setting options, new directory, messages…\nTeam option: PCs know each other (numbers/emails shared in devices).\nLots of fixes and UI improvements."
+    }
   }
 }
