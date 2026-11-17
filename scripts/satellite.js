@@ -73,14 +73,14 @@ export function requestLink(id, { sats, who, to, kind, text = "" }) {
     const where = scenes.length ? `<p class="spt-sat-where"><i class="fas fa-map-location-dot"></i> ${scenes.map((sc) => esc(sc.name)).join(", ")}</p>` : "";
     // A jammer does not cut the satellite, but the GM may want to know it is there.
     const jam = scenes.some((sc) => sc.getFlag(MODULE_ID, "jammed")) ? `<p class="spt-sat-jam"><i class="fas fa-tower-broadcast"></i> ${t("Satellite.JammerHere")}</p>` : "";
-    const quote = kind === "sms" && text ? `<blockquote class="spt-sat-text">${esc(text)}</blockquote>` : "";
+    const quote = kind !== "call" && text ? `<blockquote class="spt-sat-text">${esc(text)}</blockquote>` : "";
     const dialog = new SatDialog({
       window: { title: t("Satellite.Title"), icon: "fas fa-satellite-dish" },
       classes: ["spt-sat-dialog"],
       position: { width: 460 },
       content: `<div class="spt-sat-request">
           <p class="spt-sat-question">${t("Satellite.Question")}</p>
-          <p>${t(kind === "sms" ? "Satellite.Sms" : "Satellite.Call", { who: `<strong>${esc(who)}</strong>`, to: `<strong>${esc(to)}</strong>` })}</p>
+          <p>${t(kind === "mail" ? "Satellite.Mail" : kind === "sms" ? "Satellite.Sms" : "Satellite.Call", { who: `<strong>${esc(who)}</strong>`, to: `<strong>${esc(to)}</strong>` })}</p>
           ${quote}
           <ul class="spt-sat-devices">${devices}</ul>
           ${where}${jam}

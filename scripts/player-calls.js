@@ -28,7 +28,7 @@ export async function receiveRing({ callId, caller, callerNumber, callerImg, tim
 
   const ringing = getPhoneData(fromUuidSync(itemUuid));
   const icon = ringing ? modelOf(ringing).icon : "fa-mobile-screen";
-  const onScreen = ["smartphone", "mobile", "brick"].includes(ringing?.model) || (ringing?.model === "landline" && skinOf(ringing) === "modern");
+  const onScreen = ["smartphone", "mobile", "brick", "satphone"].includes(ringing?.model) || (ringing?.model === "landline" && skinOf(ringing) === "modern");
   if (!game.user.isGM && onScreen) {
     // Smartphone, mobile and modern landline show the call on the device itself: open it (or bring it forward).
     call.screen = { caller: caller ? maskedLabel(caller) : callerNumber || null, known: !!caller, silent, img: callerImg ?? null, secure };
@@ -150,8 +150,8 @@ export function playerCall(item, to) {
   call.hangup = hangup;
   // Through the satellite: the device searches for it until the GM decides (no ringback tone yet).
   call.searching = viaSatellite(phone);
-  if (["smartphone", "mobile", "brick"].includes(phone.model)) {
-    // Smartphone, mobile and brick: the call shows on the device itself, not in a window.
+  if (["smartphone", "mobile", "brick", "satphone"].includes(phone.model)) {
+    // Smartphone, mobile, brick and satellite phone: the call shows on the device itself, not in a window.
     call.screen = { name, img: knownFace(phone, to), face: phone.model === "smartphone", searching: call.searching };
     const app = PlayerPhone.instance ?? new PlayerPhone();
     app._state.phoneUuid = item.uuid;

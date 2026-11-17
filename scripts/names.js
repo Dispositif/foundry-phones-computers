@@ -1,4 +1,4 @@
-import { hasSignal } from "./devices.js";
+import { hasSignal, isSatellite } from "./devices.js";
 import { t } from "./i18n.js";
 import { universeKey } from "./universes.js";
 /* -------------------------------------------- */
@@ -76,7 +76,7 @@ const BRANDS = {
       Samsung: ["B#%0"]
     },
     // Satellite phone
-    "sat-brick": {
+    satphone: {
       Iridium: ["%5##", "Extreme %"]
     },
     pager: {
@@ -160,6 +160,8 @@ export const OPERATORS = {
   modern: ["Halcyon Mobile", "Soren Telecom", "Nexa"],
   cyberpunk: ["Hexanet", "Sable Mesh", "Tetsu Grid"]
 };
+// Satellite devices: one operator for all of them (none set: the usual operators).
+export const SAT_OPERATORS = { modern: "Iridium" };
 
 /** Machine names of laptops and terminals. */
 const HOSTS = {
@@ -225,6 +227,7 @@ export function deviceName(model, { satellite = false } = {}) {
 /** Network operator of a phone: always the same for a given device (seeded by its number). */
 export function operatorName(phone) {
   const key = universeKey();
+  if (SAT_OPERATORS[key] && isSatellite(phone)) return SAT_OPERATORS[key];
   const list = OPERATORS[key] ?? OPERATORS.modern;
   return pick(list, rng(phone?.number || "operator"));
 }

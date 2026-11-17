@@ -38,7 +38,7 @@ const FRAMES = {
     before: `<span class="spt-frame-deco spt-frame-antenna"></span><div class="spt-frame-deco spt-brick-grille"></div><div class="spt-frame-deco spt-brick-brand">CELLULAR</div>`,
     after: `<div class="spt-frame-deco spt-brick-pad" aria-hidden="true"><div class="fn">${["RCL", "STO", "FCN", "CLR", "PWR", "VOL"].map((k) => `<span>${k}</span>`).join("")}</div><div class="num">${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div><div class="fn"><span class="snd">SND</span><span class="end">END</span></div></div><div class="spt-frame-deco spt-brick-mic"></div>`
   },
-  // Satellite phone (brick shape, 2000s): short screen, big keys, thick antenna.
+  // Satellite phone (2000s): short screen, big keys, thick antenna.
   bricksat: {
     width: 270, height: 570, gm: { width: 320, height: 610 },
     before: `<span class="spt-frame-deco spt-frame-antenna"></span><span class="spt-frame-deco spt-frame-sat">SAT</span><div class="spt-frame-deco spt-frame-speaker"></div>`,
@@ -69,7 +69,7 @@ function frameKind(phone) {
   const skin = skinOf(phone);
   if (model === "desktop") return ["console", "military"].includes(skin) ? "crt" : "monitor";
   if (model === "landline") return skin === "modern" ? "desk" : "rotary";
-  if (model === "brick") return isSatellite(phone) ? "bricksat" : "brick";
+  if (model === "satphone") return "bricksat";
   return FRAMES[model] ? model : null;
 }
 
@@ -935,9 +935,11 @@ export class PlayerPhone extends ApplicationV2 {
    */
   _satSignal(p) {
     const phone = p.phone;
+    // Laptop: Wi-Fi instead of the mobile bars.
+    const icon = isComputer(phone) ? "fa-wifi" : "fa-signal";
     const gsm = mobileSignal(phone)
-      ? `<i class="fas fa-signal spt-signal" title="${esc(`${t("Net.Signal")} · ${operatorName(phone)}`)}"></i>`
-      : `<i class="fas fa-signal spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
+      ? `<i class="fas ${icon} spt-signal" title="${esc(isComputer(phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(phone)}`)}"></i>`
+      : `<i class="fas ${icon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
     const uuid = p.item.uuid;
     const linked = viaSatellite(phone) && (!!liveOn(uuid) || (outgoing?.itemUuid === uuid && !outgoing.done && !!outgoing.satLinked) || skyOpenFor(p));
     const sat = `<i class="fas fa-satellite spt-sat-signal ${linked ? "linked" : ""}" title="${t("Satellite.Signal")}"></i>`;

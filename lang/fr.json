@@ -630,7 +630,7 @@
         "desktop": "Mails, documents",
         "jammer": "Coupe le réseau",
         "brick": "Appels",
-        "satphone": "Appels par satellite"
+        "satphone": "Appels et SMS par satellite"
       },
       "Npc": "PNJ…",
       "NpcName": "Nom du PNJ",
@@ -820,7 +820,7 @@
       "tracking": "Traçage",
       "trackingHint": "Avec quelle précision le réseau peut localiser chaque agent (expérimental).",
       "satellite": "Satellite",
-      "satelliteHint": "Option satellite pour la brique, le smartphone et le bipeur : fonctionne sans réseau mobile ; le MJ décide de chaque connexion."
+      "satelliteHint": "Option satellite pour la brique, le smartphone, le bipeur et le laptop : fonctionne sans réseau mobile ; le MJ décide de chaque connexion."
     },
     "Guide": {
       "Title": "Bien démarrer",
@@ -846,6 +846,8 @@
       "Question": "Conditions pour établir la connexion satellite ?",
       "Call": "{who} appelle {to} par satellite.",
       "Sms": "{who} écrit à {to} par satellite.",
+      "Mail": "{who} envoie un mail à {to} par satellite.",
+      "SkyOpen": "Liaison satellite ouverte pour toute la scène : {scenes}",
       "Hint": "Ciel dégagé, pas de murs épais, un satellite au-dessus… Tant que vous n'avez pas décidé, l'appareil cherche le satellite.",
       "Establish": "Établir la liaison",
       "WholeScene": "Pour toute la scène",

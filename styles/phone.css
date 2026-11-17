@@ -77,6 +77,8 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-gm-status.down .spt-pill { background: rgba(192,57,43,0.25); color: #ff8a7a; }
 .spt-gm-status .spt-gm-pending { font-size: 0.85em; opacity: 0.8; }
 .spt-gm-status .spt-gm-net { margin-left: auto; flex: 0 0 auto; width: auto; font-size: 0.85em; padding: 1px 10px; }
+.spt-gm-status .spt-gm-satsky { margin-left: auto; color: #4caf50; }
+.spt-gm-status .spt-gm-satsky + .spt-gm-net { margin-left: 0.5rem; }
 .spt-gm-status .spt-gm-help { flex: 0 0 2em; width: 2em; padding: 1px 0; font-size: 0.85em; }
 .spt-gm-ringing { display: flex; align-items: center; gap: 0.5rem; padding: 5px 10px; background: rgba(201,118,28,0.18); border-bottom: 1px solid rgba(201,118,28,0.4); }
 .spt-gm-ringing > i { animation: spt-phone-shake 0.6s infinite; color: var(--spt-warn); }
@@ -1429,6 +1431,10 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
 
 /* Satellite */
 .spt-sat-badge { color: #c98a00; }
+/* Brick and satellite phone icons (no Font Awesome glyph): the drawing as a mask, in the text color */
+.spt-ico-brick::before, .spt-ico-satphone::before { content: ""; display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.15em; background: currentColor; -webkit-mask: var(--spt-ico) center / contain no-repeat; mask: var(--spt-ico) center / contain no-repeat; }
+.spt-ico-brick { --spt-ico: url("../icons/brick.svg"); }
+.spt-ico-satphone { --spt-ico: url("../icons/satphone.svg"); }
 /* GM satellite window: establish (green), whole scene (discreet green), not found (red) */
 .spt-sat-dialog .form-footer button[data-action="ok"] { background: #2e9e4f; border-color: #237a3c; color: #fff; }
 .spt-sat-dialog .form-footer button[data-action="scene"] { background: rgba(47,125,62,0.18); border-color: #4c8a5a; color: inherit; }

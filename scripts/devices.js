@@ -21,11 +21,13 @@ export function getPhoneData(item) {
 export const MODELS = {
   landline: { get label() { return t("Model.landline"); }, icon: "fa-phone", fixed: true, sms: false, callerId: false, attachments: false, ring: "ring-bell.ogg" },
   mobile: { get label() { return t("Model.mobile"); }, icon: "fa-mobile-retro", sms: true, callerId: true, attachments: false, ring: "ring-mobile.ogg", notif: "sms-mobile.ogg" },
-  // 1980s brick phone: calls only, no caller ID. As a satellite phone, every call goes through the satellite.
-  brick: { get label() { return t("Model.brick"); }, icon: "fa-mobile-button", skin: "mobile", noSilent: true, sms: false, callerId: false, attachments: false, ring: "ring-mobile.ogg", satellite: true, satAlways: true },
+  // 1980s brick phone: calls only, no caller ID.
+  brick: { get label() { return t("Model.brick"); }, icon: "spt-ico-brick", skin: "mobile", noSilent: true, sms: false, callerId: false, attachments: false, ring: "ring-mobile.ogg" },
+  // Satellite phone (Iridium, 2000s): calls and texts, always a satellite device.
+  satphone: { get label() { return t("Model.satphone"); }, icon: "spt-ico-satphone", skin: "mobile", noSilent: true, sms: true, callerId: true, attachments: false, ring: "ring-mobile.ogg", notif: "sms-mobile.ogg", satellite: true, satAlways: true },
   pager: { get label() { return t("Model.pager"); }, icon: "fa-pager", sms: true, pager: true, noCalls: true, callerId: true, attachments: false, notif: "pager.ogg", satellite: true },
   smartphone: { get label() { return t("Model.smartphone"); }, icon: "fa-mobile-screen", sms: true, callerId: true, attachments: true, ring: "ring.ogg", satellite: true },
-  computer: { get label() { return t("Model.computer"); }, icon: "fa-laptop", sms: true, mail: true, noCalls: true, callerId: true, attachments: true, notif: "mail.ogg" },
+  computer: { get label() { return t("Model.computer"); }, icon: "fa-laptop", sms: true, mail: true, noCalls: true, callerId: true, attachments: true, notif: "mail.ogg", satellite: true },
   desktop: { get label() { return t("Model.desktop"); }, icon: "fa-desktop", fixed: true, sms: true, mail: true, noCalls: true, callerId: true, attachments: true, notif: "mail.ogg" },
   // No screen, no number: an on/off switch that cuts the network on the carrier's scene.
   jammer: { get label() { return t("Model.jammer"); }, icon: "fa-tower-broadcast", jammer: true, sms: false, noCalls: true, callerId: false, attachments: false }
@@ -62,12 +64,14 @@ export function jammedScenes() {
  * the device is an ordinary one again (the option is kept).
  */
 export function isSatellite(phone) {
-  return !!phone?.satellite && !!modelOf(phone).satellite && feature("satellite");
+  const model = modelOf(phone);
+  if (!model.satellite || !feature("satellite")) return false;
+  // The satellite phone always is one; other models when the GM ticked the option.
+  return !!model.satAlways || !!phone?.satellite;
 }
 
-/** Model name as the GM and players see it: a satellite brick is a "Satellite phone". */
+/** Model name as the GM and players see it. */
 export function modelLabel(phone) {
-  if (isSatellite(phone) && modelOf(phone).satAlways) return t("Model.satphone");
   return modelOf(phone).label;
 }
 
@@ -249,6 +253,16 @@ export async function freezeLooks() {
     if (Object.keys(patch).length) await item.update(Object.fromEntries(Object.entries(patch).map(([k, v]) => [`flags.${MODULE_ID}.phone.${k}`, v])));
   }
   await game.settings.set(MODULE_ID, "looksFrozen", true);
+}
+
+/** Early test worlds: a brick ticked "satellite" becomes a satellite phone (its own model now). */
+export async function migrateSatphones() {
+  for (const { item, phone } of allPhones()) {
+    if (phone.model !== "brick" || !phone.satellite) continue;
+    const patch = { [`flags.${MODULE_ID}.phone.model`]: "satphone" };
+    if (item.img?.startsWith(`modules/${MODULE_ID}/icons/`)) patch.img = modelImg("satphone");
+    await item.update(patch);
+  }
 }
 
 export function modelOf(phone) {
@@ -717,8 +731,15 @@ export function conversations(phone) {
 }
 
 /** Item icon for each model (shipped with the module, always available). */
-// A satellite brick is a satellite phone: its own icon.
-export const modelImg = (model, satellite = false) => `modules/${MODULE_ID}/icons/${model === "brick" && satellite ? "satphone" : MODELS[model] ? model : "smartphone"}.svg`;
+/**
+ * Icon class of a device (shown as `fas <class>`): Font Awesome, or the brick / satellite phone
+ * drawings (CSS mask, styles/phone.css) since Font Awesome has none.
+ */
+export function iconOf(phone) {
+  return modelOf(phone).icon;
+}
+
+export const modelImg = (model) => `modules/${MODULE_ID}/icons/${MODELS[model] ? model : "smartphone"}.svg`;
 
 /** Is the item image a default one (Foundry's or ours) that can be replaced? */
 export function isDefaultImg(img, type) {
@@ -748,7 +769,7 @@ export function deviceItemPatch(item, phone) {
   const patch = {};
   const model = phone.model ?? "smartphone";
   if (item.getFlag("core", "sheetClass") === undefined) patch["flags.core.sheetClass"] = SHEET_ID;
-  const img = modelImg(model, !!phone.satellite);
+  const img = modelImg(model);
   if (isDefaultImg(item.img, item.type) && item.img !== img) patch.img = img;
   const path = descriptionPath(item);
   if (path) {
@@ -798,7 +819,7 @@ export async function createPhone(actor, { label, number, model = "smartphone", 
     {
       name: label,
       type: pickItemType(),
-      img: modelImg(model, satellite),
+      img: modelImg(model),
       flags: {
         core: { sheetClass: SHEET_ID },
         [MODULE_ID]: { phone: { label, number, model, sceneId, theme: cleanTheme(!theme || theme === DEFAULT_THEME ? newTheme(model) : theme, model), mode: "on", contacts: [], log: [], ...(secure ? { secure: true } : {}), ...(satellite ? { satellite: true } : {}), ...newRing(model) } }
@@ -830,7 +851,7 @@ export async function markPhone(item, { label, number, model, sceneId, theme, in
   // Device and item share one name.
   if (label && item.name !== label) patch.name = label;
   // Changing the model changes the item image too.
-  if (prev.model && next.model !== prev.model) patch.img = modelImg(next.model, !!next.satellite);
+  if (prev.model && next.model !== prev.model) patch.img = modelImg(next.model);
   return item.update({ [`flags.${MODULE_ID}.phone`]: next, ...patch });
 }
 
@@ -846,7 +867,7 @@ export async function unmarkPhone(item) {
 export function carriedPhone(user) {
   const actor = user?.character ?? null;
   if (!actor) return null;
-  const order = ["smartphone", "mobile", "brick"];
+  const order = ["smartphone", "mobile", "satphone", "brick"];
   return allPhones()
     .filter((p) => p.actor === actor && order.includes(p.phone.model))
     .sort((a, b) => order.indexOf(a.phone.model) - order.indexOf(b.phone.model))[0] ?? null;

@@ -16,14 +16,12 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
   label ??= randomName(model);
   const autoNumber = number === null;
   number ??= randomAddress(model, { name: holder });
-  // Satellite-only model in this universe (modern brick), unless it is this device's own non-satellite model.
-  const forcedSat = (m) => satellitePolicy(m) === "forced" && !(m === model && !satellite);
-  // A satellite brick is shown as "Satellite phone", not as the 1980s brick.
-  const optLabel = (k, m) => (m.satAlways && (k === model ? satellite : forcedSat(k)) ? t("Model.satphone") : m.label);
+  // Satellite-only model (satellite phone): nothing to tick.
+  const forcedSat = (m) => satellitePolicy(m) === "forced" || !!MODELS[m]?.satAlways;
   // Models of the universe (plus the device's own, kept even if the universe does not offer it).
   const modelOpts = Object.entries(MODELS)
     .filter(([k]) => k === model || (modelAllowed(k) && (k !== "jammer" || feature("jammer"))))
-    .map(([k, m]) => `<option value="${k}" ${k === model ? "selected" : ""}>${optLabel(k, m)}</option>`)
+    .map(([k, m]) => `<option value="${k}" ${k === model ? "selected" : ""}>${m.label}</option>`)
     .join("");
   // Looks: every look offered for some model, tagged with the models it is offered for.
   const choices = Object.fromEntries(Object.keys(MODELS).map((m) => [m, themeChoices(m)]));
@@ -91,7 +89,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
         // A jammer has no number.
         root.querySelector(".spt-if-number")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
         root.querySelector(".spt-secure-row")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
-        // Satellite: brick, smartphone and pager only; nothing to tick when the model is satellite-only.
+        // Satellite: smartphone, pager and laptop (option), satellite phone (always); nothing to tick when the model is satellite-only.
         root.querySelector(".spt-satellite-row")?.classList.toggle("hidden", !MODELS[select?.value ?? model]?.satellite || forcedSat(select?.value ?? model));
         // Looks: only those that fit the chosen model.
         const m = select?.value ?? model;
@@ -186,6 +184,7 @@ const NEW_KINDS = [
   { key: "smartphone", model: "smartphone", carried: true },
   { key: "mobile", model: "mobile", carried: true },
   { key: "brick", model: "brick", carried: true },
+  { key: "satphone", model: "satphone", carried: true },
   { key: "pager", model: "pager", carried: true },
   { key: "computer", model: "computer", carried: true },
   { key: "jammer", model: "jammer", carried: true },
@@ -193,11 +192,9 @@ const NEW_KINDS = [
   { key: "rotary", model: "landline", theme: "vintage", icon: "rotary" },
   { key: "desktop", model: "desktop" }
 ];
-// In a universe where the brick is satellite-only, its tile is the "Satellite phone".
-const satTile = (k) => k.model === "brick" && satellitePolicy("brick") === "forced";
-const kindLabel = (k) => (k.key === "landline" || k.key === "rotary" ? t(`NewDev.${k.key}`) : satTile(k) ? t("Model.satphone") : MODELS[k.model].label);
-const kindCaps = (k) => t(`NewDev.Caps.${satTile(k) ? "satphone" : k.key}`);
-const kindIcon = (k) => `modules/${MODULE_ID}/icons/${satTile(k) ? "satphone" : k.icon ?? k.model}.svg`;
+const kindLabel = (k) => (k.key === "landline" || k.key === "rotary" ? t(`NewDev.${k.key}`) : MODELS[k.model].label);
+const kindCaps = (k) => t(`NewDev.Caps.${k.key}`);
+const kindIcon = (k) => `modules/${MODULE_ID}/icons/${k.icon ?? k.model}.svg`;
 
 /** Carried models of the world's universe, as the new-device tiles show them (GM panel quick creation). */
 export function quickKinds() {
