@@ -88,11 +88,11 @@
     },
     "Gm": {
       "WritesTo": "{who} writes to {name}.",
-      "AgentCalling": "An agent is calling",
+      "AgentCalling": "A PC is calling",
       "EmptyLandlineCall": "Call to an empty landline",
       "NobodyThere": "Nobody in the room: you answer for the place.",
       "CalledBy": "called by {who}",
-      "AgentHungUp": "The agent hung up.",
+      "AgentHungUp": "The PC hung up.",
       "PanelTitle": "Network",
       "Cloned": "cloned",
       "Offline": "offline",
@@ -112,7 +112,7 @@
       "GiveTo": "Give to…",
       "Edit": "Edit",
       "Remove": "Remove",
-      "Inbox": "Agents' messages",
+      "Inbox": "PCs' messages",
       "MarkAllSeen": "Mark all as read",
       "Recipient": "Recipient",
       "PlayersDirect": "Players (direct)",
@@ -136,7 +136,7 @@
       "TabTracking": "Tracking",
       "ModeMessage": "Message",
       "ModeCall": "Call",
-      "NoInbox": "No messages from agents.",
+      "NoInbox": "No messages from PCs.",
       "Places": "Places",
       "Nobody": "Not held",
       "Actions": "Actions",
@@ -145,12 +145,12 @@
       "Compromised": "Compromised (tapped, known to the enemy…)",
       "NotCompromised": "Mark as compromised",
       "CompromisedDevice": "Compromised device: {label}",
-      "BetweenAgents": "Between agents (read only)",
+      "BetweenAgents": "Between PCs (read only)",
       "InboxNpc": "Conversations",
       "InboxAgents": "Wiretaps",
-      "DropJournal": "Drop a journal page or an image on the message: the agent reads it on their device.",
+      "DropJournal": "Drop a journal page or an image on the message: the PC reads it on their device.",
       "LeakedForward": "{who} forwarded an encrypted message in clear to {to}.",
-      "Agents": "Agents",
+      "Agents": "PCs",
       "OtherDevices": "Other devices…",
       "CanPage": "one line",
       "DeviceOf": "{name} ({device})",
@@ -160,8 +160,8 @@
       "WriteAs": "Write as {name} to",
       "FilterNpc": "Show only this correspondent",
       "ShowMore": "Show more",
-      "NoListen": "No messages between agents.",
-      "NoAgents": "No agent: no player has an assigned character. Messages and calls land on the device carried by a player's character.",
+      "NoListen": "No messages between PCs.",
+      "NoAgents": "No PC: no player has an assigned character. Messages and calls land on the device carried by a player's character.",
       "NoPlayers": "No player in this world. Messages and calls land on the device of a player's character: create a player account first.",
       "AddDevice": "Another device",
       "AnotherDevice": "Another device for {name}",
@@ -173,10 +173,10 @@
       "MoreOptions": "More options…",
       "Created": "{label} ({number}) given to {name}",
       "TabWatch": "Intel",
-      "WatchHint": "What the network knows about the agents: messages between them, calls, location. Read only.",
+      "WatchHint": "What the network knows about the PCs: messages between them, calls, location. Read only.",
       "Leak": "What the enemy sees",
       "LeakHint": "Only compromised devices: what has leaked",
-      "ListenNew": "New messages between agents",
+      "ListenNew": "New messages between PCs",
       "Settings": "Settings",
       "Back": "Back",
       "ThisComputer": "this computer only",
@@ -264,7 +264,7 @@
       "NumberHint": "Any identifier works (number, email, IP address, user ID, call sign…): it is what others dial or write to reach the device.",
       "HeldBy": "Held by",
       "Nobody": "Nobody (to prepare)",
-      "HeldByHint": "Type a few letters to find an agent or an NPC. Leave empty to prepare the device without a holder.",
+      "HeldByHint": "Type a few letters to find a PC or an NPC. Leave empty to prepare the device without a holder.",
       "Theme": "Look",
       "Inbox": "Mailbox",
       "Inbox_on": "Available",
@@ -381,7 +381,7 @@
       },
       "gmFloatingButton": {
         "name": "Floating button for the GM",
-        "hint": "A telecom icon showing the number of agents' messages you have not read. Click to open the Network panel; drag to move it."
+        "hint": "A telecom icon showing the number of PCs' messages you have not read. Click to open the Network panel; drag to move it."
       },
       "floatingButton": {
         "name": "Floating button for players",
@@ -404,20 +404,16 @@
         "haze": "Orange haze",
         "classic": "Classic"
       },
-      "welcomeMessage": {
-        "name": "Operator welcome message",
-        "hint": "The first time a player opens a new device, its operator sends a welcome message (a mail on a computer)."
-      },
       "team": {
-        "name": "Team: PCs know each other (numbers and emails already shared)",
-        "hint": "PCs' devices show the other PCs' devices in their contacts: numbers on phones, emails on computers."
+        "name": "Team: PCs know each other",
+        "hint": "Their numbers and emails are already in the contacts of every PC device."
       }
     },
     "Migrated": "{n} device(s) recovered from the previous version.",
     "UniverseName": {
       "retro": "Vintage (1980s-1990s)",
       "modern": "Modern",
-      "cyberpunk": "Cyberpunk / neon noir"
+      "cyberpunk": "Cyberpunk"
     },
     "Universe": {
       "retro": {
@@ -537,7 +533,7 @@
       "NpcHint": "fake numbers, no device behind them",
       "NpcTitle": "NPCs (GM answers)",
       "NoDevices": "No device with a number yet.",
-      "DevicePublicHint": "Public: every agent finds this device by its name",
+      "DevicePublicHint": "Public: every PC finds this device by its name",
       "DevicesHint": "device items, carried by a PC or installed in a scene",
       "DevicesTitle": "PCs and scenes",
       "Search": "Search a name or a number…",
@@ -564,7 +560,7 @@
       "ToIdentify": "To identify",
       "Empty": "The directory is empty.",
       "EditText": "Edit as text",
-      "NoPrep": "Nothing to prepare: any number an agent dials reaches you.",
+      "NoPrep": "Nothing to prepare: any number a PC dials reaches you.",
       "AddSender": "add to the directory",
       "DeleteConfirm": "Remove {name} from the directory?",
       "Messages": {
@@ -575,7 +571,7 @@
         "one": "{n} call",
         "other": "{n} calls"
       },
-      "Purpose": "<strong>The directory only holds NPCs: fake numbers with no device behind them, answered by you.</strong> It is optional: any number an agent dials reaches you anyway. It helps you keep track: name a number (who really answers), make it public (players can look it up), pin it (on top of Messages) or switch it off (out of service). The agents' and places' numbers come from their devices: they are listed in the Directory tab, where you can make them public."
+      "Purpose": "<strong>The directory only holds NPCs: fake numbers with no device behind them, answered by you.</strong> It is optional: any number a PC dials reaches you anyway. It helps you keep track: name a number (who really answers), make it public (players can look it up), pin it (on top of Messages) or switch it off (out of service). The PCs' and places' numbers come from their devices: they are listed in the Directory tab, where you can make them public."
     },
     "CallOrMessage": "Call / Message",
     "Renamed": {
@@ -613,7 +609,7 @@
     },
     "Scene": {
       "DeadZone": "Dead zone",
-      "DeadZoneHint": "Phones & Computers: no mobile network and no Wi-Fi for the devices carried by agents whose player is on this scene. Landlines and terminals keep their line."
+      "DeadZoneHint": "Phones & Computers: no mobile network and no Wi-Fi for the devices carried by PCs whose player is on this scene. Landlines and terminals keep their line."
     },
     "NewDev": {
       "landline": "Modern landline",
@@ -770,8 +766,8 @@
       "ReadyTitle": "Ready to play",
       "ReadyPlayers": "{n} players, {m} with a character",
       "ReadyNoPlayers": "No player account yet",
-      "ReadyDevices": "Every agent has a device",
-      "ReadyBare": "{n} agent(s) without a device: give one from the Send tab",
+      "ReadyDevices": "Every PC has a device",
+      "ReadyBare": "{n} PC(s) without a device: give one from the Send tab",
       "PointDirectory": "The <strong>Directory</strong> is optional: no number to create, no NPC to set up. It only helps you keep track (name a number, make it public, pin it, switch it off), and fills up as you play.",
       "MoreTools": "More tools: secure devices, jammer, tracking…",
       "UniverseHint": "Devices offered and their default looks. Changing it reloads the game; existing devices do not change."
@@ -785,7 +781,7 @@
       },
       "recipient": {
         "title": "Recipient",
-        "content": "Pick an agent, then one of their devices; or a place where agents are, and its landline. An agent without a device gets one here in one click."
+        "content": "Pick a PC, then one of their devices; or a place where PCs are, and its landline. A PC without a device gets one here in one click."
       },
       "sender": {
         "title": "Sender",
@@ -810,17 +806,19 @@
     },
     "Features": {
       "Title": "Advanced features",
-      "Hint": "Off, they are hidden from the panel and the device windows. Nothing is deleted: switched back on, everything returns.",
-      "secure": "Secure devices",
+      "Hint": "Once you can handle simple phone calls. Not before.",
+      "intel": "Intel tab (GM)",
+      "intelSetting": "Advanced feature: Intel tab (GM)",
+      "intelHint": "Wiretaps on messages between PCs, call list and tracking.",
+      "secure": "Secure communications (in-game)",
+      "secureSetting": "Advanced feature: Secure communications (in-game)",
       "secureHint": "Encrypted calls and messages between secure devices, secure lines with NPCs.",
-      "compromised": "Compromised devices",
-      "compromisedHint": "Mark a device as tapped by the enemy; \"what the enemy sees\" filter.",
       "jammer": "Jammer",
+      "jammerSetting": "Advanced feature: Jammer",
       "jammerHint": "A carried device that cuts the network in its scene.",
-      "tracking": "Tracking",
-      "trackingHint": "How precisely the network can locate each agent (experimental).",
-      "satellite": "Satellite",
-      "satelliteHint": "Satellite option for brick, smartphone, pager and laptop: works without the mobile network; the GM decides each connection."
+      "satellite": "Satellite communication",
+      "satelliteSetting": "Advanced feature: Satellite communication",
+      "satelliteHint": "Satellite option for phones and laptops (Modern, Cyberpunk)."
     },
     "Guide": {
       "Title": "Getting started",
@@ -830,7 +828,7 @@
       "Call": "<strong>Call</strong>: type a number or a name, then the phone button. Any number works, even a made-up one.",
       "Text": "<strong>Text</strong>: open a conversation, or start a new one with any number.",
       "Contacts": "<strong>Contacts</strong>: the address book in the top bar. In a conversation, add the sender to your contacts.",
-      "Show": "<strong>Show</strong> your screen to the agents in the same scene, or <strong>forward</strong> a message.",
+      "Show": "<strong>Show</strong> your screen to the other PCs in the same scene, or <strong>forward</strong> a message.",
       "Next": "Nothing ever goes to the chat: everything stays on your devices.",
       "Credit": "Phones & Computers, a Foundry VTT module by Soren"
     },
