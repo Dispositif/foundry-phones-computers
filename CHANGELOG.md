@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+- New device: **Brick phone** (Vintage), calls only.
+- **Satellite** (advanced feature): satellite phone, smartphone and pager; the GM approves each satellite connection.
+- Universe chosen in the GM welcome window; "Any setting" removed (Modern by default); changing the universe no longer changes existing devices.
+
 ## 1.4.0
 - "What's new" window for the GM after an update.
 - **GM panel redesign**, tools, directory, theme settings…

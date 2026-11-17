@@ -4,6 +4,7 @@ import { maskedLabel, rerenderAll } from "./util.js";
 import { t } from "./i18n.js";
 import { agentSide, closeDial, lineBusy, npcSide, openGmRing, startLive } from "./live-call.js";
 import { gmIncoming } from "./gm-actions.js";
+import { callLinkPending } from "./satellite.js";
 /* -------------------------------------------- */
 /*  Calls ringing at players                    */
 /* -------------------------------------------- */
@@ -17,7 +18,7 @@ export const pendingCalls = new Map();
  */
 /** The network takes one call at a time: one ringing or in progress, anywhere. */
 export function networkBusy() {
-  return pendingCalls.size > 0 || gmIncoming.size > 0 || lineBusy();
+  return pendingCalls.size > 0 || gmIncoming.size > 0 || callLinkPending() || lineBusy();
 }
 
 /**
@@ -150,7 +151,7 @@ export function onResponse({ callId, result, userId }) {
   call.lastResult = result;
   const user = game.users.get(userId);
   const item = itemUuid ? fromUuidSync(itemUuid) : null;
-  if (item) addLog(item, { kind: "call", call: callId, dir: "in", with: keyFor(getPhoneData(item), call.from), result, ...(result === "missed" ? { read: false } : {}) });
+  if (item) addLog(item, { kind: "call", call: callId, dir: "in", with: keyFor(getPhoneData(item), call.from), result, ...(result === "missed" ? { read: false } : {}), ...(call.origin?.sat ? { sat: true } : {}) });
 
   if (!call.origin) {
     const where = item ? ` (${getPhoneData(item)?.label ?? item.name})` : "";
@@ -177,7 +178,7 @@ export function onResponse({ callId, result, userId }) {
 /** Closes a call placed by a player: history + outcome shown to them. */
 export function finishOrigin(origin, result) {
   const item = fromUuidSync(origin.itemUuid);
-  if (item) addLog(item, { kind: "call", call: origin.callId, dir: "out", with: origin.key, result });
+  if (item) addLog(item, { kind: "call", call: origin.callId, dir: "out", with: origin.key, result, ...(origin.sat ? { sat: true } : {}) });
   game.socket.emit(SOCKET, { type: "callResult", targetUserId: origin.userId, callId: origin.callId, result, name: origin.name });
 }
 

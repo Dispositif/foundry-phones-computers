@@ -23,6 +23,10 @@ const BRANDS = {
       NEC: ["P###", "G#"],
       Philips: ["Fizz %", "Genie %0"]
     },
+    // 1980s brick phones.
+    brick: {
+      Motorola: ["DynaTAC %000X", "DynaTAC %500"]
+    },
     pager: {
       Motorola: ["P-###", "LX#", "Bravo A#"],
       NEC: ["Page %#", "R%"],
@@ -70,6 +74,10 @@ const BRANDS = {
       Alcatel: ["%0#%"],
       Doro: ["%#0"],
       Samsung: ["B#%0"]
+    },
+    // Satellite phone
+    "sat-brick": {
+      Iridium: ["%5##", "Extreme %"]
     },
     pager: {
       Motorola: ["PX %##"],
@@ -167,10 +175,9 @@ const MAIL = {
 };
 const HANDLES = ["contact", "office", "admin", "info", "archives", "desk", "staff"];
 
-/* Universe whose lists are used: "all" mixes retro and modern; an unknown one falls back on modern. */
+/* Universe whose lists are used: an unknown one falls back on modern. */
 function eras() {
   const key = universeKey();
-  if (key === "all") return ["retro", "modern"];
   return BRANDS[key] ? [key] : ["modern"];
 }
 
@@ -197,8 +204,12 @@ function expand(pattern, r = Math.random) {
     .replace(/[#%@$&]/g, (c) => pick(sets[c], r));
 }
 
-/** Random "brand model" for a new device of this model, in the world's universe ("Motorola R33"). null if none fits. */
-export function deviceName(model) {
+/**
+ * Random "brand model" for a new device of this model, in the world's universe ("Motorola R33"). null if none fits.
+ * satellite: a satellite device takes a name from the "sat-<model>" lists when the universe has one.
+ */
+export function deviceName(model, { satellite = false } = {}) {
+  if (satellite && eras().some((era) => BRANDS[era]?.[`sat-${model}`])) model = `sat-${model}`;
   const pool = [];
   for (const era of [...eras(), "any"]) {
     const brands = BRANDS[era]?.[model];
@@ -214,7 +225,7 @@ export function deviceName(model) {
 /** Network operator of a phone: always the same for a given device (seeded by its number). */
 export function operatorName(phone) {
   const key = universeKey();
-  const list = OPERATORS[key] ?? (key === "all" ? [...OPERATORS.retro, ...OPERATORS.modern] : OPERATORS.modern);
+  const list = OPERATORS[key] ?? OPERATORS.modern;
   return pick(list, rng(phone?.number || "operator"));
 }
 
@@ -230,7 +241,7 @@ export function bootText(phone) {
 export function hostName(phone) {
   const r = rng(phone?.number || "host");
   const key = universeKey();
-  const era = HOSTS[key] ? key : key === "all" ? pick(["retro", "modern"], r) : "modern";
+  const era = HOSTS[key] ? key : "modern";
   const list = HOSTS[era][phone?.model === "desktop" ? "desktop" : "computer"];
   return expand(pick(list, r), r);
 }
@@ -252,7 +263,7 @@ export function mailAddress(name) {
   const first = words[0];
   const last = words.length > 1 ? words[words.length - 1] : null;
   const two = () => String(Math.floor(r() * 90) + 10);
-  const era = universeKey() === "all" ? pick(["retro", "modern"], r) : MAIL[universeKey()] ? universeKey() : "modern";
+  const era = MAIL[universeKey()] ? universeKey() : "modern";
   if (era === "retro") {
     // Online services of the time: numeric IDs, or 8-letter user names.
     if (!words.length || r() < 0.4) return `7${Math.floor(r() * 9000) + 1000}.${Math.floor(r() * 900) + 100}@${pick(MAIL.retro.numeric, r)}`;

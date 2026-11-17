@@ -1,5 +1,5 @@
-import { DialogV2, HANGUP_SRC, MODULE_ID, PICKUP_SRC, RINGBACK_SRC, RING_SRC, SOCKET, VIBRATE_SRC } from "./constants.js";
-import { displayName, findContact, getPhoneData, hasSignal, isUnknownName, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf } from "./devices.js";
+import { DialogV2, HANGUP_SRC, MODULE_ID, PICKUP_SRC, RINGBACK_SRC, RING_SRC, SAT_SEARCH_SRC, SOCKET, VIBRATE_SRC } from "./constants.js";
+import { displayName, findContact, getPhoneData, hasSignal, isUnknownName, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf, viaSatellite } from "./devices.js";
 import { updateFab } from "./fab.js";
 import { deviceNotice, esc, isMasked, maskedLabel, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -28,7 +28,7 @@ export async function receiveRing({ callId, caller, callerNumber, callerImg, tim
 
   const ringing = getPhoneData(fromUuidSync(itemUuid));
   const icon = ringing ? modelOf(ringing).icon : "fa-mobile-screen";
-  const onScreen = ["smartphone", "mobile"].includes(ringing?.model) || (ringing?.model === "landline" && skinOf(ringing) === "modern");
+  const onScreen = ["smartphone", "mobile", "brick"].includes(ringing?.model) || (ringing?.model === "landline" && skinOf(ringing) === "modern");
   if (!game.user.isGM && onScreen) {
     // Smartphone, mobile and modern landline show the call on the device itself: open it (or bring it forward).
     call.screen = { caller: caller ? maskedLabel(caller) : callerNumber || null, known: !!caller, silent, img: callerImg ?? null, secure };
@@ -110,6 +110,8 @@ export function playerSendSms(item, to, text, { att = null, fwd = false, fwdSecu
   if (getPhoneData(item)?.locked) return deviceNotice(t("Warn.Locked"), { warn: true }), false;
   if (modeOf(getPhoneData(item)) === "off") return deviceNotice(t("Warn.PhoneOff"), { warn: true }), false;
   if (!networkUp(getPhoneData(item))) return false;
+  // Through the satellite: the GM decides whether the link is established (the device says it searches).
+  if (viaSatellite(getPhoneData(item))) deviceNotice(t("Satellite.Searching"), { icon: "fa-satellite" });
   game.socket.emit(SOCKET, { type: "playerSms", fromItemUuid: item.uuid, to, text, att, fwd, fwdSecure, userId: game.user.id });
   return true;
 }
@@ -146,22 +148,55 @@ export function playerCall(item, to) {
     game.socket.emit(SOCKET, { type: "playerHangup", callId });
   };
   call.hangup = hangup;
-  if (["smartphone", "mobile"].includes(phone.model)) {
-    // Smartphone and mobile: the call shows on the device itself, not in a window.
-    call.screen = { name, img: knownFace(phone, to), face: phone.model === "smartphone" };
+  // Through the satellite: the device searches for it until the GM decides (no ringback tone yet).
+  call.searching = viaSatellite(phone);
+  if (["smartphone", "mobile", "brick"].includes(phone.model)) {
+    // Smartphone, mobile and brick: the call shows on the device itself, not in a window.
+    call.screen = { name, img: knownFace(phone, to), face: phone.model === "smartphone", searching: call.searching };
     const app = PlayerPhone.instance ?? new PlayerPhone();
     app._state.phoneUuid = item.uuid;
     app.render({ force: true }).then(() => app.bringToFront?.());
   } else showOutgoingDialog(call, name, hangup);
   game.socket.emit(SOCKET, { type: "playerCall", fromItemUuid: item.uuid, to, callId, userId: game.user.id });
-  // Narration: the whole table hears the ringback tone and knows who is on the phone.
-  const agent = item.parent?.name ?? game.user.character?.name ?? game.user.name;
-  const img = item.parent?.img ?? game.user.character?.img ?? null;
-  game.socket.emit(SOCKET, { type: "callNearby", callId, exclude: [game.user.id], name: agent, img, timeout: game.settings.get(MODULE_ID, "ringTimeout") });
+  if (call.searching) startSatSearch(call);
+  else startRingback(call, item);
+}
+
+/** Searching for the satellite: the whole table hears the device beep until the GM decides. */
+function startSatSearch(call) {
+  game.socket.emit(SOCKET, { type: "satNearby", callId: call.callId, exclude: [game.user.id] });
+  playLocal(SAT_SEARCH_SRC, { loop: true, gain: 0.5 }).then((sound) => {
+    call.sound = sound;
+    if (call.done || !call.searching) sound?.stop();
+  });
+}
+
+/** Narration: the whole table hears the ringback tone and knows who is on the phone. */
+function startRingback(call, item) {
+  const agent = item?.parent?.name ?? game.user.character?.name ?? game.user.name;
+  const img = item?.parent?.img ?? game.user.character?.img ?? null;
+  game.socket.emit(SOCKET, { type: "callNearby", callId: call.callId, exclude: [game.user.id], name: agent, img, timeout: game.settings.get(MODULE_ID, "ringTimeout") });
   playLocal(RINGBACK_SRC, { loop: true }).then((sound) => {
+    call.sound?.stop();
     call.sound = sound;
     if (call.done || call.ringing) sound?.stop();
   });
+}
+
+/** The GM established the satellite link: the call goes on (ringback tone). */
+export function onSatLink({ callId }) {
+  const call = outgoing;
+  if (!call || call.callId !== callId || call.done || !call.searching) return;
+  call.searching = false;
+  call.sound?.stop();
+  call.sound = null;
+  stopEntry(`sat:${callId}`);
+  game.socket.emit(SOCKET, { type: "satNearbyStop", callId });
+  if (call.screen) {
+    call.screen.searching = false;
+    rerenderAll();
+  }
+  startRingback(call, fromUuidSync(call.itemUuid));
 }
 
 /**
@@ -203,7 +238,8 @@ export const CALLER_RESULTS = {
   unreachable: () => t("CallerResult.unreachable"),
   noanswer: (name) => t("CallerResult.noanswer", { name }),
   busy: () => t("CallerResult.busy"),
-  neterror: () => t("CallerResult.neterror")
+  neterror: () => t("CallerResult.neterror"),
+  nosat: () => t("CallerResult.nosat")
 };
 
 export function onCallResult({ callId, result, name }) {
@@ -217,7 +253,7 @@ export function onCallResult({ callId, result, name }) {
   // Answered: the device shows the call, no notice. Otherwise, a notice on the device.
   if (result === "answer") return playLocal(PICKUP_SRC);
   const msg = (CALLER_RESULTS[result] ?? CALLER_RESULTS.noanswer)(name);
-  deviceNotice(msg, { warn: true, icon: ["busy", "neterror"].includes(result) ? "fa-signal spt-busy" : null });
+  deviceNotice(msg, { warn: true, icon: ["busy", "neterror"].includes(result) ? "fa-signal spt-busy" : result === "nosat" ? "fa-satellite" : null });
 }
 
 
@@ -252,7 +288,16 @@ export function receiveNearbyCall({ callId, exclude, timeout }) {
   return playNearby({ kind: "call", callId, exclude, timeout, src: RINGBACK_SRC });
 }
 
+export function receiveNearbySat({ callId, exclude }) {
+  return playNearby({ kind: "sat", callId, exclude, timeout: 0, src: SAT_SEARCH_SRC });
+}
+
+export function stopNearbySat({ callId }) {
+  stopEntry(`sat:${callId}`);
+}
+
 export function stopNearbyRing({ callId }) {
+  stopEntry(`sat:${callId}`);
   stopEntry(`ring:${callId}`);
   stopEntry(`call:${callId}`);
 }

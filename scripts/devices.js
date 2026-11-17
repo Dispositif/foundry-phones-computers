@@ -2,7 +2,7 @@ import { feature } from "./features.js";
 import { LOG_MAX, MASKED, MODULE_ID, SHEET_ID } from "./constants.js";
 import { esc, maskedLabel, norm, randomEmail, randomNumber, isMasked } from "./util.js";
 import { t } from "./i18n.js";
-import { universe } from "./universes.js";
+import { UNIVERSES, satellitePolicy, storedUniverseKey, universe } from "./universes.js";
 import { deviceName } from "./names.js";
 /* -------------------------------------------- */
 /*  Model: phones, contacts, history            */
@@ -21,8 +21,10 @@ export function getPhoneData(item) {
 export const MODELS = {
   landline: { get label() { return t("Model.landline"); }, icon: "fa-phone", fixed: true, sms: false, callerId: false, attachments: false, ring: "ring-bell.ogg" },
   mobile: { get label() { return t("Model.mobile"); }, icon: "fa-mobile-retro", sms: true, callerId: true, attachments: false, ring: "ring-mobile.ogg", notif: "sms-mobile.ogg" },
-  pager: { get label() { return t("Model.pager"); }, icon: "fa-pager", sms: true, pager: true, noCalls: true, callerId: true, attachments: false, notif: "pager.ogg" },
-  smartphone: { get label() { return t("Model.smartphone"); }, icon: "fa-mobile-screen", sms: true, callerId: true, attachments: true, ring: "ring.ogg" },
+  // 1980s brick phone: calls only, no caller ID. As a satellite phone, every call goes through the satellite.
+  brick: { get label() { return t("Model.brick"); }, icon: "fa-mobile-button", skin: "mobile", noSilent: true, sms: false, callerId: false, attachments: false, ring: "ring-mobile.ogg", satellite: true, satAlways: true },
+  pager: { get label() { return t("Model.pager"); }, icon: "fa-pager", sms: true, pager: true, noCalls: true, callerId: true, attachments: false, notif: "pager.ogg", satellite: true },
+  smartphone: { get label() { return t("Model.smartphone"); }, icon: "fa-mobile-screen", sms: true, callerId: true, attachments: true, ring: "ring.ogg", satellite: true },
   computer: { get label() { return t("Model.computer"); }, icon: "fa-laptop", sms: true, mail: true, noCalls: true, callerId: true, attachments: true, notif: "mail.ogg" },
   desktop: { get label() { return t("Model.desktop"); }, icon: "fa-desktop", fixed: true, sms: true, mail: true, noCalls: true, callerId: true, attachments: true, notif: "mail.ogg" },
   // No screen, no number: an on/off switch that cuts the network on the carrier's scene.
@@ -53,6 +55,29 @@ export function jammedScenes() {
     jamCache.get(p.phone.jamScene).push(p);
   }
   return jamCache;
+}
+
+/**
+ * Satellite device (option ticked by the GM, advanced feature on). Switched off in the settings,
+ * the device is an ordinary one again (the option is kept).
+ */
+export function isSatellite(phone) {
+  return !!phone?.satellite && !!modelOf(phone).satellite && feature("satellite");
+}
+
+/** Model name as the GM and players see it: a satellite brick is a "Satellite phone". */
+export function modelLabel(phone) {
+  if (isSatellite(phone) && modelOf(phone).satAlways) return t("Model.satphone");
+  return modelOf(phone).label;
+}
+
+/**
+ * Does this device go through the satellite right now? Only when it has no mobile network
+ * (dead zone, jammer, network cut): with the mobile network, it calls like any phone.
+ */
+export function viaSatellite(phone) {
+  if (!isSatellite(phone) || phone.noSignal) return false;
+  return !mobileSignal(phone);
 }
 
 /** Can this device send messages (texts or emails)? */
@@ -114,7 +139,10 @@ export function playerUnread(phone) {
 
 /** Ring mode (on, silent, off). Computers have none: always on. */
 export function modeOf(phone) {
-  return isComputer(phone) ? "on" : phone?.mode ?? "on";
+  if (isComputer(phone)) return "on";
+  // A brick has no silent mode: it rings.
+  if (modelOf(phone).noSilent && phone?.mode === "silent") return "on";
+  return phone?.mode ?? "on";
 }
 
 /**
@@ -165,23 +193,20 @@ export function cleanTheme(theme, model) {
 }
 
 /**
- * Look in effect: in a universe, "default" or a look it does not offer becomes the universe's default.
- * The stored look is kept, so switching back to the previous universe brings it back.
+ * Look in effect: the stored one. The universe never changes an existing device's look
+ * (new devices store the universe's default look when they are created).
  */
 function effectiveTheme(theme, model) {
   // A landline's old "default" is the rotary dial: it stays one.
-  if (model === "landline" && (!theme || theme === DEFAULT_THEME)) theme = "vintage";
-  const list = universe().themes[model] ? themeChoices(model) : null;
-  if (list && (theme === DEFAULT_THEME || !list.includes(theme))) return list[0];
-  return theme;
+  if (model === "landline" && (!theme || theme === DEFAULT_THEME)) return "vintage";
+  return theme || DEFAULT_THEME;
 }
 
-/** The look to select in a form for this device. */
+/** The look to select in a form for this device (its own look, even one the universe does not offer). */
 export function shownTheme(theme, model) {
   const k = effectiveTheme(theme, model);
-  const list = themeChoices(model);
-  if (list.includes(k)) return k;
-  return model === "landline" ? "vintage" : list[0];
+  if (k === DEFAULT_THEME && !themeChoices(model).includes(k)) return BASE_THEME;
+  return k;
 }
 
 /** Look to display: the chosen one if it fits, otherwise the model's look (fallback). */
@@ -189,13 +214,41 @@ export function skinOf(phone) {
   const model = MODELS[phone?.model] ? phone.model : "smartphone";
   // "default" keeps the model's look (rotary dial for a landline), so existing devices do not change.
   const theme = effectiveTheme(phone?.theme, model);
-  return themeFits(theme, model) ? THEMES[theme].skin ?? theme : model;
+  // A model may share another's screen look (the brick: the mobile's LCD).
+  return themeFits(theme, model) ? THEMES[theme].skin ?? theme : MODELS[model].skin ?? model;
 }
 
-/** Ringtone of a device: the modern landline has its own electronic ring, the rotary dial keeps the bell. */
+/**
+ * Ringtone of a device: the one it got when created (the universe's own ringtone, Cyberpunk),
+ * otherwise the modern landline has its own electronic ring, the rotary dial keeps the bell.
+ */
 export function ringOf(phone) {
-  if (universe().ring) return universe().ring;
+  if (phone?.ring) return phone.ring;
   return skinOf(phone) === "modern" ? "ring-landline.ogg" : modelOf(phone).ring;
+}
+
+/**
+ * Once per world (active GM): before looks stopped following the universe, a device's "default"
+ * look and its ringtone came from the universe. Stores them on each device, so changing the
+ * universe never changes existing devices. Uses the universe as stored (even the removed "all").
+ */
+export async function freezeLooks() {
+  if (game.settings.get(MODULE_ID, "looksFrozen")) return;
+  const u = UNIVERSES[storedUniverseKey()];
+  for (const { item, phone } of allPhones({ jammers: true })) {
+    const model = MODELS[phone.model] ? phone.model : "smartphone";
+    const patch = {};
+    const list = u?.themes?.[model]?.filter((k) => k === BASE_THEME || themeFits(k, model));
+    if (list?.length) {
+      let theme = phone.theme;
+      if (model === "landline" && (!theme || theme === DEFAULT_THEME)) theme = "vintage";
+      if (theme === DEFAULT_THEME || !theme || !list.includes(theme)) theme = list[0];
+      if (theme !== phone.theme) patch.theme = theme;
+    }
+    if (u?.ring && !phone.ring && modelOf(phone).ring) patch.ring = u.ring;
+    if (Object.keys(patch).length) await item.update(Object.fromEntries(Object.entries(patch).map(([k, v]) => [`flags.${MODULE_ID}.phone.${k}`, v])));
+  }
+  await game.settings.set(MODULE_ID, "looksFrozen", true);
 }
 
 export function modelOf(phone) {
@@ -257,13 +310,22 @@ export function inDeadZone(actor) {
   });
 }
 
-/** Does the device have signal? (network cut, no signal for this device, or its holder in a dead zone) */
-export function hasSignal(phone) {
+/** Mobile network only: network cut, no signal for this device, or its holder in a dead zone (or jammed). */
+export function mobileSignal(phone) {
   // An installed device does not depend on the mobile network: it always has a line.
   if (isFixed(phone)) return true;
   if (game.settings.get(MODULE_ID, "networkDown") || phone?.noSignal) return false;
   const holder = PHONE_ITEM.get(phone)?.parent;
   return !(holder instanceof Actor && inDeadZone(holder));
+}
+
+/**
+ * Does the device have signal? The mobile network, or the satellite: a satellite device ignores
+ * dead zones, jammers and network cuts (the GM decides each connection). "No signal" set by the GM still cuts it.
+ */
+export function hasSignal(phone) {
+  if (mobileSignal(phone)) return true;
+  return isSatellite(phone) && !phone?.noSignal;
 }
 
 /**
@@ -655,7 +717,8 @@ export function conversations(phone) {
 }
 
 /** Item icon for each model (shipped with the module, always available). */
-export const modelImg = (model) => `modules/${MODULE_ID}/icons/${MODELS[model] ? model : "smartphone"}.svg`;
+// A satellite brick is a satellite phone: its own icon.
+export const modelImg = (model, satellite = false) => `modules/${MODULE_ID}/icons/${model === "brick" && satellite ? "satphone" : MODELS[model] ? model : "smartphone"}.svg`;
 
 /** Is the item image a default one (Foundry's or ours) that can be replaced? */
 export function isDefaultImg(img, type) {
@@ -673,8 +736,8 @@ function descriptionPath(item) {
 
 /** Short device description: "Smartphone · 555-0142". */
 export function deviceDescription(phone) {
-  if (isJammer(phone)) return `<p>${esc(modelOf(phone).label)}</p>`;
-  return `<p>${esc(modelOf(phone).label)} · ${esc(phone.number ?? "")}</p>`;
+  if (isJammer(phone)) return `<p>${esc(modelLabel(phone))}</p>`;
+  return `<p>${esc(modelLabel(phone))} · ${esc(phone.number ?? "")}</p>`;
 }
 
 /**
@@ -685,7 +748,8 @@ export function deviceItemPatch(item, phone) {
   const patch = {};
   const model = phone.model ?? "smartphone";
   if (item.getFlag("core", "sheetClass") === undefined) patch["flags.core.sheetClass"] = SHEET_ID;
-  if (isDefaultImg(item.img, item.type) && item.img !== modelImg(model)) patch.img = modelImg(model);
+  const img = modelImg(model, !!phone.satellite);
+  if (isDefaultImg(item.img, item.type) && item.img !== img) patch.img = img;
   const path = descriptionPath(item);
   if (path) {
     const current = foundry.utils.getProperty(item, path) ?? "";
@@ -716,18 +780,28 @@ export function pickItemType() {
   return types.find((t) => /equip|gear|item|stuff|objet|possession|inventory/i.test(t)) ?? types[0];
 }
 
-export async function createPhone(actor, { label, number, model = "smartphone", sceneId = null, theme = null, secure = false }) {
-  label ||= deviceName(model) ?? MODELS[model]?.label ?? MODELS.smartphone.label;
+/**
+ * Satellite option of a new device: forced by the universe, or the GM's choice where it is an option.
+ * undefined (no choice made): forced only.
+ */
+export function newSatellite(model, choice) {
+  const policy = satellitePolicy(model);
+  return policy === "forced" || (policy === "option" && !!choice);
+}
+
+export async function createPhone(actor, { label, number, model = "smartphone", sceneId = null, theme = null, secure = false, satellite }) {
+  satellite = newSatellite(model, satellite);
+  label ||= deviceName(model, { satellite }) ?? MODELS[model]?.label ?? MODELS.smartphone.label;
   number ||= randomAddress(model, { name: actor?.name });
   const options = actor ? { parent: actor, spt: true } : { spt: true };
   const item = await Item.create(
     {
       name: label,
       type: pickItemType(),
-      img: modelImg(model),
+      img: modelImg(model, satellite),
       flags: {
         core: { sheetClass: SHEET_ID },
-        [MODULE_ID]: { phone: { label, number, model, sceneId, theme: cleanTheme(theme ?? newTheme(model), model), mode: "on", contacts: [], log: [], ...(secure ? { secure: true } : {}) } }
+        [MODULE_ID]: { phone: { label, number, model, sceneId, theme: cleanTheme(!theme || theme === DEFAULT_THEME ? newTheme(model) : theme, model), mode: "on", contacts: [], log: [], ...(secure ? { secure: true } : {}), ...(satellite ? { satellite: true } : {}), ...newRing(model) } }
       }
     },
     options
@@ -737,19 +811,26 @@ export async function createPhone(actor, { label, number, model = "smartphone", 
   return item;
 }
 
-export async function markPhone(item, { label, number, model, sceneId, theme, inbox, secure }) {
+/** Ringtone stored on a new device: the universe's own, if it has one (Cyberpunk). */
+function newRing(model) {
+  const ring = universe().ring;
+  return ring && MODELS[model]?.ring ? { ring } : {};
+}
+
+export async function markPhone(item, { label, number, model, sceneId, theme, inbox, secure, satellite }) {
   const prev = getPhoneData(item) ?? { mode: "on", contacts: [], log: [] };
   const next = { ...prev, label, number };
   if (model) next.model = model;
   if (sceneId !== undefined) next.sceneId = sceneId;
   if (inbox !== undefined) next.inbox = inbox;
   if (secure !== undefined) next.secure = !!secure;
+  if (satellite !== undefined) next.satellite = !!satellite && !!MODELS[next.model ?? "smartphone"]?.satellite;
   if (theme !== undefined || !next.theme) next.theme = cleanTheme(theme ?? next.theme, next.model ?? "smartphone");
   const patch = deviceItemPatch(item, next);
   // Device and item share one name.
   if (label && item.name !== label) patch.name = label;
   // Changing the model changes the item image too.
-  if (prev.model && next.model !== prev.model) patch.img = modelImg(next.model);
+  if (prev.model && next.model !== prev.model) patch.img = modelImg(next.model, !!next.satellite);
   return item.update({ [`flags.${MODULE_ID}.phone`]: next, ...patch });
 }
 
@@ -765,7 +846,7 @@ export async function unmarkPhone(item) {
 export function carriedPhone(user) {
   const actor = user?.character ?? null;
   if (!actor) return null;
-  const order = ["smartphone", "mobile"];
+  const order = ["smartphone", "mobile", "brick"];
   return allPhones()
     .filter((p) => p.actor === actor && order.includes(p.phone.model))
     .sort((a, b) => order.indexOf(a.phone.model) - order.indexOf(b.phone.model))[0] ?? null;
@@ -783,7 +864,7 @@ export async function defaultDeviceFor(user) {
   if (carried) return carried;
   const model = universe().defaultModel;
   const label = deviceName(model) ?? MODELS[model]?.label ?? MODELS.smartphone.label;
-  const item = await createPhone(actor, { label, number: randomAddress(model, { name: actor.name }), model, theme: DEFAULT_THEME });
+  const item = await createPhone(actor, { label, number: randomAddress(model, { name: actor.name }), model });
   if (!item) return null;
   ui.notifications.info(`📱 ${t("Info.DefaultCreated", { label, name: actor.name })}`);
   return { item, phone: getPhoneData(item), actor };

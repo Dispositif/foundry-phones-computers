@@ -6,6 +6,10 @@ import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js
 import { esc, playLocal, rerenderAll } from "./util.js";
 import { labels, t } from "./i18n.js";
 import { agentSide, npcSide, startLive } from "./live-call.js";
+import { cancelLink, requestLink, satDevices, satPending } from "./satellite.js";
+
+/** The sending device as a device entry ({ item, phone, actor }), for the satellite check. */
+const entryOf = (item) => ({ item, phone: getPhoneData(item), actor: item?.parent instanceof Actor ? item.parent : null });
 /* -------------------------------------------- */
 /*  GM: handling player actions                 */
 /* -------------------------------------------- */
@@ -41,6 +45,18 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
     game.socket.emit(SOCKET, { type: "smsResult", targetUserId: userId, result: "pagerCut" });
   }
   const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;
+  // Satellite at either end: the GM decides whether the link can be established.
+  const sats = satDevices([entryOf(from), ...targets]);
+  if (sats.length) {
+    const to = targets.length ? targets.map((p) => holderName(p.item, p.phone)).join(", ") : displayName(fromPhone, key);
+    const link = await requestLink(foundry.utils.randomID(), { sats, who, to, kind: "sms", text });
+    if (link !== "ok") {
+      // Satellite not found: not sent. The agent sees it on the device and can try again.
+      await addLog(from, { kind: "sms", dir: "out", with: key, text, nosat: true, ...extra });
+      game.socket.emit(SOCKET, { type: "smsResult", targetUserId: userId, result: "nosat" });
+      return rerenderAll();
+    }
+  }
   warnCompromised(fromPhone, ...targets.map((p) => p.phone));
 
   if (targets.length) {
@@ -93,6 +109,20 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   const targets = phonesByNumber(number).filter((p) => p.item !== from);
   // A landline with nobody in the room: the GM answers in place of whoever is there (NPC).
   const emptyRooms = targets.length > 0 && targets.every((p) => isLandline(p.phone) && !holders(p, { activeOnly: true }).length);
+
+  // Satellite at either end: the GM decides first; the caller's device searches for the satellite meanwhile.
+  const sats = satDevices([entryOf(from), ...targets]);
+  if (sats.length) {
+    const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;
+    const to = targets.length && !emptyRooms ? targets.map((p) => holderName(p.item, p.phone)).join(", ") : origin.name;
+    const link = await requestLink(callId, { sats, who, to, kind: "call" });
+    if (link === "cancelled") return finishOriginLogOnly(origin, "cancelled");
+    if (link !== "ok") return finishOrigin(origin, "nosat");
+    origin.sat = true;
+    game.socket.emit(SOCKET, { type: "satLink", targetUserId: userId, callId });
+    // Another call started while the GM was deciding.
+    if (networkBusy()) return finishOrigin(origin, "busy");
+  }
 
   if (targets.length && !emptyRooms) {
     warnCompromised(fromPhone, ...targets.map((p) => p.phone));
@@ -160,6 +190,8 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
 }
 
 export function onPlayerHangup({ callId }) {
+  // Hung up while the GM was deciding on the satellite link.
+  if (satPending.has(callId)) return cancelLink(callId);
   const npc = gmIncoming.get(callId);
   if (npc) {
     npc.finish("cancelled");
@@ -175,6 +207,6 @@ export function onPlayerHangup({ callId }) {
 
 export function finishOriginLogOnly(origin, result) {
   const item = fromUuidSync(origin.itemUuid);
-  if (item) addLog(item, { kind: "call", call: origin.callId, dir: "out", with: origin.key, result });
+  if (item) addLog(item, { kind: "call", call: origin.callId, dir: "out", with: origin.key, result, ...(origin.sat ? { sat: true } : {}) });
 }
 

@@ -6,7 +6,7 @@ The module's code is under the MIT License (see LICENSE). The assets below keep 
 
 - Smartphone, mobile, pager, laptop, terminal, landline: [Font Awesome Free](https://fontawesome.com), CC BY 4.0.
 - Rotary phone: Caro Asercion, Candlestick phone: Delapouite ([game-icons.net](https://game-icons.net)), CC BY 3.0.
-- Jammer: Signal Jammer by Kevin Lane ([Noun Project](https://thenounproject.com)), CC BY 3.0.
+- Jammer: Signal Jammer by Kevin Lane, Brick phone: Cell Phone by Michael Keshen, Satellite phone: telecom by iconnut ([Noun Project](https://thenounproject.com)), CC BY 3.0.
 
 ## Sounds
 

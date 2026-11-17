@@ -461,6 +461,8 @@ a.spt-link:hover { filter: brightness(1.15); }
 #spt-phone-fab .spt-fab-badge[hidden] { display: none; }
 /* Device whose window is open: thin white ring (an outline, so it never fights the call or jammer glows). */
 #spt-phone-fab .spt-fab.open { outline: 2px solid rgba(232,232,232,0.85); outline-offset: 2px; }
+/* GM: whole network cut */
+#spt-phone-fab .spt-fab.netdown { outline: 3px solid #ff3b30; outline-offset: 2px; }
 #spt-phone-fab .spt-fab.ringing { animation: spt-fab-ring 0.5s infinite; background: var(--spt-accent); }
 @keyframes spt-fab-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
 
@@ -1381,3 +1383,64 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
 .spt-news ul { margin: 4px 0 8px; padding-left: 1.2em; }
 .spt-news li { margin: 4px 0; }
 .spt-news-more { margin: 0; font-size: 0.85em; opacity: 0.8; }
+
+/* Brick phones: antenna pulled out during calls */
+.spt-frame-antenna { top: -46px; right: 22px; width: 22px; height: 56px; border-radius: 6px 6px 0 0; background: linear-gradient(90deg, #1a1b1d, #3c3f44, #1a1b1d); transition: top 0.4s, height 0.4s; }
+.spt-frame-antenna::before { content: ""; position: absolute; top: -8px; left: -3px; width: calc(100% + 6px); height: 10px; border-radius: 8px; background: #2a2c30; }
+.spt-player-phone.spt-antenna-up .spt-frame-antenna { top: -96px; height: 106px; }
+
+/* 1980s brick: imposing tall shell, tiny LCD, tiny keys, big earpiece and mouthpiece */
+.application.spt-player-phone.spt-frame-brick:not(.minimized) {
+  padding: 20px 22px 0; border-radius: 22px 22px 18px 18px;
+  background: linear-gradient(175deg, #3b3a37, #262523 45%, #1b1a19);
+  box-shadow: 0 0 0 2px #0f0f0e, 0 24px 48px rgba(0,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.1), inset 0 -10px 18px rgba(0,0,0,0.45);
+}
+.spt-player-phone.spt-frame-brick:not(.minimized) > .window-header { top: 0; height: 20px; padding: 0 24px; color: #e6e9ee; }
+.spt-player-phone.spt-frame-brick:not(.minimized) > .window-content { flex: 0 0 150px; border-radius: 2px; border: 6px solid #0c0c0b; font-size: 0.82em; }
+.spt-frame-deco.spt-brick-grille, .spt-frame-deco.spt-brick-brand, .spt-frame-deco.spt-brick-pad, .spt-frame-deco.spt-brick-mic { position: relative; z-index: auto; flex: 0 0 auto; }
+.spt-brick-grille { height: 70px; margin: 6px 18px 4px; border-radius: 10px; background: repeating-linear-gradient(0deg, #0e0e0d 0 4px, #33322f 4px 8px); box-shadow: inset 0 2px 6px rgba(0,0,0,0.7); }
+.spt-brick-brand { margin: 0 0 8px; text-align: center; font: bold 10px/1 sans-serif; letter-spacing: 0.3em; color: #a8a49b; }
+.spt-brick-pad { margin: 10px 14px 0; display: flex; flex-direction: column; gap: 5px; }
+.spt-brick-pad .fn, .spt-brick-pad .num { display: grid; gap: 4px; }
+.spt-brick-pad .fn { grid-template-columns: repeat(3, 1fr); }
+.spt-brick-pad .num { grid-template-columns: repeat(3, 1fr); }
+.spt-brick-pad span { height: 15px; border-radius: 2px; background: linear-gradient(#cfcbc2, #9c988f); color: #222; font: bold 8px/15px sans-serif; text-align: center; box-shadow: 0 1px 0 #111; }
+.spt-brick-pad .fn span { background: linear-gradient(#58564f, #3a3934); color: #ddd; }
+.spt-brick-pad span.snd { background: linear-gradient(#6aa865, #417c3c); color: #fff; }
+.spt-brick-pad span.end { background: linear-gradient(#c96a61, #94423a); color: #fff; }
+.spt-brick-mic { flex: 1 1 auto; min-height: 40px; display: grid; place-items: end center; padding-bottom: 26px; }
+.spt-brick-mic::after { content: ""; width: 46px; height: 10px; border-radius: 5px; background: repeating-linear-gradient(90deg, #0e0e0d 0 3px, #33322f 3px 6px); }
+
+/* Satellite phone (brick shape): short screen, big keys, SAT label, thick antenna */
+.application.spt-player-phone.spt-frame-bricksat:not(.minimized) {
+  padding: 20px 16px 0; border-radius: 16px 16px 12px 12px;
+  background: linear-gradient(170deg, #4a4d52, #2a2c30 50%, #1d1f22);
+  box-shadow: 0 0 0 2px #121315, 0 22px 44px rgba(0,0,0,0.55), inset 0 2px 3px rgba(255,255,255,0.12);
+}
+.spt-player-phone.spt-frame-bricksat:not(.minimized) > .window-header { top: 0; height: 20px; padding: 0 24px; color: #e6e9ee; }
+.spt-player-phone.spt-frame-bricksat:not(.minimized) > .window-content { flex: 0 0 260px; border-radius: 3px; border: 8px solid #101113; }
+.spt-player-phone.spt-frame-bricksat .spt-frame-antenna { width: 34px; right: 18px; border-radius: 10px 10px 0 0; }
+.spt-frame-sat { top: 4px; left: 18px; font: bold 9px sans-serif; letter-spacing: 0.15em; color: #f0b429; }
+.spt-brick-keys { grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 14px 6px 18px; }
+.spt-brick-keys span { height: 26px; border-radius: 4px; background: linear-gradient(#d9d6cf, #a9a59c); box-shadow: 0 2px 0 #444; }
+.spt-brick-keys span.snd { background: linear-gradient(#7fbf7a, #4f8f4a); color: #fff; }
+.spt-brick-keys span.end { background: linear-gradient(#d9786f, #a9483f); color: #fff; }
+.spt-brick-keys span.clr { background: linear-gradient(#e8d9a8, #b8a978); }
+
+/* Satellite */
+.spt-sat-badge { color: #c98a00; }
+.spt-phone-top .spt-sat-signal { color: inherit; }
+.spt-sat-search i { animation: spt-sat-blink 1.2s ease-in-out infinite; }
+@keyframes spt-sat-blink { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .spt-sat-search i { animation: none; } }
+.spt-bubble.spt-failed { opacity: 0.75; border-style: dashed; }
+.spt-notsent { display: block; margin-top: 4px; font-size: 0.8em; opacity: 0.9; }
+.spt-notsent a { text-decoration: underline; cursor: pointer; }
+.spt-satellite-row { margin-top: 6px; }
+.spt-sat-request .spt-sat-question { font-weight: bold; }
+.spt-sat-request .spt-sat-devices { margin: 6px 0; padding-left: 1.2em; list-style: none; }
+.spt-sat-request .spt-sat-devices i { color: #c98a00; margin-right: 4px; }
+.spt-sat-request .spt-sat-text { margin: 6px 0; padding: 4px 8px; border-left: 3px solid #c98a00; opacity: 0.9; white-space: pre-wrap; }
+.spt-sat-request .spt-sat-jam { color: #c0392b; }
+.spt-wl-universe select { margin-left: 0.4em; }
+.spt-wl-universe-hint { margin: 2px 0 0; }
