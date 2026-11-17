@@ -20,7 +20,7 @@ import { registerEnrichers, runJournalLink } from "./journal-links.js";
 import { flushAll, flushPending, sendSms } from "./messages.js";
 import { restoreLive } from "./live-call.js";
 import { DEFAULT_UNIVERSE, UNIVERSES, applyGmLook, storedUniverseKey, universeKey } from "./universes.js";
-import { PlayerPhone } from "./player-phone.js";
+import { PlayerPhone, cycleDevices } from "./player-phone.js";
 import { registerTour } from "./tour.js";
 import { maybeWelcome, openWelcome, welcomeOwnedDevices } from "./welcome.js";
 import { maybeNews, openNews } from "./news.js";
@@ -208,9 +208,8 @@ Hooks.once("init", () => {
     editable: [{ key: "KeyP", modifiers: ["Control", "Shift"] }],
     onDown: () => {
       if (game.user.isGM) openPanel();
-      // Window already in front: each new press moves to the next device, then closes it.
-      else if (PlayerPhone.instance?.rendered && !PlayerPhone.instance.minimized) PlayerPhone.instance.cycleDevice();
-      else openPhone();
+      // Each new press shows the next device (pagers included), then closes once all were shown.
+      else cycleDevices(() => openPhone());
       return true;
     }
   });

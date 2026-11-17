@@ -10,7 +10,7 @@ import { activeCall, endCall, outgoing, playerCall, playerSendSms } from "./play
 import { dismissEnded, hangUpLive, liveOn, otherEnd, phoneClosed, statusHtml } from "./live-call.js";
 import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./share.js";
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
-import { openPager } from "./pager.js";
+import { PagerWindow, openPager } from "./pager.js";
 import { BOOT_MS, bootText, hostName, operatorName } from "./names.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
@@ -312,20 +312,6 @@ export class PlayerPhone extends ApplicationV2 {
     // A fixed device is only passed through: the shortcut and the main button keep the carried one.
     if (!isFixed(next.phone)) saveLastDevice(next.item.uuid);
     this._go("list");
-  }
-
-  /**
-   * Repeated Ctrl+Shift+P: each device in turn, then the window closes once all were shown
-   * (the next press opens it again).
-   */
-  cycleDevice() {
-    const usable = this._usable();
-    const cur = this._current()?.item.uuid;
-    this._cycleStart ??= cur;
-    const i = usable.findIndex((p) => p.item.uuid === cur);
-    const next = usable[(i + 1) % usable.length];
-    if (!next || usable.length < 2 || next.item.uuid === this._cycleStart) return this.close();
-    this.nextDevice();
   }
 
   /**
@@ -936,7 +922,6 @@ export class PlayerPhone extends ApplicationV2 {
   }
 
   _onClose(options) {
-    this._cycleStart = null;
     super._onClose?.(options);
     // Closed during a call: the call window takes over. Closed while dialing: the call is dropped (as closing the window did).
     if (!this.gm) phoneClosed();
@@ -980,7 +965,7 @@ export class PlayerPhone extends ApplicationV2 {
         if (ev.code !== "KeyP" || !ev.shiftKey || !(ev.ctrlKey || ev.metaKey)) return;
         ev.preventDefault();
         ev.stopPropagation();
-        this.cycleDevice();
+        cycleDevices();
       });
     }
     if (!this.gm && cur && isLandline(cur.phone)) {
@@ -1114,4 +1099,65 @@ function composeLabel(phone, gm) {
   if (sms && calls) return `<i class="fas fa-phone"></i><i class="fas fa-comment-sms"></i> ${t("CallOrMessage")}`;
   if (sms) return `<i class="fas fa-comment-sms"></i> ${t("NewMessage")}`;
   return `<i class="fas fa-phone"></i> ${t("Dial")}`;
+}
+
+/* Repeated Ctrl+Shift+P: each device in turn (phones, then pagers in their own window), */
+/* then everything closes once all were shown; the next press starts again.              */
+let cycle = null; // { start, cur } device uuids
+
+function pagerUuid(uuid) {
+  return isPager(getPhoneData(fromUuidSync(uuid)));
+}
+
+function shownDevice(uuid) {
+  if (pagerUuid(uuid)) return !!PagerWindow.windows.get(uuid)?.rendered;
+  const app = PlayerPhone.instance;
+  return !!app?.rendered && !app.minimized && app._current()?.item.uuid === uuid;
+}
+
+function hideDevice(uuid) {
+  if (pagerUuid(uuid)) PagerWindow.windows.get(uuid)?.close();
+  else PlayerPhone.instance?.close();
+}
+
+function showPhone(uuid) {
+  const app = PlayerPhone.instance ?? new PlayerPhone();
+  app._state.phoneUuid = uuid;
+  // A fixed device is only passed through: the shortcut and the main button keep the carried one.
+  if (!isFixed(getPhoneData(fromUuidSync(uuid)))) saveLastDevice(uuid);
+  if (app.rendered && !app.minimized) return app._go("list");
+  app._state.view = "list";
+  app._skipRead = true;
+  app.render({ force: true });
+}
+
+/** openDefault: what the shortcut opens when no device is shown yet. */
+export function cycleDevices(openDefault = null) {
+  const mine = myPhones();
+  const list = [...mine.filter((p) => !isPager(p.phone)), ...mine.filter((p) => isPager(p.phone))].map((p) => p.item.uuid);
+  const app = PlayerPhone.instance;
+  const cur = cycle && shownDevice(cycle.cur)
+    ? cycle.cur
+    : app?.rendered && !app.minimized
+      ? app._current()?.item.uuid
+      : list.find((u) => pagerUuid(u) && shownDevice(u));
+  if (!cur || !list.includes(cur)) {
+    cycle = null;
+    return openDefault?.();
+  }
+  if (cycle?.cur !== cur) cycle = { start: cur, cur };
+  const next = list[(list.indexOf(cur) + 1) % list.length];
+  if (list.length < 2 || next === cycle.start) {
+    hideDevice(cur);
+    cycle = null;
+    return;
+  }
+  if (pagerUuid(next)) {
+    hideDevice(cur);
+    openPager(next, { latest: true });
+  } else {
+    if (pagerUuid(cur)) hideDevice(cur);
+    showPhone(next);
+  }
+  cycle.cur = next;
 }
