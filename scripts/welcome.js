@@ -145,7 +145,7 @@ export async function welcomeDevice(p) {
   if (game.user.isGM || !p?.item?.isOwner || welcomed.has(p.item.uuid)) return;
   const phone = p.phone;
   if (phone.welcomed || isPager(phone) || isComputer(phone) || !msgOn(phone) || modeOf(phone) === "off" || !hasSignal(phone) || !game.users.activeGM) return;
-  if (!game.settings.get(MODULE_ID, "welcomeMessage") || getLog(phone, { includePending: true }).length) return;
+  if (getLog(phone, { includePending: true }).length) return;
   // Several players own the device: only the first one connected sends it.
   const owners = game.users.filter((u) => u.active && !u.isGM && p.item.testUserPermission(u, "OWNER")).sort((a, b) => a.id.localeCompare(b.id));
   if (owners.length && owners[0] !== game.user) return;

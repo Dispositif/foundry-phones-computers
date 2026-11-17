@@ -545,20 +545,22 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Changes the state (tab, mode, recipient…) while keeping the current input. */
   /** Settings view: the module's own settings (read from their registration) and the advanced features. */
   _settingsContext() {
-    const keys = ["universe", "gmLook", "language", "numberPrefix", "ringTimeout", "team", "welcomeMessage", "floatingButton", "gmFloatingButton", "volume"];
+    const keys = ["universe", "gmLook", "language", "numberPrefix", "ringTimeout", "volume", "team", "floatingButton", "gmFloatingButton"];
+    // Icons beside some settings and every advanced feature (same icons as the GM tab or the device).
+    const ICONS = { team: "fa-user-group", intel: "fa-eye", secure: "fa-shield-halved", jammer: "fa-tower-broadcast", satellite: "fa-satellite" };
     const L = (s) => (s ? game.i18n.localize(s) : "");
     const rows = keys.map((key) => {
       const c = game.settings.settings.get(`${MODULE_ID}.${key}`);
       if (!c) return null;
       const value = game.settings.get(MODULE_ID, key);
-      const row = { key, name: L(c.name), hint: L(c.hint), reload: !!c.requiresReload, client: c.scope === "client" };
+      const row = { key, icon: ICONS[key] ?? null, name: L(c.name), hint: L(c.hint), reload: !!c.requiresReload, client: c.scope === "client" };
       if (c.choices) return { ...row, select: true, options: Object.entries(c.choices).map(([v, label]) => ({ value: v, label: L(label), selected: v === value })) };
       if (c.type === Boolean) return { ...row, bool: true, checked: !!value };
       if (c.type === Number && c.range) return { ...row, range: true, value, ...c.range };
       if (c.type === Number) return { ...row, number: true, value };
       return { ...row, text: true, value: value ?? "" };
     }).filter(Boolean);
-    const features = FEATURES.map((k) => ({ key: k, name: t(`Features.${k}`), hint: t(`Features.${k}Hint`), checked: feature(k) }));
+    const features = FEATURES.map((k) => ({ key: k, icon: ICONS[k] ?? null, name: t(`Features.${k}`), hint: t(`Features.${k}Hint`), checked: feature(k) }));
     return { rows, features, reloadNeeded: !!this._reloadNeeded };
   }
 
@@ -760,6 +762,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const inboxUnread = npcThreads.reduce((n, th) => n + th.unread, 0);
 
     // Wiretaps: messages between agents the GM has not looked at yet (reset when the GM opens Wiretaps).
+    // Intel is an advanced feature: switched off, its tab is gone.
+    if (st.tab === "watch" && !feature("intel")) st.tab = this._state.tab = "send";
     const listenSeen = game.user.getFlag(MODULE_ID, "listenSeen") ?? 0;
     const viewingListen = st.tab === "watch" && (st.watchView ?? "listen") === "listen";
     let listenNew = 0;
@@ -774,7 +778,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     let watch = null;
     if (st.tab === "watch") {
       const agentOk = (ids) => !st.watchAgent || ids.has(st.watchAgent);
-      const leakOk = (th) => !st.watchLeak || !feature("compromised") || th.phone.compromised || phonesByNumber(keyFor(th.phone, th.key)).some((p) => p.phone.compromised);
+      const leakOk = (th) => !st.watchLeak || th.phone.compromised || phonesByNumber(keyFor(th.phone, th.key)).some((p) => p.phone.compromised);
       const views = ["listen", "calls", ...(feature("tracking") ? ["tracking"] : [])];
       const view = views.includes(st.watchView) ? st.watchView : "listen";
       watch = {
@@ -856,7 +860,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const canSecure = [...tp, ...(tpUser ? [tpUser] : [])].some((p) => isSecure(p.phone));
     return {
       settingsView: st.settingsOpen ? this._settingsContext() : null,
-      feat: Object.fromEntries(FEATURES.map((k) => [k, feature(k)])),
+      feat: Object.fromEntries([...FEATURES, "jammer", "tracking"].map((k) => [k, feature(k)])),
       tab: this._state.tab,
       mode: this._state.mode,
       messaging,

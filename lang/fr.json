@@ -88,11 +88,11 @@
     },
     "Gm": {
       "WritesTo": "{who} écrit à {name}.",
-      "AgentCalling": "Un agent appelle",
+      "AgentCalling": "Un PJ appelle",
       "EmptyLandlineCall": "Appel vers un fixe vide",
       "NobodyThere": "Personne sur place : vous répondez pour le lieu.",
       "CalledBy": "appelé par {who}",
-      "AgentHungUp": "L'agent a raccroché.",
+      "AgentHungUp": "Le PJ a raccroché.",
       "PanelTitle": "Réseau",
       "Cloned": "cloné",
       "Offline": "hors ligne",
@@ -112,7 +112,7 @@
       "GiveTo": "Donner à…",
       "Edit": "Modifier",
       "Remove": "Retirer",
-      "Inbox": "Messages des agents",
+      "Inbox": "Messages des PJ",
       "MarkAllSeen": "Tout marquer comme lu",
       "Recipient": "Destinataire",
       "PlayersDirect": "Joueurs (direct)",
@@ -136,7 +136,7 @@
       "TabTracking": "Traçage",
       "ModeMessage": "Message",
       "ModeCall": "Appel",
-      "NoInbox": "Aucun message des agents.",
+      "NoInbox": "Aucun message des PJ.",
       "Places": "Lieux",
       "Nobody": "Sans porteur",
       "Actions": "Actions",
@@ -145,12 +145,12 @@
       "Compromised": "Compromis (sur écoute, connu de l'ennemi…)",
       "NotCompromised": "Marquer comme compromis",
       "CompromisedDevice": "Appareil compromis : {label}",
-      "BetweenAgents": "Entre agents (lecture seule)",
+      "BetweenAgents": "Entre PJ (lecture seule)",
       "InboxNpc": "Conversations",
       "InboxAgents": "Écoutes",
-      "DropJournal": "Glissez une page de journal ou une image sur le message : l'agent la lira sur son appareil.",
+      "DropJournal": "Glissez une page de journal ou une image sur le message : le PJ la lira sur son appareil.",
       "LeakedForward": "{who} a transféré un message chiffré en clair à {to}.",
-      "Agents": "Agents",
+      "Agents": "PJ",
       "OtherDevices": "Autres appareils…",
       "CanPage": "une ligne",
       "DeviceOf": "{name} ({device})",
@@ -160,8 +160,8 @@
       "WriteAs": "Écrire en tant que {name} à",
       "FilterNpc": "Voir seulement ce correspondant",
       "ShowMore": "Afficher plus",
-      "NoListen": "Aucun message entre agents.",
-      "NoAgents": "Aucun agent : aucun joueur n'a de personnage assigné. Messages et appels arrivent sur l'appareil que porte le personnage d'un joueur.",
+      "NoListen": "Aucun message entre PJ.",
+      "NoAgents": "Aucun PJ : aucun joueur n'a de personnage assigné. Messages et appels arrivent sur l'appareil que porte le personnage d'un joueur.",
       "NoPlayers": "Aucun joueur dans ce monde. Messages et appels arrivent sur l'appareil du personnage d'un joueur : créez d'abord un compte joueur.",
       "AddDevice": "Autre appareil",
       "AnotherDevice": "Un autre appareil pour {name}",
@@ -173,10 +173,10 @@
       "MoreOptions": "Plus d'options…",
       "Created": "{label} ({number}) donné à {name}",
       "TabWatch": "Surveillance",
-      "WatchHint": "Ce que le réseau sait des agents : messages entre eux, appels, localisation. Lecture seule.",
+      "WatchHint": "Ce que le réseau sait des PJ : messages entre eux, appels, localisation. Lecture seule.",
       "Leak": "Ce que voit l'ennemi",
       "LeakHint": "Seulement les appareils compromis : ce qui a fuité",
-      "ListenNew": "Nouveaux messages entre agents",
+      "ListenNew": "Nouveaux messages entre PJ",
       "Settings": "Réglages",
       "Back": "Retour",
       "ThisComputer": "cet ordinateur seulement",
@@ -264,7 +264,7 @@
       "NumberHint": "Tout identifiant convient (numéro, email, adresse IP, identifiant, indicatif…) : c'est ce qu'on compose ou écrit pour joindre l'appareil.",
       "HeldBy": "Porté par",
       "Nobody": "Personne (à préparer)",
-      "HeldByHint": "Tapez quelques lettres pour trouver un agent ou un PNJ. Laissez vide pour préparer l'appareil sans porteur.",
+      "HeldByHint": "Tapez quelques lettres pour trouver un PJ ou un PNJ. Laissez vide pour préparer l'appareil sans porteur.",
       "Theme": "Habillage",
       "Inbox": "Messagerie",
       "Inbox_on": "Disponible",
@@ -381,7 +381,7 @@
       },
       "gmFloatingButton": {
         "name": "Bouton flottant pour le MJ",
-        "hint": "Une icône télécom avec le nombre de messages d'agents non lus. Un clic ouvre le panneau Réseau ; elle se déplace par glisser."
+        "hint": "Une icône télécom avec le nombre de messages de PJ non lus. Un clic ouvre le panneau Réseau ; elle se déplace par glisser."
       },
       "floatingButton": {
         "name": "Bouton flottant pour les joueurs",
@@ -404,20 +404,16 @@
         "haze": "Brume orange",
         "classic": "Classique"
       },
-      "welcomeMessage": {
-        "name": "Message de bienvenue de l'opérateur",
-        "hint": "La première fois qu'un joueur ouvre un nouvel appareil, son opérateur lui envoie un message de bienvenue (un mail sur un ordinateur)."
-      },
       "team": {
-        "name": "Équipe : les PJ se connaissent (numéros et mails déjà partagés)",
-        "hint": "Les appareils des PJ affichent ceux des autres PJ dans leurs contacts : numéros sur les téléphones, mails sur les ordinateurs."
+        "name": "Équipe : les PJ se connaissent",
+        "hint": "Leurs numéros et mails sont déjà dans les contacts de chaque appareil de PJ."
       }
     },
     "Migrated": "{n} appareil(s) repris de l'ancienne version.",
     "UniverseName": {
       "retro": "Vintage (années 80-90)",
       "modern": "Moderne",
-      "cyberpunk": "Cyberpunk / néon noir"
+      "cyberpunk": "Cyberpunk"
     },
     "Universe": {
       "retro": {
@@ -537,7 +533,7 @@
       "NpcHint": "faux numéros, sans appareil derrière",
       "NpcTitle": "PNJ (MJ répond)",
       "NoDevices": "Aucun appareil numéroté pour l'instant.",
-      "DevicePublicHint": "Public : tous les agents trouvent cet appareil par son nom",
+      "DevicePublicHint": "Public : tous les PJ trouvent cet appareil par son nom",
       "DevicesHint": "les objets Appareil, portés par un PJ ou installés dans une scène",
       "DevicesTitle": "PJ et scènes",
       "Search": "Rechercher un nom, un numéro…",
@@ -564,7 +560,7 @@
       "ToIdentify": "À identifier",
       "Empty": "L'annuaire est vide.",
       "EditText": "Éditer en texte",
-      "NoPrep": "Rien à préparer : tout numéro composé par un agent arrive chez vous.",
+      "NoPrep": "Rien à préparer : tout numéro composé par un PJ arrive chez vous.",
       "AddSender": "ajouter à l'annuaire",
       "DeleteConfirm": "Retirer {name} de l'annuaire ?",
       "Messages": {
@@ -575,7 +571,7 @@
         "one": "{n} appel",
         "other": "{n} appels"
       },
-      "Purpose": "<strong>L'annuaire ne contient que des PNJ : des faux numéros, sans appareil derrière, auxquels vous répondez vous-même.</strong> Il est facultatif : tout numéro composé par un agent arrive chez vous de toute façon. Il sert à vous y retrouver : nommer un numéro (qui répond vraiment), le rendre public (les joueurs peuvent le trouver), l'épingler (en tête de Messages) ou le couper (hors service). Les numéros des agents et des lieux viennent de leurs appareils : ils sont listés dans l'onglet Annuaire, où vous pouvez les rendre publics."
+      "Purpose": "<strong>L'annuaire ne contient que des PNJ : des faux numéros, sans appareil derrière, auxquels vous répondez vous-même.</strong> Il est facultatif : tout numéro composé par un PJ arrive chez vous de toute façon. Il sert à vous y retrouver : nommer un numéro (qui répond vraiment), le rendre public (les joueurs peuvent le trouver), l'épingler (en tête de Messages) ou le couper (hors service). Les numéros des PJ et des lieux viennent de leurs appareils : ils sont listés dans l'onglet Annuaire, où vous pouvez les rendre publics."
     },
     "CallOrMessage": "Appeler / Écrire",
     "Renamed": {
@@ -613,7 +609,7 @@
     },
     "Scene": {
       "DeadZone": "Zone blanche",
-      "DeadZoneHint": "Phones & Computers : ni réseau mobile ni Wi-Fi pour les appareils portés par les agents dont le joueur est sur cette scène. Les fixes et terminaux gardent leur ligne."
+      "DeadZoneHint": "Phones & Computers : ni réseau mobile ni Wi-Fi pour les appareils portés par les PJ dont le joueur est sur cette scène. Les fixes et terminaux gardent leur ligne."
     },
     "NewDev": {
       "landline": "Fixe moderne",
@@ -770,8 +766,8 @@
       "ReadyTitle": "Prêt à jouer",
       "ReadyPlayers": "{n} joueur(s), {m} avec un personnage",
       "ReadyNoPlayers": "Aucun compte joueur pour l'instant",
-      "ReadyDevices": "Chaque agent a un appareil",
-      "ReadyBare": "{n} agent(s) sans appareil : donnez-le depuis l'onglet Envoyer",
+      "ReadyDevices": "Chaque PJ a un appareil",
+      "ReadyBare": "{n} PJ sans appareil : donnez-le depuis l'onglet Envoyer",
       "PointDirectory": "L'<strong>Annuaire</strong> est facultatif : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver (nommer un numéro, le rendre public, l'épingler, le couper) et se remplit au fil de la partie.",
       "MoreTools": "Plus d'outils : sécurisé, brouilleur, traçage…",
       "UniverseHint": "Appareils proposés et leurs habillages par défaut. Le changer recharge la partie ; les appareils existants ne changent pas."
@@ -785,7 +781,7 @@
       },
       "recipient": {
         "title": "Destinataire",
-        "content": "Choisissez un agent, puis un de ses appareils ; ou un lieu où se trouvent des agents, et son fixe. Un agent sans appareil en reçoit un ici, en un clic."
+        "content": "Choisissez un PJ, puis un de ses appareils ; ou un lieu où se trouvent des PJ, et son fixe. Un PJ sans appareil en reçoit un ici, en un clic."
       },
       "sender": {
         "title": "Expéditeur",
@@ -810,17 +806,19 @@
     },
     "Features": {
       "Title": "Fonctions avancées",
-      "Hint": "Désactivées, elles disparaissent du panneau et des fenêtres d'appareils. Rien n'est supprimé : réactivées, tout revient.",
-      "secure": "Appareils sécurisés",
+      "Hint": "Quand vous saurez passer de simples coups de fil. Pas avant.",
+      "intel": "Onglet Surveillance (MJ)",
+      "intelSetting": "Fonction avancée : Onglet Surveillance (MJ)",
+      "intelHint": "Écoute des messages entre PJ, liste des appels et traçage.",
+      "secure": "Communications sécurisées (in-game)",
+      "secureSetting": "Fonction avancée : Communications sécurisées (in-game)",
       "secureHint": "Appels et messages chiffrés entre appareils sécurisés, lignes sécurisées avec les PNJ.",
-      "compromised": "Appareils compromis",
-      "compromisedHint": "Marquer un appareil sur écoute par l'ennemi ; filtre « ce que voit l'ennemi ».",
       "jammer": "Brouilleur",
+      "jammerSetting": "Fonction avancée : Brouilleur",
       "jammerHint": "Un appareil porté qui coupe le réseau dans sa scène.",
-      "tracking": "Traçage",
-      "trackingHint": "Avec quelle précision le réseau peut localiser chaque agent (expérimental).",
-      "satellite": "Satellite",
-      "satelliteHint": "Option satellite pour la brique, le smartphone, le bipeur et le laptop : fonctionne sans réseau mobile ; le MJ décide de chaque connexion."
+      "satellite": "Communications satellite",
+      "satelliteSetting": "Fonction avancée : Communications satellite",
+      "satelliteHint": "Option satellite pour téléphones et laptops (Moderne, Cyberpunk)."
     },
     "Guide": {
       "Title": "Bien démarrer",
@@ -830,7 +828,7 @@
       "Call": "<strong>Appeler</strong> : tapez un numéro ou un nom, puis le bouton téléphone. Tout numéro marche, même inventé.",
       "Text": "<strong>Écrire</strong> : ouvrez une conversation, ou commencez-en une avec n'importe quel numéro.",
       "Contacts": "<strong>Contacts</strong> : le carnet d'adresses dans la barre du haut. Dans une conversation, ajoutez l'expéditeur à vos contacts.",
-      "Show": "<strong>Montrez</strong> votre écran aux agents de la même scène, ou <strong>transférez</strong> un message.",
+      "Show": "<strong>Montrez</strong> votre écran aux autres PJ de la même scène, ou <strong>transférez</strong> un message.",
       "Next": "Rien ne passe jamais par le chat : tout reste sur vos appareils.",
       "Credit": "Phones & Computers, un module Foundry VTT par Soren"
     },

@@ -27,7 +27,7 @@ import { maybeNews, openNews } from "./news.js";
 import { hangUp, ring } from "./ring.js";
 import { onSocket } from "./socket.js";
 import { isActiveGM, norm, rerenderAll } from "./util.js";
-import { initFeatures } from "./features.js";
+import { initFeatures, registerFeatureSettings } from "./features.js";
 import { resetOpenSky } from "./satellite.js";
 import { loadLanguages, t, tn } from "./i18n.js";
 
@@ -46,6 +46,27 @@ export function openPanel({ tab = null, settings = false } = {}) {
   panel._state.settingsOpen = settings;
   panel.render({ force: true });
   return panel;
+}
+
+// GM, repeated Ctrl+Shift+P: each tab of the panel in turn, then it closes once all were shown.
+let gmCycle = null; // { start, cur } tab keys
+function cyclePanelTabs() {
+  const panel = PhonePanel.instance;
+  if (!panel?.rendered || panel.minimized || panel._state.settingsOpen) {
+    gmCycle = null;
+    return openPanel();
+  }
+  const tabs = [...panel.element.querySelectorAll('.spt-tab[data-action="switchTab"]')].map((a) => a.dataset.tab);
+  const cur = panel._state.tab;
+  if (!tabs.includes(cur)) return openPanel();
+  if (gmCycle?.cur !== cur) gmCycle = { start: cur, cur };
+  const next = tabs[(tabs.indexOf(cur) + 1) % tabs.length];
+  if (tabs.length < 2 || next === gmCycle.start) {
+    gmCycle = null;
+    return panel.close();
+  }
+  gmCycle.cur = next;
+  panel._setState({ tab: next });
 }
 
 export function openPhone(phoneUuid = null) {
@@ -100,8 +121,9 @@ Hooks.once("init", () => {
   });
   // Existing devices keep their look and ringtone when the universe changes: stored once per world (see freezeLooks).
   game.settings.register(MODULE_ID, "looksFrozen", { scope: "world", config: false, type: Boolean, default: false });
-  // Advanced features (secure, compromised, jammer, tracking): set on first start, see features.js.
+  // Old storage of the advanced features (one object), migrated once to one setting per feature, see features.js.
   game.settings.register(MODULE_ID, "features", { scope: "world", config: false, type: Object, default: null, onChange: () => rerenderAll() });
+  game.settings.register(MODULE_ID, "featuresMigrated", { scope: "world", config: false, type: Boolean, default: false, onChange: () => rerenderAll() });
   game.settings.register(MODULE_ID, "gmLook", {
     name: "SPT.Settings.gmLook.name",
     hint: "SPT.Settings.gmLook.hint",
@@ -182,14 +204,6 @@ Hooks.once("init", () => {
     default: true,
     onChange: () => rerenderAll()
   });
-  game.settings.register(MODULE_ID, "welcomeMessage", {
-    name: "SPT.Settings.welcomeMessage.name",
-    hint: "SPT.Settings.welcomeMessage.hint",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: true
-  });
   // GM welcome window: shown once per world.
   game.settings.register(MODULE_ID, "welcomeShown", { scope: "world", config: false, type: Boolean, default: false });
   // Calls in progress (GM writes): found again after a reload.
@@ -211,12 +225,14 @@ Hooks.once("init", () => {
     name: "SPT.Settings.keybinding",
     editable: [{ key: "KeyP", modifiers: ["Control", "Shift"] }],
     onDown: () => {
-      if (game.user.isGM) openPanel();
+      if (game.user.isGM) cyclePanelTabs();
       // Each new press shows the next device (pagers included), then closes once all were shown.
       else cycleDevices(() => openPhone());
       return true;
     }
   });
+  // Advanced features last, so they close the module's list in Foundry's settings.
+  registerFeatureSettings(() => rerenderAll());
 });
 
 // Button in the "Tokens" toolbar (object structure of controls, v13+).
