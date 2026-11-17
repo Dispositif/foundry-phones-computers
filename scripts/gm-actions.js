@@ -1,5 +1,5 @@
 import { MODULE_ID, PAGER_MAX, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
-import { addLog, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
+import { addLog, isComputer, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
 import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js";
@@ -49,7 +49,7 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
   const sats = satDevices([entryOf(from), ...targets]);
   if (sats.length) {
     const to = targets.length ? targets.map((p) => holderName(p.item, p.phone)).join(", ") : displayName(fromPhone, key);
-    const link = await requestLink(foundry.utils.randomID(), { sats, who, to, kind: "sms", text });
+    const link = await requestLink(foundry.utils.randomID(), { sats, who, to, kind: isComputer(fromPhone) ? "mail" : "sms", text });
     if (link !== "ok") {
       // Satellite not found: not sent. The agent sees it on the device and can try again.
       await addLog(from, { kind: "sms", dir: "out", with: key, text, nosat: true, ...extra });

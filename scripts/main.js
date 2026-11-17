@@ -10,7 +10,7 @@
 
 import { DIRECTORY_SAMPLE, LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
 import { ensureDeviceItems, registerPhoneSheet } from "./item-sheet.js";
-import { allPhones, createPhone, freezeLooks, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
+import { allPhones, createPhone, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
 import { openPager } from "./pager.js";
 import { myJammers, openJammer, registerJammerHooks } from "./jammer.js";
 import { transferPhone } from "./dialogs.js";
@@ -299,6 +299,7 @@ export async function migrateLegacy() {
 async function migrateUniverse() {
   try {
     await freezeLooks();
+    await migrateSatphones();
     if (!UNIVERSES[storedUniverseKey()]) await game.settings.set(MODULE_ID, "universe", DEFAULT_UNIVERSE);
   } catch (err) {
     console.warn(`${MODULE_ID} | could not migrate the universe`, err);

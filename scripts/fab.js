@@ -1,6 +1,6 @@
 import { MODULE_ID } from "./constants.js";
 import { t, tn } from "./i18n.js";
-import { allPhones, getLog, getPhoneData, holders, isFixed, isJammer, isPager, jammedScenes, landlineUsers, modeOf, modelOf, playerUnread } from "./devices.js";
+import { allPhones, getLog, getPhoneData, holders, isFixed, isJammer, isPager, jammedScenes, landlineUsers, modeOf, modelOf, playerUnread, iconOf } from "./devices.js";
 import { gmIncoming } from "./gm-actions.js";
 import { elapsed, liveCalls, liveOn } from "./live-call.js";
 import { openPanel, openPhone } from "./main.js";
@@ -96,7 +96,7 @@ export function updateFab() {
   main.hidden = !shown;
   main.dataset.deviceUuid = shown?.item.uuid ?? "";
   if (shown) {
-    main.querySelector("i").className = `fas ${modelOf(shown.phone).icon}`;
+    main.querySelector("i").className = `fas ${iconOf(shown.phone)}`;
     setOnLine(main, livePersonal ? onLine(livePersonal) : null);
     main.dataset.liveUuid = livePersonal?.item.uuid ?? "";
     // Switched off: a slash across the icon (a click still opens the dark screen and its power button).
@@ -222,7 +222,7 @@ function satelliteButtons(fab, phones, { ringing }) {
       b.dataset.uuid = p.item.uuid;
       fab.appendChild(b);
     }
-    b.querySelector("i").className = `fas ${modelOf(p.phone).icon}`;
+    b.querySelector("i").className = `fas ${iconOf(p.phone)}`;
     const u = playerUnread(p.phone);
     setFabBadge(b, u);
     b.classList.toggle("ringing", ringing(p));
@@ -240,7 +240,7 @@ function jammerButtons(fab, jammers) {
     if (!b) {
       b = fabButton("spt-fab-sat spt-fab-jammer");
       b.dataset.uuid = p.item.uuid;
-      b.querySelector("i").className = `fas ${modelOf(p.phone).icon}`;
+      b.querySelector("i").className = `fas ${iconOf(p.phone)}`;
       fab.appendChild(b);
     }
     b.title = `${p.phone.label} — ${t("Jammer.FabHint")}`;
@@ -325,7 +325,7 @@ function roomButtons(fab, rooms, { unread, ringing = () => false, live = () => n
       b.dataset.uuid = p.item.uuid;
       fab.appendChild(b);
     }
-    b.querySelector("i").className = `fas ${modelOf(p.phone).icon}`;
+    b.querySelector("i").className = `fas ${iconOf(p.phone)}`;
     const u = unread(p);
     setFabBadge(b, u);
     b.classList.toggle("ringing", ringing(p));

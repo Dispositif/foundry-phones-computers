@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite } from "./devices.js";
+import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -10,7 +10,7 @@ import { hangUpAll, pendingCalls, ring } from "./ring.js";
 import { clock, liveCalls, timerHtml } from "./live-call.js";
 import { esc, isMasked, nl2br, norm } from "./util.js";
 import { t, tn } from "./i18n.js";
-import { OPERATORS, deviceName } from "./names.js";
+import { OPERATORS, SAT_OPERATORS, deviceName } from "./names.js";
 import { satellitePolicy, universe, universeKey } from "./universes.js";
 import { openWelcome } from "./welcome.js";
 import { FEATURES, feature, setFeature } from "./features.js";
@@ -70,7 +70,7 @@ function otherAgents(th) {
   if (!others.length) return [{ name: gmName(th.phone, th.key), icon: null }];
   const seen = new Set();
   return others
-    .map((p) => ({ name: holderName(p.item, p.phone), icon: modelOf(p.phone).icon, modelLabel: modelOf(p.phone).label }))
+    .map((p) => ({ name: holderName(p.item, p.phone), icon: iconOf(p.phone), modelLabel: modelOf(p.phone).label }))
     .filter((o) => !seen.has(o.name) && seen.add(o.name));
 }
 
@@ -136,7 +136,7 @@ const THREAD_PAGE = 30;
 function collectThreads(phones) {
   const threads = new Map();
   // The operator's welcome message is the network talking, not a conversation.
-  const operators = new Set(Object.values(OPERATORS).flat().map(norm));
+  const operators = new Set([...Object.values(OPERATORS).flat(), ...Object.values(SAT_OPERATORS)].map(norm));
   for (const p of phones) {
     for (const e of getLog(p.phone, { includePending: true })) {
       if (e.kind !== "sms" || e.prep || e.off || e.net || (e.dir === "in" && operators.has(norm(e.with)))) continue;
@@ -248,7 +248,7 @@ export function bindIconSelects(root) {
 
 /** How precisely the network can place a device: carried, switched on, with signal. */
 /** model -> [precision, how the network places it] */
-const TRACK_LEVEL = { smartphone: ["high", "gps"], computer: ["high", "wifi"], mobile: ["medium", "gsm"], brick: ["medium", "gsm"], pager: ["low", "gsm"] };
+const TRACK_LEVEL = { smartphone: ["high", "gps"], computer: ["high", "wifi"], mobile: ["medium", "gsm"], brick: ["medium", "gsm"], satphone: ["medium", "gsm"], pager: ["low", "gsm"] };
 /** Precision for this device: a satellite device reports its GPS position to the satellite network. */
 const trackLevel = (phone) => (isSatellite(phone) ? ["high", "sat"] : TRACK_LEVEL[phone.model]);
 const TRACK_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
@@ -294,7 +294,7 @@ function trackingRows(phones) {
         .filter((p) => p.actor?.id === actor.id && trackLevel(p.phone) && modeOf(p.phone) !== "off" && hasSignal(p.phone))
         .map((p) => {
           const [level, via] = trackLevel(p.phone);
-          return { icon: modelOf(p.phone).icon, modelLabel: modelLabel(p.phone), label: p.phone.label, level, via, compromised: !!p.phone.compromised, secure: isSecure(p.phone) };
+          return { icon: iconOf(p.phone), modelLabel: modelLabel(p.phone), label: p.phone.label, level, via, compromised: !!p.phone.compromised, secure: isSecure(p.phone) };
         })
         .sort((a, b) => TRACK_ORDER[a.level] - TRACK_ORDER[b.level]);
       for (const d of devices) d.levelLabel = `${t(`Track.${d.level}`)} (${t(`Track.Via.${d.via}`)})`;
@@ -620,7 +620,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const targetDevices = numbers.map((n) => {
       const ps = phones.filter((p) => norm(p.phone.number) === norm(n));
       const label = ps.length > 1 ? `${n} — ${ps.map((p) => p.actor?.name ?? "?").join(" + ")} (${t("Gm.Cloned")})` : phoneLabel(ps[0]);
-      return { value: `phone:${n}`, label, icon: modelOf(ps[0].phone).icon, selected: this._state.target === `phone:${n}` };
+      return { value: `phone:${n}`, label, icon: iconOf(ps[0].phone), selected: this._state.target === `phone:${n}` };
     });
 
     // Send: an agent, or a place where agents are, then one of its devices.
@@ -657,7 +657,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const sendTiles = tiles.map((p) => ({
       target: tileValue(p),
       label: p.phone.label,
-      icon: modelOf(p.phone).icon,
+      icon: iconOf(p.phone),
       // An agent's device: its number or address; a place's: who is there.
       sub: st.sendKind === "place" ? landlineUsers(p.phone).map((u) => u.character?.name ?? u.name).join(", ") : p.phone.number,
       secure: isSecure(p.phone),
@@ -722,7 +722,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         npcId: th.npcId,
         who: holderName(th.item, th.phone),
         // The agent's device icon: the GM sees at a glance a text (phone) or an email (computer).
-        icon: modelOf(th.phone).icon,
+        icon: iconOf(th.phone),
         modelLabel: modelOf(th.phone).label,
         // Channel of the thread (text or email): replies always go back the same way.
         channel: isComputer(th.phone) ? "fa-envelope" : "fa-comment",
@@ -823,7 +823,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         uuid: p.item.uuid,
         number: p.phone.number,
         label: p.phone.label,
-        icon: model.icon,
+        icon: iconOf(p.phone),
         modelLabel: modelLabel(p.phone),
         modeIcon: fixed || modeOf(p.phone) === "on" ? null : mode.icon,
         modeLabel: mode.label,
@@ -862,6 +862,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       messaging,
       canSecure,
       down: game.settings.get(MODULE_ID, "networkDown"),
+      // Scenes opened to the satellite "for the whole scene": a green satellite in the status bar.
+      satSky: feature("satellite") ? (game.settings.get(MODULE_ID, "satSky") ?? []).map((id) => game.scenes.get(id)?.name).filter(Boolean).join(", ") : "",
       // Scenes cut by a jammer: one chip each, a click opens the jammer.
       jams: [...jammedScenes()].flatMap(([sceneId, list]) =>
         list.map((p) => ({ uuid: p.item.uuid, label: t("Jammer.Chip", { scene: game.scenes.get(sceneId)?.name ?? "?", who: p.actor?.name ?? p.phone.label }) }))
@@ -1069,7 +1071,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       .map((p) => {
         const model = modelOf(p.phone);
         const name = publicName(p) || p.phone.label || "";
-        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: model.icon, place: isFixed(p.phone), pub: !!p.phone.pub, search: `${name} ${p.phone.number}`.toLowerCase() };
+        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: iconOf(p.phone), place: isFixed(p.phone), pub: !!p.phone.pub, search: `${name} ${p.phone.number}`.toLowerCase() };
       })
       .sort((a, b) => a.place - b.place || a.name.localeCompare(b.name));
     const unknown = unknownNumbers(phones).map((u) => ({
@@ -1174,7 +1176,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     };
     const computers = phones
       .filter((p) => isComputer(p.phone))
-      .map((p) => ({ item: p.item, phone: p.phone, label: p.phone.label || p.item.name, icon: modelOf(p.phone).icon, img: p.actor?.img ?? null, where: where(p) }));
+      .map((p) => ({ item: p.item, phone: p.phone, label: p.phone.label || p.item.name, icon: iconOf(p.phone), img: p.actor?.img ?? null, where: where(p) }));
     const { view, filter } = { view: this._state.filesView, filter: this._state.filesFilter };
     const { groups, counts } = filesOverview(computers, { view, filter });
     const filters = [

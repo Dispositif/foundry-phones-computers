@@ -38,18 +38,18 @@ export const UNIVERSES = {
     defaultModel: "mobile"
   },
   modern: {
-    models: ["smartphone", "mobile", "brick", "pager", "computer", "desktop", "landline", "jammer"],
+    models: ["smartphone", "mobile", "satphone", "pager", "computer", "desktop", "landline", "jammer"],
     themes: {
       smartphone: ["standard", "military"],
       mobile: ["standard"],
-      brick: ["standard"],
+      satphone: ["standard"],
       pager: ["standard"],
       computer: ["standard", "federal", "military", "console"],
       desktop: ["standard", "federal", "military", "console"],
       landline: ["modern", "vintage"]
     },
-    // The brick only exists as a satellite phone here (no GSM brick in the 2000s).
-    satellite: { brick: "forced", smartphone: "option", pager: "option" },
+    // The satellite phone needs the satellite feature.
+    satellite: { satphone: "forced", smartphone: "option", pager: "option", computer: "option" },
     defaultModel: "smartphone"
   },
   cyberpunk: {
@@ -62,7 +62,7 @@ export const UNIVERSES = {
       landline: ["modern"],
       jammer: ["neon", "standard"]
     },
-    satellite: { smartphone: "option", pager: "option" },
+    satellite: { smartphone: "option", pager: "option", computer: "option" },
     defaultModel: "smartphone",
     numberPrefix: "NC-",
     mailPrefix: "NX-",

@@ -630,7 +630,7 @@
         "desktop": "Emails, documents",
         "jammer": "Cuts the network",
         "brick": "Calls",
-        "satphone": "Calls by satellite"
+        "satphone": "Calls and texts by satellite"
       },
       "Npc": "NPC…",
       "NpcName": "NPC name",
@@ -820,7 +820,7 @@
       "tracking": "Tracking",
       "trackingHint": "How precisely the network can locate each agent (experimental).",
       "satellite": "Satellite",
-      "satelliteHint": "Satellite option for brick, smartphone and pager: works without the mobile network; the GM decides each connection."
+      "satelliteHint": "Satellite option for brick, smartphone, pager and laptop: works without the mobile network; the GM decides each connection."
     },
     "Guide": {
       "Title": "Getting started",
@@ -846,6 +846,8 @@
       "Question": "Conditions to establish the satellite connection?",
       "Call": "{who} calls {to} by satellite.",
       "Sms": "{who} writes to {to} by satellite.",
+      "Mail": "{who} emails {to} by satellite.",
+      "SkyOpen": "Satellite link open for the whole scene: {scenes}",
       "Hint": "Open sky, no thick walls, a satellite overhead… Until you decide, the device searches for the satellite.",
       "Establish": "Establish the link",
       "WholeScene": "For the whole scene",
