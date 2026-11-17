@@ -276,6 +276,20 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-player-phone.spt-skin-mobile .spt-badge { background: #1e2a17; color: #b7c79c; border-radius: 0; }
 .spt-player-phone.spt-skin-mobile .spt-bubble .spt-del { background: #1e2a17; color: #b7c79c; border-radius: 0; }
 .spt-player-phone.spt-skin-mobile .spt-modes .spt-mode { color: #1e2a17; }
+/* LCD header: no red (Foundry's hover/focus/active glow), ink only */
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode,
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode:is(:hover, :focus, :focus-visible, :active, .active) { background: transparent; color: #1e2a17; border-color: rgba(30,42,23,0.5); outline: none; text-shadow: none; }
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode.active { box-shadow: 0 0 0 1px #1e2a17 inset; }
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode > i { color: inherit; }
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode:not(.active):is(:hover, :focus, :focus-visible) { box-shadow: none; }
+/* Device switched off: its name in the header fades (LCD: pale ink; smartphone: low contrast) */
+.application.spt-player-phone:has(.spt-offscreen) .spt-dev-title { opacity: 0.45; }
+.application.spt-player-phone.spt-skin-mobile:has(.spt-offscreen) .spt-dev-title { opacity: 0.4; }
+/* Landline (player): the device name stays discreet */
+.application.spt-player-phone.spt-landline:not(.spt-gm-view) .spt-dev-title strong { font-weight: normal; opacity: 0.3; }
+/* LCD header: contacts book bigger, lighter ink, centered */
+.application.spt-player-phone.spt-skin-mobile .spt-phone-top a[data-action="contacts"] { display: inline-flex; align-items: center; align-self: center; font-size: 1.35em; line-height: 1; color: rgba(30,42,23,0.6); }
+.application.spt-player-phone.spt-skin-mobile .spt-phone-top a[data-action="contacts"]:hover { color: #1e2a17; text-shadow: none; }
 
 /* Laptop: plain mail client */
 .spt-player-phone.spt-skin-computer {
@@ -701,6 +715,34 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-incoming-keys .spt-answer { background: #2e9e4f; }
 .spt-incoming-keys .spt-decline { background: #c0392b; }
 .spt-incoming-keys button:hover { filter: brightness(1.15); }
+.spt-incoming-keys .spt-key-label { display: none; }
+/* Brick and satellite phone: tiny screen, so a compact call screen and full-width rectangular keys */
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming { justify-content: space-between; padding: 2px 4px; gap: 2px; min-height: 0; }
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-phone-ring > i,
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-live-face { display: none; }
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-phone-ring p { margin: 0; }
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-caller { font-size: 1.05em; line-height: 1.2; overflow-wrap: anywhere; }
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming-keys { gap: 4px; width: 100%; }
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .window-content .spt-incoming-keys button { flex: 1; width: auto; height: 1.9em; border-radius: 3px; font-size: 0.9em; gap: 0.35em; }
+.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming-keys .spt-key-label { display: inline; }
+/* Brick and satellite phone: call status on one short line, no number under the name */
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-live-status { margin: 0; font-size: 0.65rem; letter-spacing: 0.06em; line-height: 1.3; }
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-live-status .spt-live-state i { display: none; }
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-live-timer { display: inline; margin-left: 4px; color: #1e2a17; opacity: 1; font-size: 1.1em; }
+.application.spt-player-phone.spt-frame-brick .spt-incoming .spt-live-sub { display: none; }
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-phone-ring { margin: 0; padding: 0; gap: 0; flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+/* Brick on the line: only the timer (no "On the line"). */
+.application.spt-player-phone.spt-frame-brick .spt-live-screen .spt-live-state:not(.ended):not(.dialing) { display: none; }
+/* The keys always stay visible: the text above gives way first. */
+.application.spt-player-phone:is(.spt-frame-brick, .spt-frame-bricksat) .spt-incoming .spt-incoming-keys { flex: 0 0 auto; }
+/* LCD phones (brick, satellite phone, mobile): the list scrollbar always shows (a hint that it scrolls), drawn in LCD ink */
+.spt-player-phone.spt-skin-mobile .window-content :is(.spt-conv-list, .spt-thread) { overflow-y: scroll; scrollbar-width: auto; scrollbar-color: auto; }
+.spt-player-phone.spt-skin-mobile .window-content :is(.spt-conv-list, .spt-thread)::-webkit-scrollbar { width: 6px; }
+.spt-player-phone.spt-skin-mobile .window-content :is(.spt-conv-list, .spt-thread)::-webkit-scrollbar-track { background: rgba(30,42,23,0.15); }
+.spt-player-phone.spt-skin-mobile .window-content :is(.spt-conv-list, .spt-thread)::-webkit-scrollbar-thumb { background: rgba(30,42,23,0.45); border-radius: 0; }
+/* 1980s brick: plain text keys, no modern pictograms */
+.spt-player-phone.spt-frame-brick .window-content :is(.spt-incoming-keys button, .spt-incoming-row button, button[data-action="call"], button[data-action="compose"]) > i { display: none; }
 
 /* Modern landline ringing: caller number on the display, answer / hang up keys. */
 .spt-lcd-ringing { align-items: center; }
@@ -1398,7 +1440,7 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
   box-shadow: 0 0 0 2px #0f0f0e, 0 24px 48px rgba(0,0,0,0.6), inset 0 2px 3px rgba(255,255,255,0.1), inset 0 -10px 18px rgba(0,0,0,0.45);
 }
 .spt-player-phone.spt-frame-brick:not(.minimized) > .window-header { top: 0; height: 20px; padding: 0 24px; color: #e6e9ee; }
-.spt-player-phone.spt-frame-brick:not(.minimized) > .window-content { flex: 0 0 150px; border-radius: 2px; border: 6px solid #0c0c0b; font-size: 0.82em; }
+.spt-player-phone.spt-frame-brick:not(.minimized) > .window-content { flex: 0 0 195px; border-radius: 2px; border: 6px solid #0c0c0b; font-size: 0.82em; }
 .spt-frame-deco.spt-brick-grille, .spt-frame-deco.spt-brick-brand, .spt-frame-deco.spt-brick-pad, .spt-frame-deco.spt-brick-mic { position: relative; z-index: auto; flex: 0 0 auto; }
 .spt-brick-grille { height: 70px; margin: 6px 18px 4px; border-radius: 10px; background: repeating-linear-gradient(0deg, #0e0e0d 0 4px, #33322f 4px 8px); box-shadow: inset 0 2px 6px rgba(0,0,0,0.7); }
 .spt-brick-brand { margin: 0 0 8px; text-align: center; font: bold 10px/1 sans-serif; letter-spacing: 0.3em; color: #a8a49b; }
