@@ -1429,7 +1429,14 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
 
 /* Satellite */
 .spt-sat-badge { color: #c98a00; }
-.spt-phone-top .spt-sat-signal { color: inherit; }
+/* GM satellite window: establish (green), whole scene (discreet green), not found (red) */
+.spt-sat-dialog .form-footer button[data-action="ok"] { background: #2e9e4f; border-color: #237a3c; color: #fff; }
+.spt-sat-dialog .form-footer button[data-action="scene"] { background: rgba(47,125,62,0.18); border-color: #4c8a5a; color: inherit; }
+.spt-sat-dialog .form-footer button[data-action="nosat"] { background: #b4443a; border-color: #8e3229; color: #fff; }
+.spt-sat-dialog .form-footer button:hover { filter: brightness(1.12); }
+#spt-phone-panel .spt-sat-btn { color: #f0b429; margin-left: 0.3em; }
+.spt-phone-top .spt-sat-signal { color: #8a8d91; opacity: 0.85; }
+.spt-phone-top .spt-sat-signal.linked { color: #4caf50; opacity: 1; }
 .spt-sat-search i { animation: spt-sat-blink 1.2s ease-in-out infinite; }
 @keyframes spt-sat-blink { 50% { opacity: 0.25; } }
 @media (prefers-reduced-motion: reduce) { .spt-sat-search i { animation: none; } }

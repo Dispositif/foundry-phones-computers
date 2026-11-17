@@ -11,6 +11,7 @@ import { dismissEnded, hangUpLive, liveOn, otherEnd, phoneClosed, statusHtml } f
 import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./share.js";
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
 import { PagerWindow, openPager } from "./pager.js";
+import { skyOpenFor } from "./satellite.js";
 import { BOOT_MS, bootText, hostName, operatorName } from "./names.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
@@ -703,7 +704,7 @@ export class PlayerPhone extends ApplicationV2 {
       : isFixed(p.phone)
         ? ""
         : isSatellite(p.phone)
-        ? this._satSignal(p.phone)
+        ? this._satSignal(p)
         : hasSignal(p.phone)
         ? `<i class="fas ${netIcon} spt-signal" title="${esc(isComputer(p.phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(p.phone)}`)}"></i>`
         : `<i class="fas ${netIcon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
@@ -928,12 +929,18 @@ export class PlayerPhone extends ApplicationV2 {
     if (!this.gm && outgoing?.screen && !outgoing.done) outgoing.hangup();
   }
 
-  /** Satellite device: the mobile network bars (green or red), plus the satellite when it goes through it. */
-  _satSignal(phone) {
+  /**
+   * Satellite device: the mobile network bars (green or red), and always the satellite:
+   * grey, green when linked (call through the satellite, or scene opened to it by the GM).
+   */
+  _satSignal(p) {
+    const phone = p.phone;
     const gsm = mobileSignal(phone)
       ? `<i class="fas fa-signal spt-signal" title="${esc(`${t("Net.Signal")} · ${operatorName(phone)}`)}"></i>`
       : `<i class="fas fa-signal spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
-    const sat = viaSatellite(phone) ? `<i class="fas fa-satellite spt-signal spt-sat-signal" title="${t("Satellite.Signal")}"></i>` : "";
+    const uuid = p.item.uuid;
+    const linked = viaSatellite(phone) && (!!liveOn(uuid) || (outgoing?.itemUuid === uuid && !outgoing.done && !!outgoing.satLinked) || skyOpenFor(p));
+    const sat = `<i class="fas fa-satellite spt-sat-signal ${linked ? "linked" : ""}" title="${t("Satellite.Signal")}"></i>`;
     return `${gsm}${sat}`;
   }
 

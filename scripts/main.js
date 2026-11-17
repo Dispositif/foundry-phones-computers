@@ -28,6 +28,7 @@ import { hangUp, ring } from "./ring.js";
 import { onSocket } from "./socket.js";
 import { isActiveGM, norm, rerenderAll } from "./util.js";
 import { initFeatures } from "./features.js";
+import { resetOpenSky } from "./satellite.js";
 import { loadLanguages, t, tn } from "./i18n.js";
 
 // Both languages are loaded at startup ("Module language" setting).
@@ -193,12 +194,15 @@ Hooks.once("init", () => {
   game.settings.register(MODULE_ID, "welcomeShown", { scope: "world", config: false, type: Boolean, default: false });
   // Calls in progress (GM writes): found again after a reload.
   game.settings.register(MODULE_ID, "liveCalls", { scope: "world", config: false, type: Object, default: {} });
+  // Scenes the GM opened to the satellite "for the whole scene" (emptied at each GM session).
+  game.settings.register(MODULE_ID, "satSky", { scope: "world", config: false, type: Array, default: [], onChange: () => rerenderAll() });
   game.settings.register(MODULE_ID, "networkDown", {
     scope: "world",
     config: false,
     type: Boolean,
     default: false,
     onChange: (down) => {
+      resetOpenSky();
       rerenderAll();
       if (!down && isActiveGM()) flushAll();
     }
@@ -311,6 +315,11 @@ function renamedNotice(n, oldActive) {
   }).catch(() => {});
 }
 
+// Another scene activated: satellite approvals "for the whole scene" are forgotten.
+Hooks.on("updateScene", (scene, changes) => {
+  if (changes.active === true) resetOpenSky();
+});
+
 Hooks.once("ready", async () => {
   // Universe accent on the GM panel and floating buttons (CSS: body[data-spt-universe]).
   document.body.dataset.sptUniverse = universeKey();
@@ -330,6 +339,7 @@ Hooks.once("ready", async () => {
   if (game.user === game.users.activeGM) {
     ensureDeviceItems();
     await migrateUniverse();
+    resetOpenSky();
   }
   updateFab();
   restoreLive();

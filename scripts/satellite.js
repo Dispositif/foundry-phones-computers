@@ -8,8 +8,24 @@ import { t } from "./i18n.js";
 
 // id (call or message) -> { finish, kind } while the GM's window is open.
 export const satPending = new Map();
-// Scenes where the GM chose "For the whole scene" (this session only: forgotten on reload).
-const openSky = new Set();
+// Scenes where the GM chose "For the whole scene": world setting "satSky" (players see it on
+// their device), emptied when the GM's session starts and when the network is cut or restored.
+function openSky() {
+  return new Set(game.settings.get(MODULE_ID, "satSky") ?? []);
+}
+
+/** Active GM: every scene asks again (session start, network cut or restored). */
+export function resetOpenSky() {
+  if (game.users.activeGM !== game.user || !openSky().size) return;
+  game.settings.set(MODULE_ID, "satSky", []);
+}
+
+/** Satellite link open for the whole scene where this device is (header of the device). */
+export function skyOpenFor(p) {
+  const sky = openSky();
+  const scenes = scenesOf(p);
+  return scenes.length > 0 && scenes.every((sc) => sky.has(sc.id));
+}
 
 /** The GM's window: closing it with the cross is an answer too. */
 class SatDialog extends DialogV2 {
@@ -31,10 +47,7 @@ export function satDevices(list) {
 
 /** "For the whole scene" chosen before for every scene involved: no window. */
 function linkedBefore(sats) {
-  return sats.every((p) => {
-    const scenes = scenesOf(p);
-    return scenes.length > 0 && scenes.every((sc) => openSky.has(sc.id));
-  });
+  return sats.every(skyOpenFor);
 }
 
 /**
@@ -82,7 +95,7 @@ export function requestLink(id, { sats, who, to, kind, text = "" }) {
         closed = true; // DialogV2 closes by itself after submit
         finish(result === "scene" ? "ok" : result);
         // Open sky for the whole scene: the next links there are established without asking.
-        if (result === "scene") for (const sc of scenes) openSky.add(sc.id);
+        if (result === "scene") game.settings.set(MODULE_ID, "satSky", [...new Set([...openSky(), ...scenes.map((sc) => sc.id)])]);
       }
     });
     // Closed with the cross: no satellite.

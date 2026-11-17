@@ -123,15 +123,15 @@
         <button type="button" class="spt-icon-btn" data-action="attach" title="{{spt "AttachImage"}}" aria-label="{{spt "AttachImage"}}"><i class="fas fa-paperclip"></i></button>
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
         {{#if canSecure}}<button type="button" class="spt-icon-btn spt-secure-link" data-action="copySecureLink" title="{{spt "Secure.CopyLink"}}" aria-label="{{spt "Secure.CopyLink"}}"><i class="fas fa-link"></i><i class="fas fa-shield-halved"></i></button>{{/if}}
-        <button type="button" class="spt-primary" data-action="sms"><i class="fas fa-paper-plane"></i> {{#if targetName}}{{spt "Gm.SendTo" name=targetName}}{{else}}{{spt "Send"}}{{/if}}</button>
-        {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="smsSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Send"}}</button>{{/if}}
+        <button type="button" class="spt-primary" data-action="sms"><i class="fas fa-paper-plane"></i> {{#if targetName}}{{spt "Gm.SendTo" name=targetName}}{{else}}{{spt "Send"}}{{/if}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
+        {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="smsSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Send"}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>{{/if}}
       </div>
       {{else}}
       <div class="spt-phone-row">
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
         {{#if canSecure}}<button type="button" class="spt-icon-btn spt-secure-link" data-action="copySecureLink" title="{{spt "Secure.CopyLink"}}" aria-label="{{spt "Secure.CopyLink"}}"><i class="fas fa-link"></i><i class="fas fa-shield-halved"></i></button>{{/if}}
-        <button type="button" class="spt-primary" data-action="ring"><i class="fas fa-phone-volume"></i> {{#if targetName}}{{spt "Gm.RingTo" name=targetName}}{{else}}{{spt "Gm.Ring"}}{{/if}}</button>
-        {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="ringSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Ring"}}</button>{{/if}}
+        <button type="button" class="spt-primary" data-action="ring"><i class="fas fa-phone-volume"></i> {{#if targetName}}{{spt "Gm.RingTo" name=targetName}}{{else}}{{spt "Gm.Ring"}}{{/if}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
+        {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="ringSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Ring"}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>{{/if}}
       </div>
       {{/if}}
       {{/if}}
@@ -184,8 +184,8 @@
           {{{attChip}}}
           <div class="spt-gthread-reply">
             <input type="text" data-draft="{{id}}" value="{{draft}}" placeholder="{{spt "Gm.ReplyAs" name=to}}" aria-label="{{spt "Gm.ReplyAs" name=to}}">
-            <button type="button" data-action="sendReply" aria-label="{{spt "Send"}}" data-tooltip="{{spt "Send"}}"><i class="fas fa-paper-plane"></i></button>
-            {{#if canCall}}<button type="button" data-action="callBack" aria-label="{{spt "Gm.CallBack"}}" data-tooltip="{{spt "Gm.CallBack"}}"><i class="fas fa-phone"></i></button>{{/if}}
+            <button type="button" data-action="sendReply" aria-label="{{spt "Send"}}" data-tooltip="{{spt "Send"}}"><i class="fas fa-paper-plane"></i>{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
+            {{#if canCall}}<button type="button" data-action="callBack" aria-label="{{spt "Gm.CallBack"}}" data-tooltip="{{spt "Gm.CallBack"}}"><i class="fas fa-phone"></i>{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>{{/if}}
           </div>
           </div>
           {{/unless}}
