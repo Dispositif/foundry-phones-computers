@@ -592,8 +592,8 @@ export class PlayerPhone extends ApplicationV2 {
           ${secure ? `<p class="spt-ring-secure">${shieldIcon()} ${t("Secure.Line")}</p>` : ""}
         </div>
         <div class="spt-incoming-keys">
-          <button type="button" class="spt-decline" data-action="decline" title="${t("Call.Decline")}"><i class="fas fa-phone-slash"></i></button>
-          <button type="button" class="spt-answer" data-action="answer" title="${t("Call.Answer")}"><i class="fas fa-phone"></i></button>
+          <button type="button" class="spt-decline" data-action="decline" title="${t("Call.Decline")}"><i class="fas fa-phone-slash"></i><span class="spt-key-label">${t("Call.Decline")}</span></button>
+          <button type="button" class="spt-answer" data-action="answer" title="${t("Call.Answer")}"><i class="fas fa-phone"></i><span class="spt-key-label">${t("Call.Answer")}</span></button>
         </div>
       </div>`;
   }
@@ -614,8 +614,8 @@ export class PlayerPhone extends ApplicationV2 {
         </div>
         <div class="spt-incoming-keys">
           ${live.ended
-            ? `<button type="button" class="spt-dismiss" data-action="liveDismiss" title="${t("Close")}"><i class="fas fa-xmark"></i></button>`
-            : `<button type="button" class="spt-decline" data-action="liveHangup" title="${t("Call.HangUp")}"><i class="fas fa-phone-slash"></i></button>`}
+            ? `<button type="button" class="spt-dismiss" data-action="liveDismiss" title="${t("Close")}"><i class="fas fa-xmark"></i><span class="spt-key-label">${t("Close")}</span></button>`
+            : `<button type="button" class="spt-decline" data-action="liveHangup" title="${t("Call.HangUp")}"><i class="fas fa-phone-slash"></i><span class="spt-key-label">${t("Call.HangUp")}</span></button>`}
         </div>
       </div>`;
   }
@@ -638,7 +638,7 @@ export class PlayerPhone extends ApplicationV2 {
           <p class="spt-caller">${esc(name)}</p>
         </div>
         <div class="spt-incoming-keys">
-          <button type="button" class="spt-decline" data-action="outHangup" title="${t("Call.HangUp")}"><i class="fas fa-phone-slash"></i></button>
+          <button type="button" class="spt-decline" data-action="outHangup" title="${t("Call.HangUp")}"><i class="fas fa-phone-slash"></i><span class="spt-key-label">${t("Call.HangUp")}</span></button>
         </div>
       </div>`;
   }
@@ -954,6 +954,8 @@ export class PlayerPhone extends ApplicationV2 {
     for (const k of SKINS) this.element.classList.toggle(`spt-skin-${k}`, k === skin);
     // Satellite device: its frame shows it (brick: SAT label, thick antenna).
     this.element.classList.toggle("spt-satellite", !!cur && isSatellite(cur.phone));
+    // Landline: its name stays discreet in the header (player side).
+    this.element.classList.toggle("spt-landline", !!cur && isLandline(cur.phone));
     // Brick: the antenna is pulled out while the device is on.
     this.element.classList.toggle("spt-antenna-up", !!cur && !this.gm && modeOf(cur.phone) !== "off");
     this.element.classList.toggle("spt-gm-view", this.gm);
