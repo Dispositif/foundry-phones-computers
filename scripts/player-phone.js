@@ -1,7 +1,7 @@
 import { attChipHtml, attHtml, openAttachment, pickImage } from "./attachments.js";
 import { openSystemSheet } from "./item-sheet.js";
 import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
-import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, publicDevices, inboxOf, filesOf, playerUnread } from "./devices.js";
+import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, isSatellite, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, publicDevices, inboxOf, filesOf, playerUnread, viaSatellite, mobileSignal } from "./devices.js";
 import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
 import { addContactDialog, contactsDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
@@ -31,6 +31,18 @@ const FRAMES = {
     before: `<div class="spt-frame-deco spt-frame-speaker"></div>`,
     after: `<div class="spt-frame-deco spt-frame-keys" aria-hidden="true"><span class="nav"><i class="fas fa-caret-left"></i><b>OK</b><i class="fas fa-caret-right"></i></span>${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div>`
   },
+  // 1980s brick: huge tall shell, tiny screen, tiny keys, antenna pulled out during a call.
+  brick: {
+    width: 240, height: 680, gm: { width: 300, height: 720 },
+    before: `<span class="spt-frame-deco spt-frame-antenna"></span><div class="spt-frame-deco spt-brick-grille"></div><div class="spt-frame-deco spt-brick-brand">CELLULAR</div>`,
+    after: `<div class="spt-frame-deco spt-brick-pad" aria-hidden="true"><div class="fn">${["RCL", "STO", "FCN", "CLR", "PWR", "VOL"].map((k) => `<span>${k}</span>`).join("")}</div><div class="num">${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div><div class="fn"><span class="snd">SND</span><span class="end">END</span></div></div><div class="spt-frame-deco spt-brick-mic"></div>`
+  },
+  // Satellite phone (brick shape, 2000s): short screen, big keys, thick antenna.
+  bricksat: {
+    width: 270, height: 570, gm: { width: 320, height: 610 },
+    before: `<span class="spt-frame-deco spt-frame-antenna"></span><span class="spt-frame-deco spt-frame-sat">SAT</span><div class="spt-frame-deco spt-frame-speaker"></div>`,
+    after: `<div class="spt-frame-deco spt-frame-keys spt-brick-keys" aria-hidden="true"><span class="snd">SND</span><span class="clr">CLR</span><span class="end">END</span>${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div>`
+  },
   computer: {
     width: 640, height: 460,
     before: `<span class="spt-frame-deco spt-frame-webcam"></span>`,
@@ -56,6 +68,7 @@ function frameKind(phone) {
   const skin = skinOf(phone);
   if (model === "desktop") return ["console", "military"].includes(skin) ? "crt" : "monitor";
   if (model === "landline") return skin === "modern" ? "desk" : "rotary";
+  if (model === "brick") return isSatellite(phone) ? "bricksat" : "brick";
   return FRAMES[model] ? model : null;
 }
 
@@ -113,6 +126,14 @@ export class PlayerPhone extends ApplicationV2 {
       answer: function () { if (activeCall?.screen) endCall("answer", activeCall); },
       decline: function () { if (activeCall?.screen) endCall("decline", activeCall); },
       outHangup: function () { if (outgoing?.screen) outgoing.hangup(); },
+      // Message not sent (satellite not found): sent again, the failed copy goes away.
+      retrySms: async function (event, target) {
+        const p = this._current();
+        const e = p && getLog(p.phone).find((x) => x.id === target.dataset.id && x.nosat);
+        if (!e || !p.item.isOwner) return;
+        if (!playerSendSms(p.item, e.with, e.text ?? "", { att: e.att ?? null })) return;
+        await mutateLog(p.item, (log) => log.filter((x) => x.id !== e.id));
+      },
       liveDismiss: function () {
         const live = liveOn(this._current()?.item.uuid);
         if (live) dismissEnded(live.callId);
@@ -121,7 +142,6 @@ export class PlayerPhone extends ApplicationV2 {
         const live = liveOn(this._current()?.item.uuid);
         if (live) hangUpLive(live.callId);
       },
-      powerOn: function () { this._setMode(this._current(), "on"); },
       gmItemSheet: function () { const p = this._current(); if (p) openSystemSheet(p.item); },
       showEntry: async function (event, target) {
         const p = this._current();
@@ -292,6 +312,20 @@ export class PlayerPhone extends ApplicationV2 {
     // A fixed device is only passed through: the shortcut and the main button keep the carried one.
     if (!isFixed(next.phone)) saveLastDevice(next.item.uuid);
     this._go("list");
+  }
+
+  /**
+   * Repeated Ctrl+Shift+P: each device in turn, then the window closes once all were shown
+   * (the next press opens it again).
+   */
+  cycleDevice() {
+    const usable = this._usable();
+    const cur = this._current()?.item.uuid;
+    this._cycleStart ??= cur;
+    const i = usable.findIndex((p) => p.item.uuid === cur);
+    const next = usable[(i + 1) % usable.length];
+    if (!next || usable.length < 2 || next.item.uuid === this._cycleStart) return this.close();
+    this.nextDevice();
   }
 
   /**
@@ -600,7 +634,7 @@ export class PlayerPhone extends ApplicationV2 {
   }
 
   /** Outgoing call on a smartphone or mobile: who is called, and a hang-up key. */
-  _renderOutgoing(p, mine, { name, img, face }) {
+  _renderOutgoing(p, mine, { name, img, face, searching }) {
     // The dialed number does not stay on the screen once the call is over.
     this._state.to = "";
     // Smartphone: the face of who is called if the agent knows them, otherwise an empty portrait.
@@ -610,7 +644,9 @@ export class PlayerPhone extends ApplicationV2 {
     return `${this._renderHeader(p, mine)}
       <div class="spt-lockscreen spt-incoming spt-live-screen">
         <div class="spt-phone-ring outgoing">
-          <p class="spt-live-status"><span class="spt-live-state dialing"><i class="fas fa-circle"></i> ${t("Call.Calling")}</span></p>
+          <p class="spt-live-status">${searching
+            ? `<span class="spt-live-state dialing spt-sat-search"><i class="fas fa-satellite"></i> ${t("Satellite.Searching")}</span>`
+            : `<span class="spt-live-state dialing"><i class="fas fa-circle"></i> ${t("Call.Calling")}</span>`}</p>
           ${pic}
           <p class="spt-caller">${esc(name)}</p>
         </div>
@@ -622,12 +658,8 @@ export class PlayerPhone extends ApplicationV2 {
 
   /** Device switched off: a dark screen, nothing from its history or contacts. */
   _renderOff(p, mine) {
-    return `${this._renderHeader(p, mine)}
-      <div class="spt-lockscreen spt-offscreen">
-        <i class="fas fa-power-off"></i>
-        <p>${t("Mode.off")}</p>
-        ${isFixed(p.phone) ? "" : `<button type="button" data-action="powerOn"><i class="fas fa-power-off"></i> ${t("PowerOn")}</button>`}
-      </div>`;
+    // A blank screen, switched on again with the header's power button only.
+    return `${this._renderHeader(p, mine)}<div class="spt-lockscreen spt-offscreen"></div>`;
   }
 
   /** Switching a device on (player): from off, the network operator shows for a moment. */
@@ -672,7 +704,7 @@ export class PlayerPhone extends ApplicationV2 {
   _renderHeader(p, mine) {
     const mode = modeOf(p.phone);
     const phoneSel = this.gm ? deviceSelect(mine, p, phoneLabel) : this._deviceTitle(p);
-    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode);
+    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode, modelOf(p.phone).noSilent);
     // Player, mobile device switched off: only the power button, which switches it on.
     if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {
       return `<header class="spt-phone-top">${phoneSel}<div class="spt-modes">${modeBtns}</div></header>`;
@@ -684,6 +716,8 @@ export class PlayerPhone extends ApplicationV2 {
       ? `<span class="spt-signal off" title="${t("Net.GmAbsent")}"><i class="fas ${netIcon}"></i> <small>[${t("Net.GmAway")}]</small></span>`
       : isFixed(p.phone)
         ? ""
+        : isSatellite(p.phone)
+        ? this._satSignal(p.phone)
         : hasSignal(p.phone)
         ? `<i class="fas ${netIcon} spt-signal" title="${esc(isComputer(p.phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(p.phone)}`)}"></i>`
         : `<i class="fas ${netIcon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
@@ -702,7 +736,7 @@ export class PlayerPhone extends ApplicationV2 {
    * Two buttons: ring/silent (one toggle showing the current state) and power.
    * Switched off, the toggle keeps its space (hidden) so the power button stays in place.
    */
-  _modeButtons(mode) {
+  _modeButtons(mode, noSilent = false) {
     const off = mode === "off";
     const ring = mode === "silent" ? MODES.silent : MODES.on;
     const toggle = off && !this.gm
@@ -710,7 +744,8 @@ export class PlayerPhone extends ApplicationV2 {
       : `<button type="button" class="spt-mode ${off ? "" : "active"}" data-mode="${mode === "on" ? "silent" : "on"}" title="${ring.label}" aria-label="${ring.label}"><i class="fas ${ring.icon}"></i></button>`;
     const powerTitle = t(off ? "PowerOn" : "PowerOff");
     const power = `<button type="button" class="spt-mode ${off ? "active" : ""}" data-mode="${off ? "on" : "off"}" title="${powerTitle}" aria-label="${powerTitle}"><i class="fas ${MODES.off.icon}"></i></button>`;
-    return toggle + power;
+    // Brick: rings or is off, no silent mode.
+    return noSilent ? power : toggle + power;
   }
 
   _renderList(p, mine) {
@@ -760,7 +795,7 @@ export class PlayerPhone extends ApplicationV2 {
     const bubbles = entries
       .map((e) =>
         e.kind === "sms"
-          ? `<div class="spt-bubble ${e.dir}">${fileTag(e)}${del(e)}${share(e)}${fwdTag(e)}${secureTag(e)}${this._attHtml(e)}${e.text ? `<div>${nl2br(e.text)}</div>` : ""}${e.help ? `<a class="spt-help-link" data-action="playerGuide"><i class="fas fa-circle-question"></i> ${t("Guide.Link")}</a>` : ""}${this.gm && e.dir === "in" && !e.prep ? `<span class="spt-read ${e.read === false ? "unread" : ""}">${e.pending ? t("Read.Pending") : e.read === false ? t("Read.Unread") : t("Read.Seen")}</span>` : ""}</div>`
+          ? `<div class="spt-bubble ${e.dir} ${e.nosat ? "spt-failed" : ""}">${fileTag(e)}${del(e)}${share(e)}${fwdTag(e)}${secureTag(e)}${this._attHtml(e)}${e.text ? `<div>${nl2br(e.text)}</div>` : ""}${e.nosat ? `<span class="spt-notsent"><i class="fas fa-satellite"></i> ${t("Satellite.NotSent")}${this.gm || !e.id ? "" : ` · <a data-action="retrySms" data-id="${esc(e.id)}">${t("Satellite.Retry")}</a>`}</span>` : ""}${e.help ? `<a class="spt-help-link" data-action="playerGuide"><i class="fas fa-circle-question"></i> ${t("Guide.Link")}</a>` : ""}${this.gm && e.dir === "in" && !e.prep ? `<span class="spt-read ${e.read === false ? "unread" : ""}">${e.pending ? t("Read.Pending") : e.read === false ? t("Read.Unread") : t("Read.Seen")}</span>` : ""}</div>`
           : `<div class="spt-call-line"><i class="fas ${e.result === "answer" ? "fa-phone" : "fa-phone-slash"}"></i> ${callLabel(e)} ${del(e)}</div>`
       )
       .join("");
@@ -901,10 +936,20 @@ export class PlayerPhone extends ApplicationV2 {
   }
 
   _onClose(options) {
+    this._cycleStart = null;
     super._onClose?.(options);
     // Closed during a call: the call window takes over. Closed while dialing: the call is dropped (as closing the window did).
     if (!this.gm) phoneClosed();
     if (!this.gm && outgoing?.screen && !outgoing.done) outgoing.hangup();
+  }
+
+  /** Satellite device: the mobile network bars (green or red), plus the satellite when it goes through it. */
+  _satSignal(phone) {
+    const gsm = mobileSignal(phone)
+      ? `<i class="fas fa-signal spt-signal" title="${esc(`${t("Net.Signal")} · ${operatorName(phone)}`)}"></i>`
+      : `<i class="fas fa-signal spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
+    const sat = viaSatellite(phone) ? `<i class="fas fa-satellite spt-signal spt-sat-signal" title="${t("Satellite.Signal")}"></i>` : "";
+    return `${gsm}${sat}`;
   }
 
   _onRender(context, options) {
@@ -913,6 +958,10 @@ export class PlayerPhone extends ApplicationV2 {
     const cur = this._current();
     const skin = cur ? skinOf(cur.phone) : null;
     for (const k of SKINS) this.element.classList.toggle(`spt-skin-${k}`, k === skin);
+    // Satellite device: its frame shows it (brick: SAT label, thick antenna).
+    this.element.classList.toggle("spt-satellite", !!cur && isSatellite(cur.phone));
+    // Brick: the antenna is pulled out while the device is on.
+    this.element.classList.toggle("spt-antenna-up", !!cur && !this.gm && modeOf(cur.phone) !== "off");
     this.element.classList.toggle("spt-gm-view", this.gm);
     this._applyFrame(cur);
     const el = this.element;
@@ -931,7 +980,7 @@ export class PlayerPhone extends ApplicationV2 {
         if (ev.code !== "KeyP" || !ev.shiftKey || !(ev.ctrlKey || ev.metaKey)) return;
         ev.preventDefault();
         ev.stopPropagation();
-        this.nextDevice();
+        this.cycleDevice();
       });
     }
     if (!this.gm && cur && isLandline(cur.phone)) {

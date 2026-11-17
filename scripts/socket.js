@@ -2,7 +2,7 @@ import { MODULE_ID, PAGER_MAX, SMS_SRC, VIBRATE_SRC } from "./constants.js";
 import { markEntryRead, markRead } from "./devices.js";
 import { openPager } from "./pager.js";
 import { onPlayerCall, onPlayerHangup, onPlayerSms, senderHolds } from "./gm-actions.js";
-import { activeCall, endCall, onCallResult, receiveNearbyCall, receiveNearbyRing, receiveRing, stopNearbyRing } from "./player-calls.js";
+import { activeCall, endCall, onCallResult, onSatLink, receiveNearbyCall, receiveNearbyRing, receiveNearbySat, receiveRing, stopNearbyRing, stopNearbySat } from "./player-calls.js";
 import { onResponse } from "./ring.js";
 import { closeDial, endLive, openDial, openLive, openRinging } from "./live-call.js";
 import { receiveShow } from "./share.js";
@@ -23,6 +23,12 @@ export function onSocket(data) {
     case "ringNearby":
       receiveNearbyRing(data);
       openRinging(data);
+      break;
+    case "satNearby":
+      receiveNearbySat(data);
+      break;
+    case "satNearbyStop":
+      stopNearbySat(data);
       break;
     case "callNearby":
       receiveNearbyCall(data);
@@ -46,6 +52,10 @@ export function onSocket(data) {
       // A message to an unassigned number: the device says it was not delivered.
       if (forMe && data.result === "unassigned") deviceNotice(t("Warn.SmsUnassigned"), { warn: true });
       if (forMe && data.result === "pagerCut") deviceNotice(t("Warn.PagerCutSent", { n: PAGER_MAX }), { warn: true });
+      if (forMe && data.result === "nosat") deviceNotice(t("Warn.SmsNoSat"), { warn: true, icon: "fa-satellite" });
+      break;
+    case "satLink":
+      if (forMe) onSatLink(data);
       break;
     case "callResult":
       if (forMe) onCallResult(data);

@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress } from "./devices.js";
+import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -11,7 +11,7 @@ import { clock, liveCalls, timerHtml } from "./live-call.js";
 import { esc, isMasked, nl2br, norm } from "./util.js";
 import { t, tn } from "./i18n.js";
 import { OPERATORS, deviceName } from "./names.js";
-import { universe, universeKey } from "./universes.js";
+import { satellitePolicy, universe, universeKey } from "./universes.js";
 import { openWelcome } from "./welcome.js";
 import { FEATURES, feature, setFeature } from "./features.js";
 /* -------------------------------------------- */
@@ -248,7 +248,9 @@ export function bindIconSelects(root) {
 
 /** How precisely the network can place a device: carried, switched on, with signal. */
 /** model -> [precision, how the network places it] */
-const TRACK_LEVEL = { smartphone: ["high", "gps"], computer: ["high", "wifi"], mobile: ["medium", "gsm"], pager: ["low", "gsm"] };
+const TRACK_LEVEL = { smartphone: ["high", "gps"], computer: ["high", "wifi"], mobile: ["medium", "gsm"], brick: ["medium", "gsm"], pager: ["low", "gsm"] };
+/** Precision for this device: a satellite device reports its GPS position to the satellite network. */
+const trackLevel = (phone) => (isSatellite(phone) ? ["high", "sat"] : TRACK_LEVEL[phone.model]);
 const TRACK_ORDER = { high: 0, medium: 1, low: 2, none: 3 };
 
 /**
@@ -280,17 +282,19 @@ function lastCall(actor, phones) {
   const state = live && !live.ended && !live.dialing ? t("Live.OnLine") : e.dur != null ? clock(e.dur) : e.result !== "answer" ? t(`Calls.${e.result === "voicemail" ? "noanswer" : e.result}`) : "";
   const mins = Math.floor((Date.now() - e.t) / 60000);
   const ago = mins < 1 ? t("Track.JustNow") : t("Track.MinAgo", { n: mins });
-  return `${ago} · ${e.dir === "out" ? "→" : "←"} ${who}${state ? ` · ${state}` : ""}`;
+  // A call through the satellite leaves a trace on the satellite network.
+  const sat = e.sat ? ` · ${t("Track.Via.sat")}` : "";
+  return `${ago} · ${e.dir === "out" ? "→" : "←"} ${who}${state ? ` · ${state}` : ""}${sat}`;
 }
 
 function trackingRows(phones) {
   return agentActors(phones)
     .map((actor) => {
       const devices = phones
-        .filter((p) => p.actor?.id === actor.id && TRACK_LEVEL[p.phone.model] && modeOf(p.phone) !== "off" && hasSignal(p.phone))
+        .filter((p) => p.actor?.id === actor.id && trackLevel(p.phone) && modeOf(p.phone) !== "off" && hasSignal(p.phone))
         .map((p) => {
-          const [level, via] = TRACK_LEVEL[p.phone.model];
-          return { icon: modelOf(p.phone).icon, modelLabel: modelOf(p.phone).label, label: p.phone.label, level, via, compromised: !!p.phone.compromised, secure: isSecure(p.phone) };
+          const [level, via] = trackLevel(p.phone);
+          return { icon: modelOf(p.phone).icon, modelLabel: modelLabel(p.phone), label: p.phone.label, level, via, compromised: !!p.phone.compromised, secure: isSecure(p.phone) };
         })
         .sort((a, b) => TRACK_ORDER[a.level] - TRACK_ORDER[b.level]);
       for (const d of devices) d.levelLabel = `${t(`Track.${d.level}`)} (${t(`Track.Via.${d.via}`)})`;
@@ -657,6 +661,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       // An agent's device: its number or address; a place's: who is there.
       sub: st.sendKind === "place" ? landlineUsers(p.phone).map((u) => u.character?.name ?? u.name).join(", ") : p.phone.number,
       secure: isSecure(p.phone),
+      satellite: isSatellite(p.phone),
       selected: p === selectedTile,
       fresh: p.item.uuid === st.justCreated
     }));
@@ -670,7 +675,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         name: actor.name,
         canCancel: tiles.length > 0,
         kinds: quickKinds().map((k) => {
-          st.draws.list[k.key] ??= { label: deviceName(k.model) ?? k.label, number: randomAddress(k.model, { name: actor.name }) };
+          st.draws.list[k.key] ??= { label: deviceName(k.model, { satellite: satellitePolicy(k.model) === "forced" }) ?? k.label, number: randomAddress(k.model, { name: actor.name }) };
           const d = st.draws.list[k.key];
           return { ...k, drawLabel: d.label, drawNumber: d.number, recommended: k.model === rec };
         })
@@ -681,7 +686,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     st.justCreated = null;
     // Button: "Send to Cole (Smartphone)", "Ring Motel Starlite (Landline)": who, then the kind of device.
     const who = sendUser ? sendUser.character.name : st.sendKind === "place" ? places.get(st.sendId)?.name : "";
-    const targetName = selectedTile && who ? t("Gm.DeviceOf", { name: who, device: modelOf(selectedTile.phone).label }) : selectedTile?.phone.label ?? "";
+    const targetName = selectedTile && who ? t("Gm.DeviceOf", { name: who, device: modelLabel(selectedTile.phone) }) : selectedTile?.phone.label ?? "";
 
     // Conversations: agents with NPCs (the GM answers), and listening to agents between themselves.
     const allThreads = collectThreads(phones);
@@ -817,13 +822,14 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         number: p.phone.number,
         label: p.phone.label,
         icon: model.icon,
-        modelLabel: model.label,
+        modelLabel: modelLabel(p.phone),
         modeIcon: fixed || modeOf(p.phone) === "on" ? null : mode.icon,
         modeLabel: mode.label,
         fixed,
         locked: !!p.phone.locked,
         compromised: !!p.phone.compromised,
         secure: isSecure(p.phone),
+        satellite: isSatellite(p.phone),
         noSignal: !fixed && !!p.phone.noSignal,
         cloned: countByNumber.get(norm(p.phone.number)) > 1,
         unread,
@@ -1060,7 +1066,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       .map((p) => {
         const model = modelOf(p.phone);
         const name = publicName(p) || p.phone.label || "";
-        return { uuid: p.item.uuid, number: p.phone.number, name, model: model.label, icon: model.icon, place: isFixed(p.phone), pub: !!p.phone.pub, search: `${name} ${p.phone.number}`.toLowerCase() };
+        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: model.icon, place: isFixed(p.phone), pub: !!p.phone.pub, search: `${name} ${p.phone.number}`.toLowerCase() };
       })
       .sort((a, b) => a.place - b.place || a.name.localeCompare(b.name));
     const unknown = unknownNumbers(phones).map((u) => ({

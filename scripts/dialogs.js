@@ -1,7 +1,7 @@
 import { feature } from "./features.js";
 import { DialogV2, MODULE_ID } from "./constants.js";
 import { DEFAULT_THEME, MODELS, directoryText, createPhone, newTheme, getPhoneData, markPhone, randomAddress, shownTheme, themeChoices } from "./devices.js";
-import { modelAllowed } from "./universes.js";
+import { modelAllowed, satellitePolicy } from "./universes.js";
 import { deviceName } from "./names.js";
 import { esc, isMailAddress, norm, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
@@ -9,21 +9,27 @@ import { t } from "./i18n.js";
 /*  Dialogs (GM, and contacts for the player)    */
 /* -------------------------------------------- */
 
-export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", secure = false, withModel = true, holder = null }) {
+export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", secure = false, satellite = false, withModel = true, holder = null }) {
   // Default name = a random brand and model, following the model as long as the GM has not changed it.
   const randomName = (m) => deviceName(m) ?? MODELS[m]?.label ?? MODELS.smartphone.label;
   const autoLabel = label === null;
   label ??= randomName(model);
   const autoNumber = number === null;
   number ??= randomAddress(model, { name: holder });
+  // Satellite-only model in this universe (modern brick), unless it is this device's own non-satellite model.
+  const forcedSat = (m) => satellitePolicy(m) === "forced" && !(m === model && !satellite);
+  // A satellite brick is shown as "Satellite phone", not as the 1980s brick.
+  const optLabel = (k, m) => (m.satAlways && (k === model ? satellite : forcedSat(k)) ? t("Model.satphone") : m.label);
   // Models of the universe (plus the device's own, kept even if the universe does not offer it).
   const modelOpts = Object.entries(MODELS)
     .filter(([k]) => k === model || (modelAllowed(k) && (k !== "jammer" || feature("jammer"))))
-    .map(([k, m]) => `<option value="${k}" ${k === model ? "selected" : ""}>${m.label}</option>`)
+    .map(([k, m]) => `<option value="${k}" ${k === model ? "selected" : ""}>${optLabel(k, m)}</option>`)
     .join("");
   // Looks: every look offered for some model, tagged with the models it is offered for.
   const choices = Object.fromEntries(Object.keys(MODELS).map((m) => [m, themeChoices(m)]));
   const shown = shownTheme(theme ?? newTheme(model), model);
+  // The device keeps its own look, even one the universe does not offer.
+  if (!choices[model]?.includes(shown)) choices[model] = [shown, ...(choices[model] ?? [])];
   const themeOpts = [...new Set(Object.values(choices).flat())]
     .map((k) => {
       const models = Object.keys(choices).filter((m) => choices[m].includes(k));
@@ -51,6 +57,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
         <div class="form-group spt-if-themes"><label>${t("Form.Theme")}</label><select name="theme">${themeOpts}</select></div>
         <div class="form-group spt-if-computer"><label>${t("Form.Inbox")}</label><select name="inbox">${["on", "locked", "none"].map((k) => `<option value="${k}" ${k === inbox ? "selected" : ""}>${t(`Form.Inbox_${k}`)}</option>`).join("")}</select></div>
         ${secureRow(secure)}
+        ${satelliteRow(satellite)}
       </div>`,
     render: (event, x) => {
       // v13+: (event, dialog); an HTML element is accepted too.
@@ -84,6 +91,8 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
         // A jammer has no number.
         root.querySelector(".spt-if-number")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
         root.querySelector(".spt-secure-row")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
+        // Satellite: brick, smartphone and pager only; nothing to tick when the model is satellite-only.
+        root.querySelector(".spt-satellite-row")?.classList.toggle("hidden", !MODELS[select?.value ?? model]?.satellite || forcedSat(select?.value ?? model));
         // Looks: only those that fit the chosen model.
         const m = select?.value ?? model;
         const themeSel = root.querySelector("[name=theme]");
@@ -121,6 +130,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
             theme: f.theme?.value ?? DEFAULT_THEME,
             inbox: MODELS[model ?? "smartphone"]?.mail ? f.inbox?.value ?? "on" : undefined,
             secure: f.secure ? f.secure.checked : undefined,
+            satellite: forcedSat(model) ? true : f.satellite ? f.satellite.checked && !!MODELS[model]?.satellite : undefined,
             sceneId: MODELS[model]?.fixed ? scene?.id ?? null : undefined
           };
         }
@@ -135,6 +145,12 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
 function secureRow(checked) {
   if (!feature("secure")) return "";
   return `<div class="spt-secure-row"><label class="spt-secure-check"><input type="checkbox" name="secure" ${checked ? "checked" : ""}> ${shieldIcon()} ${t("Form.Secure")}</label><p class="hint">${t("Form.SecureHint")}</p></div>`;
+}
+
+/** "Satellite" option (advanced feature): Edit device, and New device where the universe makes it an option. */
+function satelliteRow(checked) {
+  if (!feature("satellite")) return "";
+  return `<div class="spt-satellite-row"><label class="spt-secure-check"><input type="checkbox" name="satellite" ${checked ? "checked" : ""}> <i class="fas fa-satellite"></i> ${t("Form.Satellite")}</label><p class="hint">${t("Form.SatelliteHint")}</p></div>`;
 }
 
 export function playerActors() {
@@ -169,6 +185,7 @@ export function resolveHolder(name) {
 const NEW_KINDS = [
   { key: "smartphone", model: "smartphone", carried: true },
   { key: "mobile", model: "mobile", carried: true },
+  { key: "brick", model: "brick", carried: true },
   { key: "pager", model: "pager", carried: true },
   { key: "computer", model: "computer", carried: true },
   { key: "jammer", model: "jammer", carried: true },
@@ -176,24 +193,28 @@ const NEW_KINDS = [
   { key: "rotary", model: "landline", theme: "vintage", icon: "rotary" },
   { key: "desktop", model: "desktop" }
 ];
-const kindLabel = (k) => (k.key === "landline" || k.key === "rotary" ? t(`NewDev.${k.key}`) : MODELS[k.model].label);
+// In a universe where the brick is satellite-only, its tile is the "Satellite phone".
+const satTile = (k) => k.model === "brick" && satellitePolicy("brick") === "forced";
+const kindLabel = (k) => (k.key === "landline" || k.key === "rotary" ? t(`NewDev.${k.key}`) : satTile(k) ? t("Model.satphone") : MODELS[k.model].label);
+const kindCaps = (k) => t(`NewDev.Caps.${satTile(k) ? "satphone" : k.key}`);
+const kindIcon = (k) => `modules/${MODULE_ID}/icons/${satTile(k) ? "satphone" : k.icon ?? k.model}.svg`;
 
 /** Carried models of the world's universe, as the new-device tiles show them (GM panel quick creation). */
 export function quickKinds() {
   return NEW_KINDS.filter((k) => k.carried && !MODELS[k.model].jammer && modelAllowed(k.model)).map((k) => ({
     key: k.key,
     model: k.model,
-    img: `modules/${MODULE_ID}/icons/${k.icon ?? k.model}.svg`,
+    img: kindIcon(k),
     label: kindLabel(k),
-    caps: t(`NewDev.Caps.${k.key}`)
+    caps: kindCaps(k)
   }));
 }
 
 /** Step 1: resolves with the chosen kind, or null. */
 async function pickKind() {
   const tile = (k) => `<button type="button" class="spt-kind" data-kind="${k.key}">
-      <img src="modules/${MODULE_ID}/icons/${k.icon ?? k.model}.svg" alt="">
-      <b>${esc(kindLabel(k))}</b><small>${t(`NewDev.Caps.${k.key}`)}</small></button>`;
+      <img src="${kindIcon(k)}" alt="">
+      <b>${esc(kindLabel(k))}</b><small>${kindCaps(k)}</small></button>`;
   // Only the models (and landline looks) of the world's universe.
   const kinds = NEW_KINDS.filter((k) => modelAllowed(k.model) && (!k.theme || themeChoices(k.model).includes(k.theme)) && (k.model !== "jammer" || feature("jammer")));
   let picked = null;
@@ -230,8 +251,10 @@ function kindForm(kind, { actor = null } = {}) {
   const pcs = playerActors();
   const npcs = game.actors.filter((a) => !pcs.includes(a)).sort((a, b) => a.name.localeCompare(b.name));
   const first = (actor && pcs.includes(actor) ? actor : pcs[0]) ?? null;
-  // Name: a random brand and model of the universe ("Motorola R33").
-  const randomName = () => deviceName(kind.model) ?? kindLabel(kind);
+  // Satellite: forced by the universe, or a box to tick where it is an option.
+  const satPolicy = satellitePolicy(kind.model);
+  // Name: a random brand and model of the universe ("Motorola R33"), a satellite one if satellite.
+  const randomName = (satellite = satPolicy === "forced") => deviceName(kind.model, { satellite }) ?? kindLabel(kind);
   const chip = (value, inner, checked = false) => `<label class="spt-chip"><input type="radio" name="holder" value="${value}" ${checked ? "checked" : ""}>${inner}</label>`;
   const holderRow = fixed
     ? `<div class="form-group"><label>${t("Form.Place")}</label><select name="scene">${game.scenes
@@ -269,6 +292,7 @@ function kindForm(kind, { actor = null } = {}) {
       theme: kind.theme ?? f.theme?.value ?? DEFAULT_THEME,
       sceneId: fixed ? f.scene?.value || null : undefined,
       secure: !!f.secure?.checked,
+      satellite: satPolicy === "forced" || (satPolicy === "option" && !!f.satellite?.checked),
       open
     };
   };
@@ -277,8 +301,8 @@ function kindForm(kind, { actor = null } = {}) {
     classes: ["spt-new-device"],
     position: { width: 500 },
     content: `<div class="spt-phone-form">
-        <div class="spt-chosen"><img src="modules/${MODULE_ID}/icons/${kind.icon ?? kind.model}.svg" alt="">
-          <div><b>${esc(kindLabel(kind))}</b><small>${t(`NewDev.Caps.${kind.key}`)}</small></div></div>
+        <div class="spt-chosen"><img src="${kindIcon(kind)}" alt="">
+          <div><b>${esc(kindLabel(kind))}</b><small>${kindCaps(kind)}</small></div></div>
         ${holderRow}
         <div class="form-group"><label>${t("Form.DeviceName")}</label><div class="form-fields">
           <input type="text" name="label" value="${esc(randomName())}">
@@ -289,6 +313,7 @@ function kindForm(kind, { actor = null } = {}) {
         ${model.jammer ? `<p class="hint">${t("Jammer.NewHint")}</p>` : ""}
         ${lookRow}
         ${model.jammer ? "" : secureRow(false)}
+        ${satPolicy === "option" ? satelliteRow(false) : ""}
       </div>`,
     render: (event, x) => {
       const root = x?.element ?? x;
@@ -315,8 +340,15 @@ function kindForm(kind, { actor = null } = {}) {
       root?.querySelector?.("[data-dice=number]")?.addEventListener("click", () => {
         numberInput.value = lastAuto = randomAddress(kind.model, { name: holderName() });
       });
+      const satBox = root?.querySelector?.("[name=satellite]");
+      const labelInput = root?.querySelector?.("[name=label]");
+      let lastLabel = labelInput?.value;
       root?.querySelector?.("[data-dice=label]")?.addEventListener("click", () => {
-        root.querySelector("[name=label]").value = randomName();
+        labelInput.value = lastLabel = randomName(satBox ? satBox.checked : undefined);
+      });
+      // Satellite ticked: a satellite name, as long as the GM has not typed one.
+      satBox?.addEventListener("change", () => {
+        if (labelInput && labelInput.value === lastLabel) labelInput.value = lastLabel = randomName(satBox.checked);
       });
     },
     buttons: [
@@ -395,6 +427,7 @@ export async function editPhoneDialog(item) {
     theme: phone.theme ?? null,
     inbox: phone.inbox ?? "on",
     secure: !!phone.secure,
+    satellite: !!phone.satellite,
     holder: item.parent?.name ?? null
   });
   if (!res) return;

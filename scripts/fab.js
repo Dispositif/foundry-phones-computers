@@ -375,7 +375,11 @@ function updateGmFab() {
   // A jammer is cutting the network somewhere: red ring.
   const jams = [...jammedScenes().keys()].map((id) => game.scenes.get(id)?.name ?? "?");
   main.classList.toggle("jamming", jams.length > 0);
+  // The GM cut the whole network: red outline.
+  const down = !!game.settings.get(MODULE_ID, "networkDown");
+  main.classList.toggle("netdown", down);
   main.title = calling ? t("Gm.AgentCalling") : n ? tn("Unread", n) : t("Gm.PanelTitle");
+  if (down) main.title += `\n${t("Net.DownAll")}`;
   if (jams.length) main.title += `\n${t("Jammer.GmFab", { scenes: jams.join(", ") })}`;
   // Devices installed on the scene the GM is viewing: one click opens their GM view.
   const sceneId = canvas?.scene?.id ?? game.user.viewedScene;

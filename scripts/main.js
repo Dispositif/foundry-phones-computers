@@ -10,7 +10,7 @@
 
 import { DIRECTORY_SAMPLE, LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
 import { ensureDeviceItems, registerPhoneSheet } from "./item-sheet.js";
-import { allPhones, createPhone, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
+import { allPhones, createPhone, freezeLooks, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
 import { openPager } from "./pager.js";
 import { myJammers, openJammer, registerJammerHooks } from "./jammer.js";
 import { transferPhone } from "./dialogs.js";
@@ -19,7 +19,7 @@ import { PhonePanel } from "./gm-panel.js";
 import { registerEnrichers, runJournalLink } from "./journal-links.js";
 import { flushAll, flushPending, sendSms } from "./messages.js";
 import { restoreLive } from "./live-call.js";
-import { UNIVERSES, applyGmLook, universeKey } from "./universes.js";
+import { DEFAULT_UNIVERSE, UNIVERSES, applyGmLook, storedUniverseKey, universeKey } from "./universes.js";
 import { PlayerPhone } from "./player-phone.js";
 import { registerTour } from "./tour.js";
 import { maybeWelcome, openWelcome, welcomeOwnedDevices } from "./welcome.js";
@@ -94,9 +94,11 @@ Hooks.once("init", () => {
     config: true,
     type: String,
     choices: Object.fromEntries(Object.keys(UNIVERSES).map((k) => [k, `SPT.UniverseName.${k}`])),
-    default: "all",
+    default: DEFAULT_UNIVERSE,
     requiresReload: true
   });
+  // Existing devices keep their look and ringtone when the universe changes: stored once per world (see freezeLooks).
+  game.settings.register(MODULE_ID, "looksFrozen", { scope: "world", config: false, type: Boolean, default: false });
   // Advanced features (secure, compromised, jammer, tracking): set on first start, see features.js.
   game.settings.register(MODULE_ID, "features", { scope: "world", config: false, type: Object, default: null, onChange: () => rerenderAll() });
   game.settings.register(MODULE_ID, "gmLook", {
@@ -206,8 +208,8 @@ Hooks.once("init", () => {
     editable: [{ key: "KeyP", modifiers: ["Control", "Shift"] }],
     onDown: () => {
       if (game.user.isGM) openPanel();
-      // Window already in front: each new press moves to the next device.
-      else if (PlayerPhone.instance?.rendered && !PlayerPhone.instance.minimized) PlayerPhone.instance.nextDevice();
+      // Window already in front: each new press moves to the next device, then closes it.
+      else if (PlayerPhone.instance?.rendered && !PlayerPhone.instance.minimized) PlayerPhone.instance.cycleDevice();
       else openPhone();
       return true;
     }
@@ -287,6 +289,19 @@ export async function migrateLegacy() {
   if (n || moved || oldActive) renamedNotice(n, oldActive);
 }
 
+/**
+ * Active GM, once: existing devices keep their looks (computed with the universe as it was stored),
+ * then the removed "Any setting" universe becomes Modern.
+ */
+async function migrateUniverse() {
+  try {
+    await freezeLooks();
+    if (!UNIVERSES[storedUniverseKey()]) await game.settings.set(MODULE_ID, "universe", DEFAULT_UNIVERSE);
+  } catch (err) {
+    console.warn(`${MODULE_ID} | could not migrate the universe`, err);
+  }
+}
+
 /** Tells the GM the module was renamed, what was recovered, and what to do with the old one. */
 function renamedNotice(n, oldActive) {
   const lines = [t("Renamed.Body"), n ? t("Migrated", { n }) : "", oldActive ? `<strong>${t("Renamed.Disable")}</strong>` : t("Renamed.Uninstall")];
@@ -313,7 +328,10 @@ Hooks.once("ready", async () => {
     runJournalLink(link.dataset);
   });
   await migrateLegacy();
-  if (game.user === game.users.activeGM) ensureDeviceItems();
+  if (game.user === game.users.activeGM) {
+    ensureDeviceItems();
+    await migrateUniverse();
+  }
   updateFab();
   restoreLive();
   registerTour();

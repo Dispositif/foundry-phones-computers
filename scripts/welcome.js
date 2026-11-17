@@ -3,7 +3,7 @@ import { addLog, allPhones, getLog, hasSignal, isComputer, isFixed, isPager, key
 import { operatorName } from "./names.js";
 import { openPanel } from "./main.js";
 import { startTour, tourAvailable } from "./tour.js";
-import { universeKey } from "./universes.js";
+import { UNIVERSES, universeKey } from "./universes.js";
 import { esc } from "./util.js";
 import { t } from "./i18n.js";
 
@@ -81,8 +81,11 @@ export class WelcomeApp extends ApplicationV2 {
       </ul>
       <h3><i class="fas fa-list-check"></i> ${t("Welcome.ReadyTitle")}</h3>
       <ul class="spt-wl-ready">${ready}</ul>
-      <p class="spt-wl-universe">${t("Welcome.Universe")} <strong>${esc(t(`UniverseName.${universeKey()}`))}</strong>
-        <a data-action="settings">${t("Welcome.Change")}</a></p>
+      <p class="spt-wl-universe"><label for="spt-wl-universe">${t("Welcome.Universe")}</label>
+        <select id="spt-wl-universe" name="universe">${Object.keys(UNIVERSES)
+          .map((k) => `<option value="${k}" ${k === universeKey() ? "selected" : ""}>${esc(t(`UniverseName.${k}`))}</option>`)
+          .join("")}</select></p>
+      <p class="hint spt-wl-universe-hint">${t("Welcome.UniverseHint")}</p>
       <footer class="spt-wl-footer">
         ${tourAvailable() ? `<button type="button" data-action="tour"><i class="fas fa-route"></i> ${t("Welcome.Tour")}</button>` : ""}
         <button type="button" data-action="panel"><i class="fas fa-tower-cell"></i> ${t("Welcome.OpenPanel", { panel })}</button>
@@ -99,6 +102,14 @@ export class WelcomeApp extends ApplicationV2 {
   _onRender(context, options) {
     super._onRender?.(context, options);
     WelcomeApp.instance = this;
+    // Universe: chosen here on first install (a world setting that needs a reload).
+    this.element.querySelector("[name=universe]")?.addEventListener("change", async (ev) => {
+      if (ev.target.value === universeKey()) return;
+      await game.settings.set(MODULE_ID, "universe", ev.target.value);
+      const Config = foundry.applications.settings?.SettingsConfig ?? globalThis.SettingsConfig;
+      if (Config?.reloadConfirm) Config.reloadConfirm({ world: true });
+      else foundry.utils.debouncedReload();
+    });
   }
 }
 

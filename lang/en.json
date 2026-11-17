@@ -29,7 +29,9 @@
       "smartphone": "Smartphone",
       "computer": "Laptop",
       "desktop": "Terminal",
-      "jammer": "Jammer"
+      "jammer": "Jammer",
+      "brick": "Brick phone",
+      "satphone": "Satellite phone"
     },
     "NoPlace": "No location (network access)",
     "NoHolder": "No holder",
@@ -71,7 +73,8 @@
       "NoVideo": "Videos cannot be attached: use an image.",
       "WrongDrop": "A {type} cannot be attached: drop a journal page or an image.",
       "SmsUnassigned": "Message not delivered: this number is not in service.",
-      "PagerCutSent": "Pager: message cut to {n} characters."
+      "PagerCutSent": "Pager: message cut to {n} characters.",
+      "SmsNoSat": "Satellite not found. Message not sent."
     },
     "Caller": "Caller",
     "Info": {
@@ -216,7 +219,7 @@
       "answer": "Answer",
       "noanswer": "No answer",
       "unreachable": "Unreachable",
-      "unassigned": "Unassigned (not in service)"
+      "unassigned": "Not in service"
     },
     "Call": {
       "Incoming": "Incoming call",
@@ -232,6 +235,8 @@
     "Net": {
       "GmAbsent": "No phone network [GM away]",
       "NoSignal": "No signal.",
+      "Mobile": "Mobile network",
+      "Wifi": "Wi-Fi",
       "DownAll": "Network down for everyone",
       "Ok": "Network OK",
       "Pending": "{n} pending",
@@ -246,7 +251,8 @@
       "unreachable": "The person you are calling cannot be reached at the moment.",
       "noanswer": "{name} does not answer.",
       "busy": "Network busy. Try again later.",
-      "neterror": "Network error. The call could not be completed."
+      "neterror": "Network error. The call could not be completed.",
+      "nosat": "Satellite not found. The call could not be completed."
     },
     "Form": {
       "Model": "Model",
@@ -268,7 +274,9 @@
       "PlaceHint": "No location + item shared as Observer: reachable from anywhere.",
       "NoPlaceHint": "Without a location, the device is reached over the network only: give players access to it from the Items sidebar (Observer). Handy for a shared case-file database.",
       "Secure": "Secure (encrypted)",
-      "SecureHint": "Calls and messages are encrypted when the other end is secure too."
+      "SecureHint": "Calls and messages are encrypted when the other end is secure too.",
+      "Satellite": "Satellite",
+      "SatelliteHint": "Works without the mobile network (dead zone, jammer). The GM decides each satellite connection."
     },
     "Ok": "OK",
     "NewDevice": "New device",
@@ -386,7 +394,7 @@
       },
       "universe": {
         "name": "Universe",
-        "hint": "Era or genre of the game: sets the devices offered, their default looks, the phone created for a character who has none (a mobile in Vintage, a smartphone otherwise) and some words. Any setting: everything, as before."
+        "hint": "Era or genre of the game: sets the devices offered for new devices, their default looks, the phone created for a character who has none (a mobile in Vintage, a smartphone otherwise) and some words. Existing devices do not change."
       },
       "gmLook": {
         "name": "GM panel theme",
@@ -407,7 +415,6 @@
     },
     "Migrated": "{n} device(s) recovered from the previous version.",
     "UniverseName": {
-      "all": "Any setting",
       "retro": "Vintage (1980s-1990s)",
       "modern": "Modern",
       "cyberpunk": "Cyberpunk / neon noir"
@@ -596,7 +603,8 @@
       "Via": {
         "gps": "GPS",
         "wifi": "Wi-Fi",
-        "gsm": "GSM"
+        "gsm": "GSM",
+        "sat": "satellite"
       },
       "DeadZone": "Dead zone",
       "LastCall": "Last call (past 30 minutes)",
@@ -620,7 +628,9 @@
         "landline": "Calls",
         "rotary": "Calls",
         "desktop": "Emails, documents",
-        "jammer": "Cuts the network"
+        "jammer": "Cuts the network",
+        "brick": "Calls",
+        "satphone": "Calls by satellite"
       },
       "Npc": "NPC…",
       "NpcName": "NPC name",
@@ -763,7 +773,8 @@
       "ReadyDevices": "Every agent has a device",
       "ReadyBare": "{n} agent(s) without a device: give one from the Send tab",
       "PointDirectory": "The <strong>Directory</strong> is optional: no number to create, no NPC to set up. It only helps you keep track (name a number, make it public, pin it, switch it off), and fills up as you play.",
-      "MoreTools": "More tools: secure devices, jammer, tracking…"
+      "MoreTools": "More tools: secure devices, jammer, tracking…",
+      "UniverseHint": "Devices offered and their default looks. Changing it reloads the game; existing devices do not change."
     },
     "Tour": {
       "Title": "Phones & Computers: the GM panel",
@@ -807,7 +818,9 @@
       "jammer": "Jammer",
       "jammerHint": "A carried device that cuts the network in its scene.",
       "tracking": "Tracking",
-      "trackingHint": "How precisely the network can locate each agent (experimental)."
+      "trackingHint": "How precisely the network can locate each agent (experimental).",
+      "satellite": "Satellite",
+      "satelliteHint": "Satellite option for brick, smartphone and pager: works without the mobile network; the GM decides each connection."
     },
     "Guide": {
       "Title": "Getting started",
@@ -826,6 +839,22 @@
       "Title": "What's new in Phones & Computers {version}",
       "Changelog": "Full changelog",
       "Lines": "**GM panel big redesign**: setting options, new directory, messages…\nTeam option: PCs know each other (numbers/emails shared in devices).\nLots of fixes and UI improvements."
+    },
+    "Satellite": {
+      "Device": "Satellite device",
+      "Title": "Satellite link",
+      "Question": "Conditions to establish the satellite connection?",
+      "Call": "{who} calls {to} by satellite.",
+      "Sms": "{who} writes to {to} by satellite.",
+      "Hint": "Open sky, no thick walls, a satellite overhead… Until you decide, the device searches for the satellite.",
+      "Establish": "Establish the link",
+      "WholeScene": "For the whole scene",
+      "NotFound": "Satellite not found",
+      "JammerHere": "A jammer is on in this scene (it does not cut the satellite).",
+      "Searching": "Searching for satellite…",
+      "Signal": "Satellite",
+      "NotSent": "Not sent",
+      "Retry": "Try again"
     }
   }
 }

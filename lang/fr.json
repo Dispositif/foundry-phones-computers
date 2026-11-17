@@ -29,7 +29,9 @@
       "smartphone": "Smartphone",
       "computer": "Ordinateur",
       "desktop": "Terminal",
-      "jammer": "Brouilleur"
+      "jammer": "Brouilleur",
+      "brick": "Téléphone brique",
+      "satphone": "Téléphone satellite"
     },
     "NoPlace": "Sans lieu (accès réseau)",
     "NoHolder": "Sans possesseur",
@@ -71,7 +73,8 @@
       "NoVideo": "Les vidéos ne peuvent pas être jointes : utilisez une image.",
       "WrongDrop": "Un objet de type {type} ne peut pas être joint : glissez une page de journal ou une image.",
       "SmsUnassigned": "Message non distribué : ce numéro n'est pas attribué.",
-      "PagerCutSent": "Bipeur : message coupé à {n} caractères."
+      "PagerCutSent": "Bipeur : message coupé à {n} caractères.",
+      "SmsNoSat": "Satellite introuvable. Message non envoyé."
     },
     "Caller": "Appelant",
     "Info": {
@@ -232,6 +235,8 @@
     "Net": {
       "GmAbsent": "Pas de réseau téléphonique [MJ absent]",
       "NoSignal": "Pas de réseau.",
+      "Mobile": "Réseau mobile",
+      "Wifi": "Wi-Fi",
       "DownAll": "Réseau coupé pour tous",
       "Ok": "Réseau OK",
       "Pending": "{n} en attente",
@@ -246,7 +251,8 @@
       "unreachable": "Votre correspondant n'est pas joignable pour le moment.",
       "noanswer": "{name} ne répond pas.",
       "busy": "Réseau encombré. Réessayez plus tard.",
-      "neterror": "Erreur réseau. L'appel n'a pas pu aboutir."
+      "neterror": "Erreur réseau. L'appel n'a pas pu aboutir.",
+      "nosat": "Satellite introuvable. L'appel n'a pas pu aboutir."
     },
     "Form": {
       "Model": "Modèle",
@@ -268,7 +274,9 @@
       "PlaceHint": "Aucun lieu + objet partagé en Observateur : accessible de partout.",
       "NoPlaceHint": "Sans lieu, l'appareil n'est accessible que par le réseau : donnez-y accès aux joueurs depuis la barre latérale Objets (Observateur). Pratique pour une base de dossiers partagée.",
       "Secure": "Sécurisé (chiffré)",
-      "SecureHint": "Appels et messages chiffrés quand l'autre bout est sécurisé aussi."
+      "SecureHint": "Appels et messages chiffrés quand l'autre bout est sécurisé aussi.",
+      "Satellite": "Satellite",
+      "SatelliteHint": "Fonctionne sans réseau mobile (zone blanche, brouilleur). Le MJ décide de chaque connexion satellite."
     },
     "Ok": "Valider",
     "NewDevice": "Nouvel appareil",
@@ -386,7 +394,7 @@
       },
       "universe": {
         "name": "Univers",
-        "hint": "Époque ou genre de la partie : fixe les appareils proposés, leurs habillages par défaut, le téléphone créé pour un personnage qui n'en a pas (un mobile en Vintage, un smartphone sinon) et certains mots. Tous univers : tout, comme avant."
+        "hint": "Époque ou genre de la partie : fixe les appareils proposés à la création, leurs habillages par défaut, le téléphone créé pour un personnage qui n'en a pas (un mobile en Vintage, un smartphone sinon) et certains mots. Les appareils existants ne changent pas."
       },
       "gmLook": {
         "name": "Thème du panel MJ",
@@ -407,7 +415,6 @@
     },
     "Migrated": "{n} appareil(s) repris de l'ancienne version.",
     "UniverseName": {
-      "all": "Tous univers",
       "retro": "Vintage (années 80-90)",
       "modern": "Moderne",
       "cyberpunk": "Cyberpunk / néon noir"
@@ -596,7 +603,8 @@
       "Via": {
         "gps": "GPS",
         "wifi": "Wi-Fi",
-        "gsm": "GSM"
+        "gsm": "GSM",
+        "sat": "satellite"
       },
       "DeadZone": "Zone blanche",
       "LastCall": "Dernier appel (30 dernières minutes)",
@@ -620,7 +628,9 @@
         "landline": "Appels",
         "rotary": "Appels",
         "desktop": "Mails, documents",
-        "jammer": "Coupe le réseau"
+        "jammer": "Coupe le réseau",
+        "brick": "Appels",
+        "satphone": "Appels par satellite"
       },
       "Npc": "PNJ…",
       "NpcName": "Nom du PNJ",
@@ -763,7 +773,8 @@
       "ReadyDevices": "Chaque agent a un appareil",
       "ReadyBare": "{n} agent(s) sans appareil : donnez-le depuis l'onglet Envoyer",
       "PointDirectory": "L'<strong>Annuaire</strong> est facultatif : aucun numéro à créer, aucun PNJ à configurer. Il sert seulement à vous y retrouver (nommer un numéro, le rendre public, l'épingler, le couper) et se remplit au fil de la partie.",
-      "MoreTools": "Plus d'outils : sécurisé, brouilleur, traçage…"
+      "MoreTools": "Plus d'outils : sécurisé, brouilleur, traçage…",
+      "UniverseHint": "Appareils proposés et leurs habillages par défaut. Le changer recharge la partie ; les appareils existants ne changent pas."
     },
     "Tour": {
       "Title": "Phones & Computers : le panneau du MJ",
@@ -807,7 +818,9 @@
       "jammer": "Brouilleur",
       "jammerHint": "Un appareil porté qui coupe le réseau dans sa scène.",
       "tracking": "Traçage",
-      "trackingHint": "Avec quelle précision le réseau peut localiser chaque agent (expérimental)."
+      "trackingHint": "Avec quelle précision le réseau peut localiser chaque agent (expérimental).",
+      "satellite": "Satellite",
+      "satelliteHint": "Option satellite pour la brique, le smartphone et le bipeur : fonctionne sans réseau mobile ; le MJ décide de chaque connexion."
     },
     "Guide": {
       "Title": "Bien démarrer",
@@ -826,6 +839,22 @@
       "Title": "Nouveautés de Phones & Computers {version}",
       "Changelog": "Toutes les modifications (en anglais)",
       "Lines": "**Grande refonte du panneau MJ** : réglages, nouvel annuaire, messages…\nOption Équipe : les PJ se connaissent (numéros et mails partagés dans les appareils).\nNombreuses corrections et améliorations de l'interface."
+    },
+    "Satellite": {
+      "Device": "Appareil satellite",
+      "Title": "Liaison satellite",
+      "Question": "Conditions pour établir la connexion satellite ?",
+      "Call": "{who} appelle {to} par satellite.",
+      "Sms": "{who} écrit à {to} par satellite.",
+      "Hint": "Ciel dégagé, pas de murs épais, un satellite au-dessus… Tant que vous n'avez pas décidé, l'appareil cherche le satellite.",
+      "Establish": "Établir la liaison",
+      "WholeScene": "Pour toute la scène",
+      "NotFound": "Satellite introuvable",
+      "JammerHere": "Un brouilleur est allumé dans cette scène (il ne coupe pas le satellite).",
+      "Searching": "Recherche de satellite…",
+      "Signal": "Satellite",
+      "NotSent": "Non envoyé",
+      "Retry": "Réessayer"
     }
   }
 }

@@ -115,7 +115,7 @@ function openWindow(callId) {
 function onSmartphone(data) {
   const mine = mySide(data);
   const item = mine?.itemUuid ? fromUuidSync(mine.itemUuid) : null;
-  return ["smartphone", "mobile"].includes(getPhoneData(item)?.model) ? item : null;
+  return ["smartphone", "mobile", "brick"].includes(getPhoneData(item)?.model) ? item : null;
 }
 
 /* Dialing: as soon as an agent calls, the rest of the table sees who is calling. */

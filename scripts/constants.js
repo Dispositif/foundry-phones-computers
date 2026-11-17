@@ -8,6 +8,8 @@ export const SMS_SRC = `modules/${MODULE_ID}/sounds/sms.ogg`;
 export const PICKUP_SRC = `modules/${MODULE_ID}/sounds/pickup.ogg`;
 export const HANGUP_SRC = `modules/${MODULE_ID}/sounds/hangup.ogg`;
 export const RINGBACK_SRC = `modules/${MODULE_ID}/sounds/ringback.ogg`;
+// Searching for the satellite: short regular beeps (the pager beeps for now).
+export const SAT_SEARCH_SRC = `modules/${MODULE_ID}/sounds/pager.ogg`;
 // Icon of secure (encrypted) devices, lines and messages: a shield, never a padlock (locked device).
 export const SECURE_ICON = "fa-shield-halved";
 // Data exchange heard when a secure line is set up.
