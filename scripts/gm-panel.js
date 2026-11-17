@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel } from "./devices.js";
+import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -741,6 +741,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         secure: th.agents ? !!conv[0]?.secure : secureWith(th.phone, th.key),
         unread: th.unread,
         canCall: !th.agents && !modelOf(th.phone).noCalls,
+        // The link would go through the satellite (no mobile network there): shown on the buttons.
+        viaSat: viaSatellite(th.phone),
         draft: this._state.drafts[th.id] ?? "",
         attChip: attChipHtml(this._state.replyAtts[th.id]),
         bubbles: conv.slice(0, INBOX_BUBBLES).reverse().map((e) => ({
@@ -877,6 +879,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       // No agent to write to: no player account, or no player with an assigned character.
       noAgents: reachable.length ? "" : players.length ? t("Gm.NoAgents") : t("Gm.NoPlayers"),
       targetName,
+      viaSat: tp.some((p) => viaSatellite(p.phone)),
       sender: this._state.sender,
       senderOptions: this._senderOptions(phones, kind, id),
       pinnedSenders: npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })),

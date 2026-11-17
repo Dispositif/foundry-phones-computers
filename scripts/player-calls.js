@@ -188,6 +188,7 @@ export function onSatLink({ callId }) {
   const call = outgoing;
   if (!call || call.callId !== callId || call.done || !call.searching) return;
   call.searching = false;
+  call.satLinked = true;
   call.sound?.stop();
   call.sound = null;
   stopEntry(`sat:${callId}`);
