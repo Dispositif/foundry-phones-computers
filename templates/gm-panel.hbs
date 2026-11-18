@@ -287,17 +287,8 @@
 
   {{#if (eq tab "directory")}}
     <section class="spt-gm-directory">
-      <fieldset class="spt-dir-add">
-        <legend><i class="fas fa-user-plus"></i> {{spt "Directory.NewNpc"}}</legend>
-        <div class="spt-dir-add-row">
-          <input type="text" name="dirName" value="{{directory.name}}" placeholder="{{spt "Directory.NamePlaceholder"}}" aria-label="{{spt "Directory.NamePlaceholder"}}" autocomplete="off">
-          <label title="{{spt "Directory.PinHint"}}"><input type="checkbox" name="dirPinNew" {{#if directory.pin}}checked{{/if}}> <i class="fas fa-star"></i></label>
-          <label title="{{spt "Directory.PublicHint"}}"><input type="checkbox" name="dirPubNew" {{#if directory.pub}}checked{{/if}}> {{spt "Directory.Public"}}</label>
-          <button type="button" class="spt-primary" data-action="dirAdd" aria-label="{{spt "Directory.Add"}}" title="{{spt "Directory.Add"}}"><i class="fas fa-plus"></i> {{spt "Directory.AddShort"}}</button>
-        </div>
-        <p class="spt-dim spt-dir-auto"><i class="fas fa-wand-magic-sparkles"></i> {{spt "Directory.AutoNumber"}}</p>
-      </fieldset>
-      <div class="spt-dir-search"><i class="fas fa-magnifying-glass"></i><input type="search" name="dirSearch" value="{{directory.search}}" placeholder="{{spt "Directory.Search"}}" aria-label="{{spt "Directory.Search"}}" autocomplete="off"></div>
+      <p class="spt-dir-intro"><i class="fas fa-circle-info"></i> {{spt "Directory.Intro"}}</p>
+      <p class="spt-dir-legend"><i class="fas fa-star spt-dev-pin"></i> {{spt "Directory.LegendPin"}} · <span class="spt-dir-flag on pub">{{spt "Directory.Public"}}</span> {{spt "Directory.LegendPublic"}}</p>
       {{#if directory.unknown.length}}
       <h4 class="spt-call-when">{{spt "Directory.ToIdentify"}}</h4>
       <ul class="spt-dir-list">
@@ -312,22 +303,23 @@
         {{/each}}
       </ul>
       {{/if}}
-      <h4 class="spt-call-when">{{spt "Directory.DevicesTitle"}} <small class="spt-dir-sub">{{spt "Directory.DevicesHint"}}</small></h4>
-      <ul class="spt-dir-list">
+      <fieldset class="spt-dir-add">
+        <legend><i class="fas fa-user-plus"></i> {{spt "Directory.NewNpc"}}</legend>
+        <div class="spt-dir-add-row">
+          <input type="text" name="dirName" value="{{directory.name}}" placeholder="{{spt "Directory.NamePlaceholder"}}" aria-label="{{spt "Directory.NamePlaceholder"}}" autocomplete="off">
+          <label title="{{spt "Directory.PinHint"}}"><input type="checkbox" name="dirPinNew" {{#if directory.pin}}checked{{/if}}> <i class="fas fa-star"></i></label>
+          <label title="{{spt "Directory.PublicHint"}}"><input type="checkbox" name="dirPubNew" {{#if directory.pub}}checked{{/if}}> {{spt "Directory.Public"}}</label>
+          <button type="button" class="spt-primary" data-action="dirAdd" aria-label="{{spt "Directory.Add"}}" title="{{spt "Directory.Add"}}"><i class="fas fa-plus"></i> {{spt "Directory.AddShort"}}</button>
+        </div>
+        <p class="spt-dim spt-dir-auto"><i class="fas fa-wand-magic-sparkles"></i> {{spt "Directory.AutoNumber"}}</p>
+      </fieldset>
+      <div class="spt-dir-search"><i class="fas fa-magnifying-glass"></i><input type="search" name="dirSearch" value="{{directory.search}}" placeholder="{{spt "Directory.Search"}}" aria-label="{{spt "Directory.Search"}}" autocomplete="off"></div>
+      <ul class="spt-dir-list spt-dir-devhits">
         {{#each directory.devices}}
-        <li class="spt-dir-row" data-uuid="{{uuid}}" data-search="{{search}}">
-          <i class="fas {{icon}} spt-dim spt-dir-icon" title="{{model}}"></i>
-          <span class="spt-dir-num">{{number}}</span>
-          {{#if canPin}}<a class="spt-dir-star {{#if pin}}on{{/if}}" data-action="devPin" title="{{spt "Directory.DevicePinHint"}}"><i class="fa{{#if pin}}s{{else}}r{{/if}} fa-star"></i></a>{{else}}<span class="spt-dir-star" style="visibility: hidden"><i class="far fa-star"></i></span>{{/if}}
-          <span class="spt-dir-name"><i class="fas {{held.icon}} spt-dim spt-dir-held" title="{{held.label}}" aria-label="{{held.label}}"></i> {{name}} <small class="spt-dim">· {{model}}</small></span>
-          {{#if filter}}<a class="spt-dir-act" data-action="filterDevice" {{#if filter.agent}}data-agent="{{filter.agent}}"{{/if}} {{#if filter.npc}}data-npc="{{filter.npc}}"{{/if}} title="{{spt "Directory.OpenMessages"}}"><i class="fas fa-comments"></i></a>{{/if}}
-          <a class="spt-dir-flag {{#if pub}}on pub{{/if}}" data-action="devPub" title="{{spt "Directory.DevicePublicHint"}}">{{spt "Directory.Public"}}</a>
-        </li>
-        {{else}}
-        <li class="spt-phone-status">{{spt "Directory.NoDevices"}}</li>
+        <li class="spt-dir-devhit" data-device-hit="{{search}}" hidden><i class="fas fa-mobile-screen spt-dim"></i> {{spt "Directory.DeviceHit" number=number name=name}} <a data-action="switchTab" data-tab="devices">{{spt "Directory.SeeDevices"}} <i class="fas fa-arrow-right"></i></a></li>
         {{/each}}
       </ul>
-      <h4 class="spt-call-when">{{spt "Directory.NpcTitle"}} <small class="spt-dir-sub">{{spt "Directory.NpcHint"}}</small></h4>
+      <h4 class="spt-call-when">{{spt "Directory.NpcTitle"}}</h4>
       <ul class="spt-dir-list">
         {{#each directory.rows}}
         {{#if title}}
@@ -356,7 +348,8 @@
         {{/each}}
       </ul>
       {{#if directory.off.length}}
-      <h4 class="spt-call-when">{{spt "Directory.OffTitle"}} <small class="spt-dir-sub">{{spt "Directory.OffSectionHint"}}</small></h4>
+      <details class="spt-dir-off" {{#if directory.offOpen}}open{{/if}}>
+      <summary class="spt-call-when">{{spt "Directory.OffTitle"}} ({{directory.off.length}}) <small class="spt-dir-sub">{{spt "Directory.OffSectionHint"}}</small></summary>
       <ul class="spt-dir-list">
         {{#each directory.off}}
         <li class="spt-dir-row off" data-line="{{line}}" data-search="{{search}}">
@@ -368,6 +361,7 @@
         </li>
         {{/each}}
       </ul>
+      </details>
       {{/if}}
       <p class="spt-dir-foot"><button type="button" data-action="directory"><i class="fas fa-align-left"></i> {{spt "Directory.EditText"}}</button> <span class="spt-dim">{{spt "Directory.NoPrep"}}</span></p>
     </section>
@@ -375,6 +369,7 @@
 
   {{#if (eq tab "devices")}}
     <section class="spt-gm-devices">
+      {{#if (gt devFilters.length 2)}}<div class="spt-fx-bar"><span class="spt-fx-pick" role="radiogroup">{{#each devFilters}}<a data-action="devFilter" data-filter="{{key}}" class="{{#if active}}active{{/if}}" role="radio">{{label}} <small>{{n}}</small></a>{{/each}}</span></div>{{/if}}
       {{#each groups}}
       <div class="spt-dev-group">
         <header class="spt-dev-group-head">
@@ -392,7 +387,7 @@
               {{#if jamFailed}}<span class="spt-jam-state">{{spt "Jammer.StateFailed"}}</span>{{/if}}
             </a>
             {{else}}
-            <a class="spt-dev-main" data-action="selectPhone" data-number="{{number}}" title="{{spt "Gm.PickRecipient"}}">
+            <a class="spt-dev-main" data-action="selectPhone" data-uuid="{{uuid}}" title="{{#if npcHeld}}{{spt "Gm.PickSender"}}{{else}}{{spt "Gm.PickRecipient"}}{{/if}}">
               <i class="fas {{icon}}" title="{{modelLabel}}"></i>
               <span class="spt-dev-label">{{label}} <small>{{number}}</small></span>
               {{#if modeIcon}}<i class="fas {{modeIcon}} spt-dim" title="{{modeLabel}}"></i>{{/if}}
@@ -403,7 +398,10 @@
               {{#if noSignal}}<i class="fas fa-signal spt-nosignal spt-dev-state" title="{{spt "Gm.NoSignal"}}"></i>{{/if}}
               {{#if cloned}}<i class="fas fa-clone spt-warn" title="{{spt "Gm.ClonedHint"}}"></i>{{/if}}
               {{#if unread}}<span class="spt-row-unread" title="{{unreadTitle}}"><i class="fas fa-envelope"></i> {{unread}}</span>{{/if}}
+              {{#if pin}}<span class="spt-dev-pin" data-action="devPin" data-uuid="{{uuid}}" title="{{spt "Directory.DevicePinHint"}}"><i class="fas fa-star"></i></span>{{/if}}
+              {{#if pub}}<span class="spt-dev-pub" data-action="devPub" data-uuid="{{uuid}}" title="{{spt "Directory.DevicePublicHint"}}">{{spt "Directory.Public"}}</span>{{/if}}
             </a>
+            {{#if filter}}<a class="spt-dev-msgs" data-action="filterDevice" {{#if filter.agent}}data-agent="{{filter.agent}}"{{/if}} {{#if filter.npc}}data-npc="{{filter.npc}}"{{/if}} title="{{spt "Directory.OpenMessages"}}" aria-label="{{spt "Directory.OpenMessages"}}"><i class="fas fa-comments"></i></a>{{/if}}
             {{/if}}
             <span class="spt-dev-actions" aria-label="{{spt "Gm.Actions"}}">
               <a data-action="openPhone" data-uuid="{{uuid}}" title="{{spt "Gm.OpenPrepare"}}" aria-label="{{spt "Gm.OpenPrepare"}}"><i class="fas fa-pen-to-square"></i></a>
@@ -412,6 +410,8 @@
               <a data-action="toggleCompromised" data-uuid="{{uuid}}" class="{{#if compromised}}spt-compromised{{/if}}" title="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}" aria-label="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}"><i class="fas fa-triangle-exclamation"></i></a>
               {{#unless fixed}}<a data-action="toggleSignal" data-uuid="{{uuid}}" class="{{#if noSignal}}spt-nosignal{{/if}}" title="{{#if noSignal}}{{spt "Gm.NoSignal"}}{{else}}{{spt "Gm.SignalOk"}}{{/if}}" aria-label="{{#if noSignal}}{{spt "Gm.NoSignal"}}{{else}}{{spt "Gm.SignalOk"}}{{/if}}"><i class="fas fa-signal"></i></a>{{/unless}}
               <a data-action="contacts" data-uuid="{{uuid}}" title="{{spt "Contacts.Title"}}" aria-label="{{spt "Contacts.Title"}}"><i class="fas fa-address-book"></i></a>
+              {{#if canPin}}<a data-action="devPin" data-uuid="{{uuid}}" class="{{#if pin}}spt-pinned{{/if}}" title="{{spt "Directory.DevicePinHint"}}" aria-label="{{spt "Directory.DevicePinHint"}}"><i class="fa{{#if pin}}s{{else}}r{{/if}} fa-star"></i></a>{{/if}}
+              {{#if number}}<a data-action="devPub" data-uuid="{{uuid}}" class="{{#if pub}}spt-public{{/if}}" title="{{spt "Directory.DevicePublicHint"}}" aria-label="{{spt "Directory.DevicePublicHint"}}"><i class="fas fa-globe"></i></a>{{/if}}
               {{/unless}}
               {{#unless fixed}}<a data-action="give" data-uuid="{{uuid}}" title="{{spt "Gm.GiveTo"}}" aria-label="{{spt "Gm.GiveTo"}}"><i class="fas fa-hand-holding"></i></a>{{/unless}}
               <a data-action="editPhone" data-uuid="{{uuid}}" title="{{spt "Gm.Edit"}}" aria-label="{{spt "Gm.Edit"}}"><i class="fas fa-gear"></i></a>
