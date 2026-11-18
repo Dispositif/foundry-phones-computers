@@ -1,5 +1,5 @@
 import { ApplicationV2, HANGUP_SRC, MODULE_ID, SECURE_SRC, SOCKET } from "./constants.js";
-import { getPhoneData, isFixed, npcCarrier, patchLog } from "./devices.js";
+import { getPhoneData, isFixed, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
 import { esc, isActiveGM, isMasked, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -40,11 +40,15 @@ export function placeSide(item) {
  * GM: the NPC end. seen = name on the agent's device, gm = name for the GM (NPC directory).
  * secure = the GM speaks for the NPC on a secure line.
  */
-export function npcSide(number, seen, gm = seen, secure = false) {
+export function npcSide(number, seen, gm = seen, secure = false, agentPhone = null) {
   // Calling from (or to) a device an NPC carries: the GM sees that NPC's name and portrait.
   const carrier = isMasked(number) ? null : npcCarrier(number);
   if (carrier && (!gm || gm === String(number ?? ""))) gm = carrier.name;
-  return { pc: false, number: String(number ?? ""), seen, gm, gmImg: carrier?.img ?? null, secure: !!secure, userIds: [], itemUuid: null };
+  // The players see the portrait only if the agent on the line knows the number (contact) or it is public.
+  const face = carrier && agentPhone ? knownNpcFace(agentPhone, number) : null;
+  // Spectators: only a public number (public device or directory line) shows who it is.
+  const pub = publicNpc(number);
+  return { pc: false, number: String(number ?? ""), seen, gm, gmImg: carrier?.img ?? null, face, pub, secure: !!secure, userIds: [], itemUuid: null };
 }
 
 /** A secure line: both ends are secure (encrypted) devices, or a secure NPC. */
@@ -153,7 +157,7 @@ export function openDial({ callId, exclude = [], name, img }) {
 }
 
 /** Spectators: an agent's phone rings out loud (not in silent mode). Their portrait joins the window. */
-export function openRinging({ callId, exclude = [], name, img }) {
+export function openRinging({ callId, exclude = [], name, img, caller = null }) {
   // The caller is not a spectator: their own device shows the call.
   if (game.user.isGM || exclude.includes(game.user.id) || noDial.has(callId) || outgoing?.callId === callId) return;
   const b = { pc: true, name, img: img ?? null, userIds: [] };
@@ -165,8 +169,9 @@ export function openRinging({ callId, exclude = [], name, img }) {
     windows.get(callId)?.render();
     return;
   }
-  // Called by an NPC (the GM): an unknown caller.
-  liveCalls.set(callId, { callId, a: UNKNOWN, b, dialing: true, ringing: true });
+  // Called by an NPC (the GM): an unknown caller, unless their number is public (name and face).
+  const a = caller ? { ...UNKNOWN, pub: caller } : UNKNOWN;
+  liveCalls.set(callId, { callId, a, b, dialing: true, ringing: true });
   openWindow(callId);
 }
 
@@ -329,9 +334,10 @@ function display(data, side) {
   const number = (name) => (isMasked(side.number) || side.number === name ? "" : side.number);
   if (user.isGM) return side.pc ? { name: side.name, img: side.img, sub: side.sub, pc: true, compromised: side.compromised } : { name: side.gm, img: side.gmImg ?? null, sub: number(side.gm) };
   // On the line: the other end as their own device names it (contact, otherwise number), with the face if it is an agent.
-  if (mine) return { name: side.seen, img: side.pc ? side.img : null, sub: number(side.seen), pc: side.pc };
-  // The rest of the table hears one side only: an NPC stays unknown.
-  return side.pc ? { name: side.name, img: side.img, pc: true } : { name: t("Live.Unknown") };
+  if (mine) return { name: side.seen, img: side.pc ? side.img : side.face ?? null, sub: number(side.seen), pc: side.pc };
+  // The rest of the table hears one side only: an NPC stays unknown, unless their number is public.
+  if (side.pc) return { name: side.name, img: side.img, pc: true };
+  return side.pub ? { name: side.pub.name, img: side.pub.img } : { name: t("Live.Unknown") };
 }
 
 class LiveCallWindow extends ApplicationV2 {

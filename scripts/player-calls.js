@@ -1,5 +1,5 @@
 import { DialogV2, HANGUP_SRC, MODULE_ID, PICKUP_SRC, RINGBACK_SRC, RING_SRC, SAT_SEARCH_SRC, SOCKET, VIBRATE_SRC } from "./constants.js";
-import { displayName, findContact, getPhoneData, hasSignal, isUnknownName, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf, viaSatellite } from "./devices.js";
+import { displayName, findContact, getPhoneData, knownNpcFace, hasSignal, isUnknownName, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf, viaSatellite } from "./devices.js";
 import { updateFab } from "./fab.js";
 import { deviceNotice, esc, isMasked, maskedLabel, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -205,8 +205,12 @@ export function onSatLink({ callId }) {
  * another agent's device. NPC portraits: not yet (silhouette).
  */
 function knownFace(phone, to) {
+  const key = keyFor(phone, to);
+  // An NPC's own device: their face if the agent knows the number or the device is public.
+  const npc = knownNpcFace(phone, key);
+  if (npc) return npc;
   if (!findContact(phone, to)) return null;
-  const target = phonesByNumber(keyFor(phone, to)).find((p) => p.actor?.hasPlayerOwner);
+  const target = phonesByNumber(key).find((p) => p.actor?.hasPlayerOwner);
   return target?.actor.img ?? null;
 }
 
