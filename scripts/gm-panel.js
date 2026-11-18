@@ -439,7 +439,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         this._setState({ sendKind: target.dataset.kind, sendId: target.dataset.id ?? null, target: null, adding: false });
       },
       pickDevice: function (event, target) { this._focusSend = true; this._setState({ target: target.dataset.target }); },
-      pickSender: function (event, target) { this._focusSend = true; this._setState({ sender: target.dataset.value }); },
+      pickSender: function (event, target) { this._focusSend = true; this._pickedSender = target.dataset.value; this._setState({ sender: target.dataset.value }); },
       quickCreate: function (event, target) { this._quickCreate(target.dataset.kind); },
       reroll: function () { this._setState({ draws: null }); },
       addDevice: function () { this._setState({ adding: true, draws: null }); },
@@ -990,7 +990,9 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       viaSat: tp.some((p) => viaSatellite(p.phone)),
       sender: this._state.sender,
       senderOptions: this._senderOptions(phones, kind, id),
-      pinnedSenders: [...npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })), ...pinnedDevices(phones).map((d) => ({ value: d.number, label: d.name }))],
+      // The favorite last clicked stays highlighted, until the GM goes back to the "From" field.
+      pinnedSenders: [...npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })), ...pinnedDevices(phones).map((d) => ({ value: d.number, label: d.name }))]
+        .map((c) => ({ ...c, active: !!this._pickedSender && c.value === this._pickedSender && this._state.sender === c.value })),
       knownSenders: JSON.stringify(this._knownSenders(phones)),
       addToDir: this._state.addToDir,
       text: this._state.text,
@@ -1103,6 +1105,11 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       };
       sender.addEventListener("input", sync);
       sync();
+      // Typing or searching a sender: no favorite highlighted, so it never marks the wrong one.
+      sender.addEventListener("focus", () => {
+        this._pickedSender = null;
+        for (const chip of this.element.querySelectorAll(".spt-sender-extra .spt-chip.active")) chip.classList.remove("active");
+      });
     }
     for (const input of this.element.querySelectorAll("[data-draft]")) {
       input.addEventListener("keydown", (ev) => {
