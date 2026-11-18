@@ -1350,6 +1350,8 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm .spt-dev-pin, .spt-gm .spt-dev-pub { cursor: pointer; }
 .spt-gm .spt-dev-pub { font-size: 0.75em; padding: 0 5px; border: 1px solid currentColor; border-radius: 8px; opacity: 0.7; }
 .spt-gm .spt-dev-actions a.spt-public { color: var(--spt-ok, #6c6); }
+.spt-gm .spt-dev-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 10px 0 0; font-size: 0.82em; opacity: 0.75; }
+.spt-gm .spt-dev-legend .spt-dev-pub { cursor: default; }
 .spt-gm .spt-dev-msgs { cursor: pointer; opacity: 0.7; padding: 0 4px; }
 .spt-gm .spt-dev-msgs:hover { opacity: 1; }
 /* Directory: intro, device hits of the search, out of service folded. */
