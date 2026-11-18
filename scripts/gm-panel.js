@@ -160,14 +160,14 @@ function collectThreads(phones) {
   return [...threads.values()].sort((a, b) => (b.unread > 0) - (a.unread > 0) || b.t - a.t);
 }
 
-/** Who holds a device, for the directory: a PC, an NPC, a place, players it is shared with, or nobody. */
-const HELD_ICONS = { pc: "fa-user", npc: "fa-user-secret", place: "fa-location-dot", shared: "fa-users", nobody: "fa-ban" };
-function heldBy(p) {
-  let kind = "nobody";
-  if (isFixed(p.phone)) kind = "place";
-  else if (p.actor) kind = isNpcHeld(p) ? "npc" : "pc";
-  else if (holders(p).length) kind = "shared";
-  return { kind, icon: HELD_ICONS[kind], label: t(`Directory.Held_${kind}`) };
+/**
+ * Messages link of a device (Devices tab): a PC's device filters on that PC, an NPC's (or nobody's)
+ * on its number. null when it has no thread the GM answers (or no filter fits: places, shared items).
+ */
+function messagesFilter(p, threads) {
+  if (isFixed(p.phone) || !p.phone.number) return null;
+  if (isNpcHeld(p)) return threads.some((th) => th.npcId === norm(p.phone.number)) ? { npc: norm(p.phone.number) } : null;
+  return p.actor && threads.some((th) => th.item === p.item) ? { agent: p.actor.id } : null;
 }
 
 /** A device the GM can pin: installed in a place, or carried by no PC (an NPC's, or given to nobody). */
@@ -357,6 +357,12 @@ function filterFiles(root, query) {
 export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   static instance = null;
 
+  /** Closed: the Devices filter goes back to "all" for the next opening. */
+  _onClose(options) {
+    super._onClose(options);
+    this._state.devFilter = "all";
+  }
+
   static DEFAULT_OPTIONS = {
     id: "spt-phone-panel",
     tag: "form",
@@ -475,9 +481,18 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         else if (choice === "keep") await unmarkPhone(item);
       },
       selectPhone: function (event, target) {
-        // Clicking a device makes it the recipient and opens the Send tab.
+        // Clicking a device opens the Send tab with it: as the sender for an NPC's device (the GM speaks
+        // from it), otherwise as the recipient, through its PC card, its place card or "Other devices".
         this._focusSend = true;
-        this._setState({ target: `phone:${target.dataset.number}`, tab: "send" });
+        const item = fromUuidSync(target.dataset.uuid);
+        const phone = getPhoneData(item);
+        if (!phone) return;
+        const p = { item, phone, actor: item.parent instanceof Actor ? item.parent : null };
+        if (isNpcHeld(p)) return this._setState({ sender: phone.number, tab: "send" });
+        const user = p.actor && !isFixed(phone) ? game.users.find((u) => !u.isGM && u.character?.id === p.actor.id) : null;
+        const place = isFixed(phone) && game.scenes.get(phone.sceneId) && landlineUsers(phone).length ? phone.sceneId : null;
+        const send = user ? { sendKind: "agent", sendId: user.id } : place ? { sendKind: "place", sendId: place } : { sendKind: "other", sendId: null };
+        this._setState({ ...send, adding: false, target: `phone:${phone.number}`, tab: "send" });
       },
       sendReply: function (event, target) { this._sendReply(target.closest("[data-thread]")); },
       toggleSecureWith: async function (event, target) {
@@ -538,6 +553,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         await item.update({ [`flags.${MODULE_ID}.phone.noSignal`]: !getPhoneData(item)?.noSignal });
       },
       filesView: function (event, target) { this._setState({ filesView: target.dataset.view }); },
+      devFilter: function (event, target) { this._setState({ devFilter: target.dataset.filter }); },
       filesFilter: function (event, target) { this._setState({ filesFilter: target.dataset.filter }); },
       fileState: function (event, target) {
         const row = target.closest("[data-file]");
@@ -575,8 +591,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     watchView: "listen", watchAgent: null, watchLeak: false,
     replyAtts: {},
     sendKind: null, sendId: null, addToDir: false, adding: false, draws: null, justCreated: null, createdNote: "",
-    dirName: "", dirSearch: "", dirPinNew: false, dirPubNew: false, dirEdit: null,
-    filesView: "device", filesFilter: "all", filesQuery: ""
+    dirName: "", dirSearch: "", dirOffOpen: false, dirPinNew: false, dirPubNew: false, dirEdit: null,
+    filesView: "device", filesFilter: "all", filesQuery: "", devFilter: "all"
   };
 
   /** Changes the state (tab, mode, recipient…) while keeping the current input. */
@@ -850,18 +866,22 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
 
+    const npcThreadsAll = collectThreads(phones).filter((th) => !th.agents);
     // Devices grouped: by holder, then by place, then "held by nobody".
     const groups = new Map();
     const groupOf = (p) => {
       if (isFixed(p.phone)) {
         const scene = game.scenes.get(p.phone.sceneId);
-        if (!scene) return { key: "s:none", order: 1.5, name: t("NoPlace"), img: null, icon: "fa-network-wired" };
-        return { key: `s:${p.phone.sceneId}`, order: 1, name: scene.name, img: scene.thumb ?? null, icon: "fa-location-dot" };
+        if (!scene) return { key: "s:none", cat: "noplace", order: 3, name: t("NoPlace"), img: null, icon: "fa-network-wired" };
+        return { key: `s:${p.phone.sceneId}`, cat: "place", order: 2, name: scene.name, img: scene.thumb ?? null, icon: "fa-location-dot" };
       }
-      if (p.actor) return { key: `a:${p.actor.id}`, order: 0, name: p.actor.name, img: p.actor.img, icon: "fa-user" };
+      if (p.actor) {
+        const npc = isNpcHeld(p);
+        return { key: `a:${p.actor.id}`, cat: npc ? "npc" : "pc", order: npc ? 1 : 0, name: p.actor.name, img: p.actor.img, icon: npc ? "fa-user-secret" : "fa-user" };
+      }
       const shared = sharedUsers(p.item);
-      if (shared.length) return { key: "shared", order: 2, name: t("Gm.Shared"), img: null, icon: "fa-users" };
-      return { key: "none", order: 3, name: t("Gm.Nobody"), img: null, icon: "fa-ghost" };
+      if (shared.length) return { key: "shared", cat: "none", order: 4, name: t("Gm.Shared"), img: null, icon: "fa-users" };
+      return { key: "none", cat: "none", order: 5, name: t("Gm.Nobody"), img: null, icon: "fa-ghost" };
     };
     // Jammers are listed with their carrier, never as recipients.
     const jammers = allJammers().sort((a, b) => phoneLabel(a).localeCompare(phoneLabel(b)));
@@ -889,12 +909,27 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         cloned: countByNumber.get(norm(p.phone.number)) > 1,
         unread,
         unreadTitle: unread ? tn("Gm.UnreadByPlayer", unread) : "",
+        // Pinned (an NPC's, a place's or nobody's device), public, and its threads in Messages.
+        canPin: !!p.phone.number && pinnable(p),
+        pin: !!p.phone.number && pinnable(p) && !!p.phone.pin,
+        pub: !!p.phone.pub,
+        filter: messagesFilter(p, npcThreadsAll),
+        npcHeld: isNpcHeld(p),
         jammer: isJammer(p.phone),
         jamOn: isJammer(p.phone) && !!p.phone.jamming && !p.phone.jamFailed,
         jamFailed: isJammer(p.phone) && !!p.phone.jamming && !!p.phone.jamFailed
       });
     }
-    const sortedGroups = [...groups.values()].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+    const allGroups = [...groups.values()].sort((a, b) => a.order - b.order || a.name.localeCompare(b.name));
+    // Filter by holder: PCs, NPCs, places, no location, not held (back to "all" each time the panel opens).
+    const cats = ["pc", "npc", "place", "noplace", "none"];
+    const count = (c) => allGroups.filter((g) => g.cat === c).reduce((n, g) => n + g.devices.length, 0);
+    if (st.devFilter !== "all" && !count(st.devFilter)) st.devFilter = "all";
+    const devFilters = [
+      { key: "all", label: t("Gm.DevCat_all"), n: allGroups.reduce((n, g) => n + g.devices.length, 0) },
+      ...cats.map((c) => ({ key: c, label: t(`Gm.DevCat_${c}`), n: count(c) })).filter((f) => f.n)
+    ].map((f) => ({ ...f, active: f.key === st.devFilter }));
+    const sortedGroups = st.devFilter === "all" ? allGroups : allGroups.filter((g) => g.cat === st.devFilter);
 
     // What the chosen recipient accepts: only the possible forms are shown.
     const [kind, id] = (this._state.target ?? "").split(/:(.*)/s);
@@ -956,6 +991,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       directory: this._state.tab === "directory" ? this._directoryContext(phones) : null,
       unknownCount: unknownNumbers(phones).length,
       groups: sortedGroups,
+      devFilters,
       deviceCount: phones.length,
       watch,
       listenNew,
@@ -1001,6 +1037,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     // Directory: Enter adds (quick add), saves (inline edit) or names an unknown number.
     // Directory search: filters the rows in place, no re-render.
+    this.element.querySelector(".spt-dir-off")?.addEventListener("toggle", (ev) => (this._state.dirOffOpen = ev.target.open));
     const dirSearch = this.element.querySelector("[name=dirSearch]");
     if (dirSearch) {
       dirSearch.addEventListener("input", () => this._dirFilter(dirSearch.value));
@@ -1119,25 +1156,19 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       return false;
     });
     const off = all.filter((r) => r.title === undefined && r.off && !r.editing);
-    const threads = collectThreads(phones).filter((th) => !th.agents);
+    // Devices are managed in the Devices tab: here only to point a search there ("555-1234 is a device").
     const devices = phones
       .filter((p) => p.phone.number)
       .map((p) => {
         const name = publicName(p) || p.phone.label || "";
-        const held = heldBy(p);
-        // Messages link: a PC's device filters on that PC, an NPC's (or nobody's) on its number.
-        let filter = null;
-        if (held.kind === "pc" && threads.some((th) => th.item === p.item)) filter = { agent: p.actor.id };
-        else if ((held.kind === "npc" || held.kind === "nobody") && threads.some((th) => th.npcId === norm(p.phone.number))) filter = { npc: norm(p.phone.number) };
-        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: iconOf(p.phone), held, filter, place: isFixed(p.phone), pub: !!p.phone.pub, canPin: pinnable(p), pin: pinnable(p) && !!p.phone.pin, search: `${name} ${p.phone.number}`.toLowerCase() };
-      })
-      .sort((a, b) => a.place - b.place || a.name.localeCompare(b.name));
+        return { number: p.phone.number, name, search: `${name} ${p.phone.number}`.toLowerCase() };
+      });
     const unknown = unknownNumbers(phones).map((u) => ({
       key: u.key,
       who: [...u.who].join(", "),
       count: [u.sms ? tn("Directory.Messages", u.sms) : "", u.calls ? tn("Directory.Calls", u.calls) : ""].filter(Boolean).join(" · ")
     }));
-    return { rows, off, devices, unknown, name: this._state.dirName, search: this._state.dirSearch, pin: this._state.dirPinNew, pub: this._state.dirPubNew };
+    return { rows, off, offOpen: this._state.dirOffOpen, devices, unknown, name: this._state.dirName, search: this._state.dirSearch, pin: this._state.dirPinNew, pub: this._state.dirPubNew };
   }
 
   /** Directory search: hides the rows that do not match (name or number), and the empty section titles. */
@@ -1148,6 +1179,11 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!root) return;
     for (const row of root.querySelectorAll("[data-search]")) row.hidden = !!q && !row.dataset.search.includes(q);
     for (const title of root.querySelectorAll(".spt-dir-section")) title.hidden = !!q;
+    // A device found by the search: only a pointer to the Devices tab, shown while searching.
+    for (const row of root.querySelectorAll("[data-device-hit]")) row.hidden = !q || !row.dataset.deviceHit.includes(q);
+    // Out of service, folded: opened when the search finds a line there.
+    const off = root.querySelector(".spt-dir-off");
+    if (off && q && off.querySelector("[data-search]:not([hidden])")) off.open = true;
   }
 
   _dirEntry(target) {

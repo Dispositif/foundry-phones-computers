@@ -1341,6 +1341,21 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm .spt-agent-card.offline span { font-style: italic; font-weight: 400; }
 /* A place where PCs are: the scene thumbnail, centred (a portrait is framed on the face, top). */
 .spt-gm .spt-place-card img { object-position: center; }
+/* Devices tab: pinned / public marks (always shown), Messages link. */
+.spt-gm .spt-dev-pin, .spt-gm .spt-dev-actions a.spt-pinned { color: var(--spt-warn); }
+.spt-gm .spt-dev-pin, .spt-gm .spt-dev-pub { cursor: pointer; }
+.spt-gm .spt-dev-pub { font-size: 0.75em; padding: 0 5px; border: 1px solid currentColor; border-radius: 8px; opacity: 0.7; }
+.spt-gm .spt-dev-actions a.spt-public { color: var(--spt-ok, #6c6); }
+.spt-gm .spt-dev-msgs { cursor: pointer; opacity: 0.7; padding: 0 4px; }
+.spt-gm .spt-dev-msgs:hover { opacity: 1; }
+/* Directory: intro, device hits of the search, out of service folded. */
+.spt-gm-directory .spt-dir-intro { margin: 0 0 4px; opacity: 0.8; font-size: 0.9em; }
+.spt-gm-directory .spt-dir-legend { margin: 0 0 8px; font-size: 0.85em; opacity: 0.75; }
+.spt-gm-directory .spt-dir-legend .spt-dir-flag { opacity: 1; cursor: default; }
+.spt-gm-directory .spt-dir-devhit { padding: 3px 4px; font-size: 0.9em; }
+.spt-gm-directory .spt-dir-devhit[hidden] { display: none; }
+.spt-gm-directory .spt-dir-devhit a { cursor: pointer; text-decoration: underline; }
+.spt-gm-directory .spt-dir-off > summary { cursor: pointer; list-style: revert; }
 .spt-gm .spt-place-card > .fa-location-dot { font-size: 2.6em; height: 88px; line-height: 88px; opacity: 0.5; }
 .spt-gm .spt-place-card span .fa-location-dot { font-size: 0.85em; opacity: 0.7; }
 .spt-gm .spt-chip.spt-leak { margin-left: auto; border-style: dashed; }
