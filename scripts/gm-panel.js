@@ -638,8 +638,9 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // "Other devices": one line per number, however it is written (555-133 = 555133).
     // Order: agents' devices first, then other carried devices, then fixed ones (by label within each group).
+    // An NPC's device is left out: nobody would receive it (the GM writes or calls FROM it instead).
     const rank = (p) => (isFixed(p.phone) ? 2 : p.actor?.hasPlayerOwner ? 0 : 1);
-    const byRank = [...phones].sort((a, b) => rank(a) - rank(b));
+    const byRank = phones.filter((p) => !isNpcHeld(p)).sort((a, b) => rank(a) - rank(b));
     const numbers = [...new Map(byRank.map((p) => [norm(p.phone.number), p.phone.number])).values()];
     const targetDevices = numbers.map((n) => {
       const ps = phones.filter((p) => norm(p.phone.number) === norm(n));
