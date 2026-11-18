@@ -169,6 +169,13 @@ export async function previewEntry(uuid, entryId) {
   openReader(entry.att.name ?? t("Document"), body, skinOf(phone));
 }
 
+/** GM: opens a journal attached to a message (GM Messages, Surveillance) in the reader window. */
+export async function previewDoc(uuid, name) {
+  const html = await entryDocHtml({ att: { type: "doc", uuid } });
+  const body = html == null ? `<p>${t("Files.Unavailable")}</p>` : `<div class="spt-doc">${html}</div>`;
+  openReader(name || t("Document"), body, skinOf(null));
+}
+
 /** Journal a file comes from: the page's journal, the journal itself, or null (image, deleted). */
 function sourceJournal(file) {
   if (file.type !== "doc" || !file.uuid) return null;

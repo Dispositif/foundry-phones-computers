@@ -117,6 +117,7 @@ a.spt-link:hover { filter: brightness(1.15); }
 .spt-bb.pending { opacity: 0.55; }
 .spt-bb-img { display: block; max-width: 140px; max-height: 90px; border-radius: 6px; border: none; margin-bottom: 3px; object-fit: cover; }
 .spt-bb-doc, .spt-bb-fwd { display: block; font-size: 0.85em; opacity: 0.8; }
+a.spt-bb-doc { cursor: pointer; text-decoration: underline dotted; }
 .spt-gthread-reply { display: flex; gap: 4px; margin-top: 6px; }
 .spt-gthread-reply input { flex: 1; height: 26px; }
 .spt-gthread-reply button { flex: 0 0 28px; width: 28px; height: 26px; padding: 0; line-height: 1; }
