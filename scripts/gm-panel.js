@@ -1,6 +1,6 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
-import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
+import { filesOverview, previewDoc, previewEntry, previewFile, setFileStates } from "./files.js";
 import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
@@ -112,7 +112,7 @@ const INBOX_BUBBLES = 6;
 function bubbleAtt(att) {
   if (!att) return "";
   if (att.type === "image") return `<img class="spt-bb-img" src="${esc(att.src)}" alt="">`;
-  return `<span class="spt-bb-doc"><i class="fas fa-file-lines"></i> ${esc(att.name ?? "")}</span>`;
+  return `<a class="spt-bb-doc" data-action="openAttDoc" data-uuid="${esc(att.uuid ?? "")}"><i class="fas fa-file-lines"></i> ${esc(att.name ?? "")}</a>`;
 }
 
 export function gmInbox() {
@@ -576,6 +576,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       groupState: function (event, target) {
         setFileStates(JSON.parse(target.closest("[data-refs]").dataset.refs), target.dataset.state);
       },
+      openAttDoc: function (event, target) { previewDoc(target.dataset.uuid, target.textContent.trim()); },
       previewFile: function (event, target) {
         const row = target.closest("[data-file]");
         if (row.dataset.mail) previewEntry(row.dataset.uuid, row.dataset.file);
