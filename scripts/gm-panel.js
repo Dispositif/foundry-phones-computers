@@ -520,7 +520,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         const th = target.closest("[data-thread]");
         const item = await fromUuid(th.dataset.uuid);
         const phone = getPhoneData(item);
-        ring(`phone:${phone.number}`, { caller: displayName(phone, th.dataset.key) });
+        ring(`phone:${phone.number}`, { caller: th.dataset.key });
       },
       toggleNetwork: async function () {
         await game.settings.set(MODULE_ID, "networkDown", !game.settings.get(MODULE_ID, "networkDown"));

@@ -168,7 +168,7 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     if (unknown && result !== "cancelled" && (call.npcName?.trim() || result === "unassigned")) nameUnknown(key, call.npcName, { off: result === "unassigned" });
     if (result === "answer") {
       if (canSecure) setSecureWith(from, key, secure);
-      startLive(callId, agentSide(from, userId), npcSide(key, origin.name, gmName(fromPhone, key), secure));
+      startLive(callId, agentSide(from, userId), npcSide(key, origin.name, gmName(fromPhone, key), secure, fromPhone));
     }
     else addLog(from, { kind: "call", call: callId, dir: "out", with: key, result: "cancelled" });
   };

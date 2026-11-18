@@ -1,6 +1,6 @@
 import { attChatHtml } from "./attachments.js";
 import { MASKED, MODULE_ID, PAGER_MAX, SOCKET } from "./constants.js";
-import { addLog, isSecure, secureWith, setSecureWith, allPhones, defaultDeviceFor, getLog, getPhoneData, hasSignal, holders, isNpcHeld, keyFor, modelOf, msgOn, npcDevices, npcNumber, phoneLabel, phonesByNumber, withItemLock, modeOf } from "./devices.js";
+import { addLog, isSecure, secureWith, setSecureWith, allPhones, defaultDeviceFor, getLog, getPhoneData, hasSignal, holders, isNpcHeld, keyFor, modelOf, msgOn, npcDevices, npcNumber, senderKey, phoneLabel, phonesByNumber, withItemLock, modeOf } from "./devices.js";
 import { esc, isMasked, maskedLabel, nl2br } from "./util.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
@@ -32,7 +32,7 @@ export async function deliverToPhone(p, senderKeyOrName, text, att = null, { fwd
     if (!text) return "nosms";
     if (line.length > PAGER_MAX && game.user.isGM) ui.notifications.warn(`📟 ${phoneLabel(p)} : ${t("Warn.PagerCut", { n: PAGER_MAX })}`);
   }
-  const key = keyFor(p.phone, senderKeyOrName);
+  const key = senderKey(senderKeyOrName, p.phone);
   const extra = { ...(att ? { att } : {}), ...(fwd ? { fwd: true } : {}), ...(secure && isSecure(p.phone) ? { secure: true } : {}) };
   const switchedOff = modeOf(p.phone) === "off";
   // A carried device no player holds (an NPC's): already read, so PCs who get it later see no unread badge.
@@ -125,7 +125,7 @@ export async function sendSms(target, text, { sender = MASKED, att = null, secur
  * (found if the PCs get hold of it). Marked npc: not a conversation the GM answers.
  */
 async function logNpcSent(p, sender, text, att) {
-  const number = keyFor(p.phone, npcNumber(sender));
+  const number = senderKey(sender, p.phone);
   if (isMasked(number)) return;
   for (const q of npcDevices(number)) {
     if (q.item === p.item) continue;

@@ -1,5 +1,5 @@
 import { MASKED, MODULE_ID, RESULT_LABELS, SOCKET } from "./constants.js";
-import { addLog, isSecure, secureWith, setSecureWith, defaultDeviceFor, displayName, findContact, getPhoneData, hasSignal, holders, isFixed, isLandline, keyFor, modelOf, npcNumber, phoneLabel, phonesByNumber, ringOf, skinOf, modeOf } from "./devices.js";
+import { addLog, knownNpcFace, publicNpc, isSecure, secureWith, setSecureWith, defaultDeviceFor, displayName, findContact, getPhoneData, hasSignal, holders, isFixed, isLandline, keyFor, modelOf, npcNumber, phoneLabel, senderKey, phonesByNumber, ringOf, skinOf, modeOf } from "./devices.js";
 import { maskedLabel, rerenderAll } from "./util.js";
 import { t } from "./i18n.js";
 import { agentSide, closeDial, lineBusy, npcSide, openGmRing, placeSide, startLive } from "./live-call.js";
@@ -53,6 +53,8 @@ export async function ring(target, { caller = MASKED, origin = null, callId = fo
       if (origin) return finishOrigin(origin, "unassigned");
       return ui.notifications.warn(t("Warn.NoDevice", { value }));
     }
+    // As an NPC: the caller's number, even if given by a name (directory, or the agent's contact).
+    if (!origin) call.from = senderKey(caller, phones[0].phone);
     if (!origin) {
       if (secure === undefined) secure = phones.some((p) => secureWith(p.phone, keyFor(p.phone, call.from)));
       else for (const p of phones) await setSecureWith(p.item, keyFor(p.phone, call.from), secure);
@@ -92,7 +94,9 @@ export async function ring(target, { caller = MASKED, origin = null, callId = fo
       // Narration: every other player hears a carried phone ring (ring mode only), softer.
       if (mode === "on" && !isFixed(p.phone) && p.actor) {
         call.nearby = true;
-        game.socket.emit(SOCKET, { type: "ringNearby", callId, exclude: users.map((u) => u.id), name: p.actor.name, img: p.actor.img, ringSrc: ringOf(p.phone), timeout });
+        // Called by an NPC with a public number: the table sees who calls.
+        const caller = origin ? null : publicNpc(call.from);
+        game.socket.emit(SOCKET, { type: "ringNearby", callId, exclude: users.map((u) => u.id), name: p.actor.name, img: p.actor.img, ringSrc: ringOf(p.phone), timeout, caller });
       }
     }
   }
@@ -203,7 +207,7 @@ function liveSides(call, item, userId) {
     b.seen = call.origin.name;
     return [a, b];
   }
-  return [npcSide(call.from, displayName(phone, keyFor(phone, call.from)), maskedLabel(call.caller), call.secure), b];
+  return [npcSide(call.from, displayName(phone, keyFor(phone, call.from)), maskedLabel(call.caller), call.secure, phone), b];
 }
 
 /**
@@ -211,7 +215,10 @@ function liveSides(call, item, userId) {
  * NPC portraits: not yet (no face).
  */
 function knownCallerFace(p, from, origin) {
-  if (p.phone.model !== "smartphone" || !origin || !findContact(p.phone, from)) return null;
+  if (p.phone.model !== "smartphone") return null;
+  // Called by an NPC from their own device: their face, if known (contact or public device).
+  if (!origin) return knownNpcFace(p.phone, from);
+  if (!findContact(p.phone, from)) return null;
   const actor = fromUuidSync(origin.itemUuid)?.parent;
   return actor instanceof Actor ? actor.img : null;
 }
