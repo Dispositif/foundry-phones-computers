@@ -1,5 +1,5 @@
 import { ApplicationV2, HANGUP_SRC, MODULE_ID, SECURE_SRC, SOCKET } from "./constants.js";
-import { getPhoneData, isFixed, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
+import { findNpc, getPhoneData, isFixed, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
 import { esc, isActiveGM, isMasked, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -43,7 +43,8 @@ export function placeSide(item) {
 export function npcSide(number, seen, gm = seen, secure = false, agentPhone = null) {
   // Calling from (or to) a device an NPC carries: the GM sees that NPC's name and portrait.
   const carrier = isMasked(number) ? null : npcCarrier(number);
-  if (carrier && (!gm || gm === String(number ?? ""))) gm = carrier.name;
+  // Given only as a number (the GM calls from a directory line): the directory name, the number below it.
+  if (!gm || gm === String(number ?? "")) gm = (isMasked(number) ? null : findNpc(number, { all: true })?.name) || carrier?.name || gm;
   // The players see the portrait only if the agent on the line knows the number (contact) or it is public.
   const face = carrier && agentPhone ? knownNpcFace(agentPhone, number) : null;
   // Spectators: only a public number (public device or directory line) shows who it is.

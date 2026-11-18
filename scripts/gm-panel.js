@@ -759,7 +759,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     st.justCreated = null;
     // Button: "Send to Cole (Smartphone)", "Ring Motel Starlite (Landline)": who, then the kind of device.
     const who = sendUser ? sendUser.character.name : st.sendKind === "place" ? places.get(st.sendId)?.name : "";
-    const targetName = selectedTile && who ? t("Gm.DeviceOf", { name: who, device: modelLabel(selectedTile.phone) }) : selectedTile?.phone.label ?? "";
+    // A satellite phone: just the agent, no device name (too long on the button).
+    const targetName = selectedTile && who ? (selectedTile.phone.model === "satphone" ? who : t("Gm.DeviceOf", { name: who, device: modelLabel(selectedTile.phone) })) : selectedTile?.phone.label ?? "";
 
     // Conversations: agents with NPCs (the GM answers), and listening to agents between themselves.
     const allThreads = collectThreads(phones);
