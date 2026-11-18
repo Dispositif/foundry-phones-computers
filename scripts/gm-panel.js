@@ -160,6 +160,22 @@ function collectThreads(phones) {
   return [...threads.values()].sort((a, b) => (b.unread > 0) - (a.unread > 0) || b.t - a.t);
 }
 
+/** A device the GM can pin: installed in a place, or carried by no PC (an NPC's, or given to nobody). */
+function pinnable(p) {
+  return isFixed(p.phone) || !holders(p).length;
+}
+
+/** Pinned devices, for the sender list and Messages: { number, name } ("Dr Kane · Smartphone", "Motel Starlite · Landline"). */
+function pinnedDevices(phones) {
+  return phones
+    .filter((p) => p.phone.pin && p.phone.number && pinnable(p))
+    .map((p) => {
+      const where = isFixed(p.phone) ? game.scenes.get(p.phone.sceneId)?.name : p.actor?.name;
+      return { number: p.phone.number, name: `${where || p.phone.label} · ${where ? modelLabel(p.phone) : p.phone.number}` };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /** Agents: the players' characters, and any player-owned actor carrying a device. */
 function agentActors(phones) {
   const agents = new Map();
@@ -365,6 +381,11 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         const item = fromUuidSync(target.closest("[data-uuid]")?.dataset.uuid);
         const phone = item && getPhoneData(item);
         if (phone) await item.update({ [`flags.${MODULE_ID}.phone.pub`]: !phone.pub });
+      },
+      devPin: async function (event, target) {
+        const item = fromUuidSync(target.closest("[data-uuid]")?.dataset.uuid);
+        const phone = item && getPhoneData(item);
+        if (phone) await item.update({ [`flags.${MODULE_ID}.phone.pin`]: !phone.pin });
       },
       dirPin: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { pin: !e.pin }); },
       dirPub: async function (event, target) { const e = this._dirEntry(target); if (e) await patchNpc(e.line, { pub: !e.pub }); },
@@ -707,13 +728,21 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       const id = npcId(e);
       return { id, name: npcLabel(e), active: st.inboxNpc === id, unread: npcThreads.filter((th) => th.npcId === id).reduce((n, th) => n + th.unread, 0) };
     });
+    // Pinned devices (an NPC's, or a place's): their threads are filed under their number.
+    const pinnedDevs = pinnedDevices(phones);
+    for (const d of pinnedDevs) {
+      const id = norm(d.number);
+      if (pinned.some((x) => x.id === id)) continue;
+      pinned.push({ id, name: d.name, active: st.inboxNpc === id, unread: npcThreads.filter((th) => th.npcId === id).reduce((n, th) => n + th.unread, 0) });
+    }
     // Filtered on one NPC: "write as this NPC to…" any agent, thread or not.
     let npcFocus = null;
     if (st.inboxNpc) {
       const npc = npcDirectory().find((e) => npcId(e) === st.inboxNpc);
       const th = npcThreads.find((x) => x.npcId === st.inboxNpc);
-      const name = npc ? npcLabel(npc) : th ? gmName(th.phone, th.key) : st.inboxNpc;
-      npcFocus = { name, number: npc?.name ? npc.number : "", sender: npc ? npc.name || npc.number : th?.key ?? "", agents: reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img })) };
+      const dev = npc ? null : pinnedDevs.find((d) => norm(d.number) === st.inboxNpc);
+      const name = npc ? npcLabel(npc) : dev ? dev.name : th ? gmName(th.phone, th.key) : st.inboxNpc;
+      npcFocus = { name, number: npc?.name ? npc.number : dev?.number ?? "", sender: npc ? npc.name || npc.number : dev?.number ?? th?.key ?? "", agents: reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img })) };
     }
     const threadView = (th) => {
       const conv = getLog(th.phone, { includePending: true }).filter((e) => e.kind === "sms" && !e.prep && sameConv(th.phone, e.with, th.key));
@@ -889,7 +918,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       viaSat: tp.some((p) => viaSatellite(p.phone)),
       sender: this._state.sender,
       senderOptions: this._senderOptions(phones, kind, id),
-      pinnedSenders: npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })),
+      pinnedSenders: [...npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })), ...pinnedDevices(phones).map((d) => ({ value: d.number, label: d.name }))],
       knownSenders: JSON.stringify(this._knownSenders(phones)),
       addToDir: this._state.addToDir,
       text: this._state.text,
@@ -1076,7 +1105,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       .map((p) => {
         const model = modelOf(p.phone);
         const name = publicName(p) || p.phone.label || "";
-        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: iconOf(p.phone), place: isFixed(p.phone), pub: !!p.phone.pub, search: `${name} ${p.phone.number}`.toLowerCase() };
+        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: iconOf(p.phone), place: isFixed(p.phone), pub: !!p.phone.pub, canPin: pinnable(p), pin: pinnable(p) && !!p.phone.pin, search: `${name} ${p.phone.number}`.toLowerCase() };
       })
       .sort((a, b) => a.place - b.place || a.name.localeCompare(b.name));
     const unknown = unknownNumbers(phones).map((u) => ({
@@ -1207,6 +1236,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     };
     add(t("Masked"));
     for (const e of npcDirectory()) if (e.pin) add(e.number || e.name, `★ ${npcLabel(e)}`);
+    for (const d of pinnedDevices(phones)) add(d.number, `★ ${d.name}`);
     // NPC directory first: the value is the number, so a secret NPC shows as a number on the agent's side.
     for (const e of npcDirectory()) if (!e.off) add(e.number || e.name, e.name && e.number ? `${e.name} · ${t("Directory.Title")}` : t("Directory.Title"));
     for (const p of recipient) for (const c of p.phone.contacts ?? []) add(c.name, c.number ? `${c.number} · ${t("Gm.InContacts")}` : t("Gm.InContacts"));

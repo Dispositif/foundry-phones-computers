@@ -1,6 +1,6 @@
 import { feature } from "./features.js";
 import { DialogV2, MODULE_ID } from "./constants.js";
-import { DEFAULT_THEME, MODELS, directoryText, createPhone, newTheme, getPhoneData, markPhone, randomAddress, shownTheme, themeChoices } from "./devices.js";
+import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, randomAddress, shownTheme, themeChoices } from "./devices.js";
 import { modelAllowed, satellitePolicy } from "./universes.js";
 import { deviceName } from "./names.js";
 import { esc, isMailAddress, norm, shieldIcon } from "./util.js";
@@ -265,7 +265,8 @@ function kindForm(kind, { actor = null } = {}) {
       </div>
       <div class="spt-npc hidden"><input type="text" name="npc" list="spt-npcs" placeholder="${t("NewDev.NpcName")}"><datalist id="spt-npcs">${npcs
         .map((a) => `<option value="${esc(a.name)}">`)
-        .join("")}</datalist></div></div>`;
+        .join("")}</datalist>${model.jammer ? "" : `<p class="hint">${t("NewDev.NpcHint")}</p>
+        <button type="button" class="spt-to-directory"><i class="fas fa-address-book"></i> ${t("NewDev.ToDirectory")}</button>`}</div></div>`;
   // Looks: only when the model has a choice (a landline's look is its tile). The first one is the default.
   const looks = kind.theme ? [] : themeChoices(kind.model);
   const lookRow =
@@ -334,6 +335,14 @@ function kindForm(kind, { actor = null } = {}) {
         })
       );
       root?.querySelector?.("[name=npc]")?.addEventListener("change", follow);
+      // An NPC only needs a directory line to call or text: saved there, no device created.
+      root?.querySelector?.(".spt-to-directory")?.addEventListener("click", async () => {
+        const name = root.querySelector("[name=npc]")?.value.trim() ?? "";
+        const number = numberInput?.value.trim() ?? "";
+        if (!(await saveNpc({ name, number }))) return;
+        ui.notifications.info(t("NewDev.AddedToDirectory", { name: name || number }));
+        (x?.element ? x : event?.target)?.close();
+      });
       root?.querySelector?.("[data-dice=number]")?.addEventListener("click", () => {
         numberInput.value = lastAuto = randomAddress(kind.model, { name: holderName() });
       });
