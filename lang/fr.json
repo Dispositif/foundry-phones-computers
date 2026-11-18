@@ -569,7 +569,7 @@
       "Add": "Ajouter à l'annuaire",
       "ToIdentify": "À identifier",
       "Empty": "L'annuaire est vide.",
-      "EditText": "Éditer en texte",
+      "EditText": "Importer / exporter",
       "NoPrep": "Rien à préparer : tout numéro composé par un PJ arrive chez vous.",
       "AddSender": "ajouter à l'annuaire",
       "DeleteConfirm": "Retirer {name} de l'annuaire ?",
@@ -581,7 +581,7 @@
         "one": "{n} appel",
         "other": "{n} appels"
       },
-      "Purpose": "<strong>L'annuaire ne contient que des PNJ : des faux numéros, sans appareil derrière, auxquels vous répondez vous-même.</strong> Il est facultatif : tout numéro composé par un PJ arrive chez vous de toute façon. Il sert à vous y retrouver : nommer un numéro (qui répond vraiment), le rendre public (les joueurs peuvent le trouver), l'épingler (en tête de Messages) ou le couper (hors service). Les numéros des PJ et des lieux viennent de leurs appareils : ils sont listés dans l'onglet Annuaire, où vous pouvez les rendre publics."
+      "Purpose": "Copiez tout l'annuaire, ou collez une liste (depuis vos notes, un autre monde…). Enregistrer remplace l'annuaire actuel. Les numéros des PJ et des lieux n'y figurent pas : ils viennent de leurs appareils (onglet Appareils)."
     },
     "CallOrMessage": "Appeler / Écrire",
     "Renamed": {
