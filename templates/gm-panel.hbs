@@ -105,7 +105,7 @@
         <datalist id="spt-senders">{{#each senderOptions}}<option value="{{value}}" label="{{label}}"></option>{{/each}}</datalist>
       </div>
       <div class="spt-sender-extra">
-        {{#each pinnedSenders}}<a class="spt-chip spt-chip-npc" data-action="pickSender" data-value="{{value}}"><i class="fas fa-star"></i> {{label}}</a>{{/each}}
+        {{#each pinnedSenders}}<a class="spt-chip spt-chip-npc {{#if active}}active{{/if}}" data-action="pickSender" data-value="{{value}}"><i class="fas fa-star"></i> {{label}}</a>{{/each}}
         <label class="spt-add-dir" hidden><input type="checkbox" name="addToDir" {{#if addToDir}}checked{{/if}}> {{spt "Directory.AddSender"}}</label>
       </div>
 
