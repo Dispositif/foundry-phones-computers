@@ -60,14 +60,14 @@
     <section class="spt-gm-send">
       <div class="spt-send-to">
         {{#if noAgents}}<p class="spt-no-agents"><i class="fas fa-triangle-exclamation"></i> {{noAgents}}</p>{{/if}}
-        {{#if sendAgents.length}}
+        {{#if (or sendAgents.length sendPlaces.length)}}
         <div class="spt-agent-cards" role="radiogroup" aria-label="{{spt "Gm.Agents"}}">
           {{#each sendAgents}}<a class="spt-agent-card {{#if active}}active{{/if}} {{#if offline}}offline{{/if}}" data-action="sendTo" data-kind="agent" data-id="{{id}}" role="radio" title="{{name}}{{#if offline}} ({{spt "Gm.Offline"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></a>{{/each}}
+          {{#each sendPlaces}}<a class="spt-agent-card spt-place-card {{#if active}}active{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio" title="{{name}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-location-dot"></i>{{/if}}<span>{{#if img}}<i class="fas fa-location-dot"></i> {{/if}}{{name}}</span></a>{{/each}}
         </div>
         {{/if}}
-        <div class="spt-chips" role="radiogroup" aria-label="{{spt "Gm.Places"}}">
-          {{#each sendPlaces}}<a class="spt-chip spt-chip-place {{#if active}}active{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio"><i class="fas fa-location-dot"></i> {{name}}</a>{{/each}}
-          <a class="spt-chip spt-chip-other {{#if (eq sendKind "other")}}active{{/if}}" data-action="sendTo" data-kind="other" role="radio">{{spt "Gm.OtherDevices"}}</a>
+        <div class="spt-chips" role="radiogroup" aria-label="{{spt "Gm.OtherDevices"}}">
+          {{#if (or targetDevices.length (eq sendKind "other"))}}<a class="spt-chip spt-chip-other {{#if (eq sendKind "other")}}active{{/if}}" data-action="sendTo" data-kind="other" role="radio">{{spt "Gm.OtherDevices"}}</a>{{/if}}
         </div>
         {{#if (eq sendKind "other")}}
         <div class="spt-icon-select"><i class="fas fa-mobile-screen"></i>

@@ -1339,6 +1339,10 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm .spt-agent-card:hover { opacity: 0.95; }
 .spt-gm .spt-agent-card.active { opacity: 1; border-color: var(--spt-warn); background: rgba(201,118,28,0.18); box-shadow: 0 0 0 1px var(--spt-warn) inset; }
 .spt-gm .spt-agent-card.offline span { font-style: italic; font-weight: 400; }
+/* A place where PCs are: the scene thumbnail, centred (a portrait is framed on the face, top). */
+.spt-gm .spt-place-card img { object-position: center; }
+.spt-gm .spt-place-card > .fa-location-dot { font-size: 2.6em; height: 88px; line-height: 88px; opacity: 0.5; }
+.spt-gm .spt-place-card span .fa-location-dot { font-size: 0.85em; opacity: 0.7; }
 .spt-gm .spt-chip.spt-leak { margin-left: auto; border-style: dashed; }
 .spt-gm .spt-chip.spt-leak.active { border-color: var(--spt-danger); background: rgba(192,57,43,0.2); color: #ff8a7a; }
 .spt-gm-watch { display: flex; flex-direction: column; gap: 0.6rem; }
