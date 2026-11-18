@@ -1308,7 +1308,8 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm-directory .spt-dir-act:hover { opacity: 1; }
 .spt-gm-directory .spt-dir-row:not(:hover) .spt-dir-act[data-action="dirDelete"] { visibility: hidden; }
 .spt-gm-directory .spt-dir-foot { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; font-size: 0.85em; }
-.spt-gm-directory .spt-dir-foot button { flex: 0 0 auto; width: auto; }
+.spt-gm-directory .spt-dir-io { margin-left: auto; cursor: pointer; opacity: 0.7; white-space: nowrap; }
+.spt-gm-directory .spt-dir-io:hover { opacity: 1; text-decoration: underline; }
 .spt-gm .spt-no-agents { margin: 0; padding: 6px 8px; border: 1px dashed var(--spt-warn); border-radius: 6px; background: rgba(201,118,28,0.1); }
 .spt-gm .spt-no-agents i, .spt-wl-ready .warn i { color: var(--spt-warn); }
 .spt-wl-ready { list-style: none; margin: 0; padding: 0; }

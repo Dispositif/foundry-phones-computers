@@ -569,7 +569,7 @@
       "Add": "Add to the directory",
       "ToIdentify": "To identify",
       "Empty": "The directory is empty.",
-      "EditText": "Edit as text",
+      "EditText": "Import / export",
       "NoPrep": "Nothing to prepare: any number a PC dials reaches you.",
       "AddSender": "add to the directory",
       "DeleteConfirm": "Remove {name} from the directory?",
@@ -581,7 +581,7 @@
         "one": "{n} call",
         "other": "{n} calls"
       },
-      "Purpose": "<strong>The directory only holds NPCs: fake numbers with no device behind them, answered by you.</strong> It is optional: any number a PC dials reaches you anyway. It helps you keep track: name a number (who really answers), make it public (players can look it up), pin it (on top of Messages) or switch it off (out of service). The PCs' and places' numbers come from their devices: they are listed in the Directory tab, where you can make them public."
+      "Purpose": "Copy the whole directory, or paste a list (from your notes, another world…). Saving replaces the current directory. The PCs' and places' numbers are not here: they come from their devices (Devices tab)."
     },
     "CallOrMessage": "Call / Message",
     "Renamed": {

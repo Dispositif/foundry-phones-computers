@@ -491,7 +491,7 @@ export async function addContactDialog(item, key, name = "") {
 /** GM: the NPC directory, edited as text like contacts. */
 export async function directoryDialog() {
   const res = await DialogV2.wait({
-    window: { title: t("Directory.Title"), icon: "fas fa-book-open", resizable: true },
+    window: { title: `${t("Directory.Title")} · ${t("Directory.EditText")}`, icon: "fas fa-file-import", resizable: true },
     classes: ["spt-text-dialog"],
     position: { width: 640, height: 560 },
     content: `<div class="spt-phone-form">
