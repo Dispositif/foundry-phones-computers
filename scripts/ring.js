@@ -2,7 +2,7 @@ import { MASKED, MODULE_ID, RESULT_LABELS, SOCKET } from "./constants.js";
 import { addLog, isSecure, secureWith, setSecureWith, defaultDeviceFor, displayName, findContact, getPhoneData, hasSignal, holders, isFixed, isLandline, keyFor, modelOf, npcNumber, phoneLabel, phonesByNumber, ringOf, skinOf, modeOf } from "./devices.js";
 import { maskedLabel, rerenderAll } from "./util.js";
 import { t } from "./i18n.js";
-import { agentSide, closeDial, lineBusy, npcSide, openGmRing, startLive } from "./live-call.js";
+import { agentSide, closeDial, lineBusy, npcSide, openGmRing, placeSide, startLive } from "./live-call.js";
 import { gmIncoming } from "./gm-actions.js";
 import { callLinkPending } from "./satellite.js";
 /* -------------------------------------------- */
@@ -106,7 +106,9 @@ export async function ring(target, { caller = MASKED, origin = null, callId = fo
   // Between agents: who calls whom ("network unavailable" button).
   const [userId, itemUuid] = call.open.entries().next().value;
   const from = origin ? agentSide(fromUuidSync(origin.itemUuid), origin.userId) : npcSide(call.from, "", maskedLabel(caller), call.secure);
-  openGmRing(callId, from, agentSide(fromUuidSync(itemUuid), userId));
+  // An installed device rings for everyone in the room: the place shows, not one of the agents.
+  const ringing = fromUuidSync(itemUuid);
+  openGmRing(callId, from, isFixed(getPhoneData(ringing)) ? placeSide(ringing) : agentSide(ringing, userId));
   rerenderAll();
   return callId;
 }
@@ -148,6 +150,14 @@ export function onResponse({ callId, result, userId }) {
   if (!call) return; // call placed by another GM
   const itemUuid = call.open.get(userId);
   call.open.delete(userId);
+  // One device ringing for several players (a landline in a room, co-owners): one hangs up, it stops for all.
+  if (result === "decline" && itemUuid) {
+    for (const [otherId, uuid] of [...call.open]) {
+      if (uuid !== itemUuid) continue;
+      game.socket.emit(SOCKET, { type: "cancel", targetUserId: otherId, callId });
+      call.open.delete(otherId);
+    }
+  }
   call.lastResult = result;
   const user = game.users.get(userId);
   const item = itemUuid ? fromUuidSync(itemUuid) : null;

@@ -28,6 +28,14 @@ export function agentSide(item, userId) {
   return { pc: true, compromised: !!phone?.compromised, secure: !!phone?.secure, name, img: actor?.img ?? null, sub: [phone?.label, place].filter(Boolean).join(", "), seen: name, number: String(phone?.number ?? ""), userIds: userId ? [userId] : [], itemUuid: item?.uuid ?? null };
 }
 
+/** GM: an installed device while it rings for the room: the device and its place, no agent's face. */
+export function placeSide(item) {
+  const phone = getPhoneData(item);
+  const scene = game.scenes.get(phone?.sceneId);
+  const name = phone?.label ?? item?.name ?? "?";
+  return { ...agentSide(item, null), name, seen: name, img: scene?.thumb || item?.img || null, sub: scene?.name ?? "" };
+}
+
 /**
  * GM: the NPC end. seen = name on the agent's device, gm = name for the GM (NPC directory).
  * secure = the GM speaks for the NPC on a secure line.
