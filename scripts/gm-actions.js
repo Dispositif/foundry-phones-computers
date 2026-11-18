@@ -1,5 +1,5 @@
 import { MODULE_ID, PAGER_MAX, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
-import { addLog, isComputer, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
+import { addLog, isComputer, isFixed, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
 import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js";
@@ -10,6 +10,9 @@ import { cancelLink, requestLink, satDevices, satPending } from "./satellite.js"
 
 /** The sending device as a device entry ({ item, phone, actor }), for the satellite check. */
 const entryOf = (item) => ({ item, phone: getPhoneData(item), actor: item?.parent instanceof Actor ? item.parent : null });
+
+/** A carried device no player holds (an NPC's): the GM answers for it, like an NPC. */
+const npcHeld = (p) => !isFixed(p.phone) && !holders(p).length;
 /* -------------------------------------------- */
 /*  GM: handling player actions                 */
 /* -------------------------------------------- */
@@ -40,13 +43,15 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
   const extra = { ...(att ? { att } : {}), ...(fwd ? { fwd: true } : {}) };
   const key = keyFor(fromPhone, to);
   // Between PCs, a pager gets the message directly (cut to its one line), like dialing a pager and keying a callback number.
-  const targets = phonesByNumber(key).concat(phonesByNumber(to)).filter((p, i, arr) => p.item !== from && arr.findIndex((q) => q.item === p.item) === i);
+  const reached = phonesByNumber(key).concat(phonesByNumber(to)).filter((p, i, arr) => p.item !== from && arr.findIndex((q) => q.item === p.item) === i);
+  // A device an NPC carries: the message goes to the GM, like any NPC.
+  const targets = reached.filter((p) => !npcHeld(p));
   if (targets.some((p) => modelOf(p.phone).pager) && text.replace(/\s+/g, " ").trim().length > PAGER_MAX) {
     game.socket.emit(SOCKET, { type: "smsResult", targetUserId: userId, result: "pagerCut" });
   }
   const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;
   // Satellite at either end: the GM decides whether the link can be established.
-  const sats = satDevices([entryOf(from), ...targets]);
+  const sats = satDevices([entryOf(from), ...reached]);
   if (sats.length) {
     const to = targets.length ? targets.map((p) => holderName(p.item, p.phone)).join(", ") : displayName(fromPhone, key);
     const link = await requestLink(foundry.utils.randomID(), { sats, who, to, kind: isComputer(fromPhone) ? "mail" : "sms", text });
@@ -109,12 +114,15 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   const targets = phonesByNumber(number).filter((p) => p.item !== from);
   // A landline with nobody in the room: the GM answers in place of whoever is there (NPC).
   const emptyRooms = targets.length > 0 && targets.every((p) => isLandline(p.phone) && !holders(p, { activeOnly: true }).length);
+  // A device an NPC carries (no player holds it): the GM answers as that NPC.
+  const npcDevices = targets.length > 0 && !emptyRooms && targets.every(npcHeld);
+  const gmAnswers = emptyRooms || npcDevices;
 
   // Satellite at either end: the GM decides first; the caller's device searches for the satellite meanwhile.
   const sats = satDevices([entryOf(from), ...targets]);
   if (sats.length) {
     const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;
-    const to = targets.length && !emptyRooms ? targets.map((p) => holderName(p.item, p.phone)).join(", ") : origin.name;
+    const to = targets.length && !gmAnswers ? targets.map((p) => holderName(p.item, p.phone)).join(", ") : origin.name;
     const link = await requestLink(callId, { sats, who, to, kind: "call" });
     if (link === "cancelled") return finishOriginLogOnly(origin, "cancelled");
     if (link !== "ok") return finishOrigin(origin, "nosat");
@@ -124,7 +132,7 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     if (networkBusy()) return finishOrigin(origin, "busy");
   }
 
-  if (targets.length && !emptyRooms) {
+  if (targets.length && !gmAnswers) {
     warnCompromised(fromPhone, ...targets.map((p) => p.phone));
     ring(`phone:${number}`, { caller: fromPhone.number, origin, callId });
     return;
@@ -132,6 +140,8 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   // Unassigned number (directory "off"): the network answers, the GM is not disturbed.
   if (!targets.length && isOffNumber(fromPhone, key)) return finishOrigin(origin, "unassigned");
   const place = emptyRooms ? `📍 ${targets.map((p) => `${p.phone.label} (${game.scenes.get(p.phone.sceneId)?.name ?? t("NoPlace")})`).join(", ")}` : "";
+  // The NPC whose device rings: the GM sees who is called.
+  const npcDevice = npcDevices ? targets.map((p) => `${p.actor?.name ?? holderName(p.item, p.phone)} (${p.phone.label})`).join(", ") : "";
 
   // To an NPC: the GM picks the outcome.
   const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;
@@ -167,7 +177,7 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     window: { title: emptyRooms ? t("Gm.EmptyLandlineCall") : t("Gm.AgentCalling"), icon: emptyRooms ? "fas fa-phone" : "fas fa-mobile-screen" },
     classes: ["spt-phone-ring-dialog"],
     position: { width: 520 },
-    content: `<div class="spt-phone-ring"><i class="fas fa-phone-volume"></i><p class="spt-caller">${esc(gmName(fromPhone, key))}${unknown ? ` <small>(${t("Directory.Unknown")})</small>` : ""}</p>${unknown ? `<p class="spt-unknown-name"><input type="text" name="sptNpcName" placeholder="${esc(t("Directory.WhoAnswers"))}" aria-label="${esc(t("Directory.WhoAnswers"))}" autocomplete="off"></p>` : ""}${place ? `<p><strong>${esc(place)}</strong><br><em>${t("Gm.NobodyThere")}</em></p>` : ""}<p>${t("Gm.CalledBy", { who: `<strong>${esc(who)}</strong>` })}</p>${fromPhone.compromised ? `<p class="spt-compromised"><i class="fas fa-triangle-exclamation"></i> ${t("Gm.CompromisedDevice", { label: esc(fromPhone.label) })}</p>` : ""}</div>`,
+    content: `<div class="spt-phone-ring"><i class="fas fa-phone-volume"></i><p class="spt-caller">${esc(gmName(fromPhone, key))}${unknown ? ` <small>(${t("Directory.Unknown")})</small>` : ""}</p>${unknown ? `<p class="spt-unknown-name"><input type="text" name="sptNpcName" placeholder="${esc(t("Directory.WhoAnswers"))}" aria-label="${esc(t("Directory.WhoAnswers"))}" autocomplete="off"></p>` : ""}${place ? `<p><strong>${esc(place)}</strong><br><em>${t("Gm.NobodyThere")}</em></p>` : ""}${npcDevice ? `<p><i class="fas fa-mobile-screen"></i> <strong>${esc(npcDevice)}</strong></p>` : ""}<p>${t("Gm.CalledBy", { who: `<strong>${esc(who)}</strong>` })}</p>${fromPhone.compromised ? `<p class="spt-compromised"><i class="fas fa-triangle-exclamation"></i> ${t("Gm.CompromisedDevice", { label: esc(fromPhone.label) })}</p>` : ""}</div>`,
     buttons: Object.entries(NPC_OUTCOMES).flatMap(([action, o]) => {
       const button = { action, label: o.label, icon: o.icon, default: action === "answer" && !(canSecure && remembered), callback: () => action };
       if (action !== "answer" || !canSecure) return [button];

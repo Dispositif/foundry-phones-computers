@@ -623,7 +623,15 @@ export function gmName(phone, key) {
   // The NPC directory wins over the name the agent gave the contact: the GM sees who really answers.
   const npc = findNpc(key, { all: true });
   if (npc) return npc.name && npc.number ? `${npc.name} (${npc.number})` : npcLabel(npc);
+  // A device an NPC carries: the GM sees whose it is.
+  const carrier = npcCarrier(key);
+  if (carrier) return `${carrier.name} (${key})`;
   return displayName(phone, key);
+}
+
+/** The NPC actor carrying the device with this number (a carried device no player holds), or null. */
+export function npcCarrier(number) {
+  return phonesByNumber(number).find((p) => p.actor && !isFixed(p.phone) && !holders(p).length)?.actor ?? null;
 }
 
 /** Number known nowhere (no contact, no directory entry, no device): probably a wrong number. */
