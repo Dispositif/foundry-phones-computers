@@ -5,6 +5,7 @@
 - **Satellite** (advanced feature): satellite phone, smartphone and pager; the GM approves each satellite connection.
 - GM settings: Intel tab (wiretaps, calls, tracking) as an advanced feature; operator welcome message always on; "PC" instead of "agent".
 - Universe chosen in the GM welcome window; "Any setting" removed (Modern by default); changing the universe no longer changes existing devices.
+- Directory: NPC devices and fixed devices can be pinned.
 - Fix: calls and messages from PCs to a device carried by an NPC now reach the GM.
 
 ## 1.4.0

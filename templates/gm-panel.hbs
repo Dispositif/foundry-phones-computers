@@ -318,6 +318,7 @@
         <li class="spt-dir-row" data-uuid="{{uuid}}" data-search="{{search}}">
           <i class="fas {{icon}} spt-dim spt-dir-icon" title="{{model}}"></i>
           <span class="spt-dir-num">{{number}}</span>
+          {{#if canPin}}<a class="spt-dir-star {{#if pin}}on{{/if}}" data-action="devPin" title="{{spt "Directory.DevicePinHint"}}"><i class="fa{{#if pin}}s{{else}}r{{/if}} fa-star"></i></a>{{else}}<span class="spt-dir-star" style="visibility: hidden"><i class="far fa-star"></i></span>{{/if}}
           <span class="spt-dir-name">{{name}} <small class="spt-dim">· {{model}}</small></span>
           <a class="spt-dir-flag {{#if pub}}on pub{{/if}}" data-action="devPub" title="{{spt "Directory.DevicePublicHint"}}">{{spt "Directory.Public"}}</a>
         </li>
