@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased
-- New device: **Brick phone** (Vintage), calls only.
+## 1.5.0
 - **Satellite** (advanced feature): satellite phone, smartphone and pager; the GM approves each satellite connection.
+- New device: **Brick phone** (1980-90s, calls only).
 - GM settings: Intel tab (wiretaps, calls, tracking) as an advanced feature; operator welcome message always on; "PC" instead of "agent".
-- Universe chosen in the GM welcome window; "Any setting" removed (Modern by default); changing the universe no longer changes existing devices.
-- Directory: NPC devices and fixed devices can be pinned.
-- Fix: calls and messages from PCs to a device carried by an NPC now reach the GM.
+- Universe chosen in the GM welcome window.
+- Directory revamp.
+- Fixes: calls and messages from PCs, UI…
 
 ## 1.4.0
 - "What's new" window for the GM after an update.

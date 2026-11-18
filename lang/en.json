@@ -854,7 +854,7 @@
     "News": {
       "Title": "What's new in Phones & Computers {version}",
       "Changelog": "Full changelog",
-      "Lines": "**GM panel big redesign**: setting options, new directory, messages…\nTeam option: PCs know each other (numbers/emails shared in devices).\nLots of fixes and UI improvements."
+      "Lines": "## 1.5\n**Satellite com** option for devices.\n**Devices tab**: favorites (★) to send as an NPC or a place, public devices that other PCs find by name, filters by holder, a legend.\n**Directory**: NPC numbers only; text editing becomes Import / export.\n**Public option** when creating or editing a device.\nNew **Brick phone** (1980-90s, calls only) for the Vintage universe.\nUniverse chosen in the GM welcome window; changing it no longer changes existing devices.\nIntel tab (wiretaps, calls, tracking) becomes an advanced feature.\nFoundry v13 supported again.\nLots of UX improvements and fixes.\n## 1.4\n**GM panel big redesign**: setting options, new directory, messages…\nTeam option: PCs know each other (numbers/emails shared in devices).\nLots of fixes and UI improvements."
     },
     "Satellite": {
       "Device": "Satellite device",
