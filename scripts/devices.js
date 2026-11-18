@@ -631,7 +631,12 @@ export function gmName(phone, key) {
 
 /** The NPC actor carrying the device with this number (a carried device no player holds), or null. */
 export function npcCarrier(number) {
-  return phonesByNumber(number).find((p) => p.actor && !isFixed(p.phone) && !holders(p).length)?.actor ?? null;
+  return npcDevices(number).find((p) => p.actor)?.actor ?? null;
+}
+
+/** Carried devices with this number that no player holds (an NPC's, or a world item given to nobody): the GM speaks for them. */
+export function npcDevices(number) {
+  return phonesByNumber(number).filter((p) => !isFixed(p.phone) && !holders(p).length);
 }
 
 /** Number known nowhere (no contact, no directory entry, no device): probably a wrong number. */

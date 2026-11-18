@@ -139,7 +139,8 @@ function collectThreads(phones) {
   const operators = new Set([...Object.values(OPERATORS).flat(), ...Object.values(SAT_OPERATORS)].map(norm));
   for (const p of phones) {
     for (const e of getLog(p.phone, { includePending: true })) {
-      if (e.kind !== "sms" || e.prep || e.off || e.net || (e.dir === "in" && operators.has(norm(e.with)))) continue;
+      // npc: the copy kept on a device an NPC carries (the GM's thread is on the PC's device).
+      if (e.kind !== "sms" || e.prep || e.off || e.net || e.npc || (e.dir === "in" && operators.has(norm(e.with)))) continue;
       const key = keyFor(p.phone, e.with);
       let agents = false;
       if (e.dir === "out") agents = !!e.pj;

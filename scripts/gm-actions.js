@@ -1,5 +1,5 @@
 import { MODULE_ID, PAGER_MAX, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
-import { addLog, isComputer, isFixed, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
+import { addLog, isComputer, isFixed, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, npcDevices, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
 import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js";
@@ -79,6 +79,8 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
     const secure = secureWith(fromPhone, key);
     if (fwd && fwdSecure && !secure) warnLeak(who, displayName(fromPhone, key));
     await addLog(from, { kind: "sms", dir: "out", with: key, text, seen: false, ...extra, ...(secure ? { secure: true } : {}) });
+    // A device an NPC carries keeps the message in its history (found if the PCs get hold of it).
+    for (const p of reached.filter(npcHeld)) await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(p.phone, fromPhone.number), text, read: true, npc: true, ...extra });
     const toName = displayName(fromPhone, key);
     ui.notifications.info(`📱 ${t("Gm.WritesTo", { who, name: toName })}`);
     playLocal(SMS_SRC);
