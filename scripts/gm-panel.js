@@ -160,6 +160,16 @@ function collectThreads(phones) {
   return [...threads.values()].sort((a, b) => (b.unread > 0) - (a.unread > 0) || b.t - a.t);
 }
 
+/** Who holds a device, for the directory: a PC, an NPC, a place, players it is shared with, or nobody. */
+const HELD_ICONS = { pc: "fa-user", npc: "fa-user-secret", place: "fa-location-dot", shared: "fa-users", nobody: "fa-ban" };
+function heldBy(p) {
+  let kind = "nobody";
+  if (isFixed(p.phone)) kind = "place";
+  else if (p.actor) kind = isNpcHeld(p) ? "npc" : "pc";
+  else if (holders(p).length) kind = "shared";
+  return { kind, icon: HELD_ICONS[kind], label: t(`Directory.Held_${kind}`) };
+}
+
 /** A device the GM can pin: installed in a place, or carried by no PC (an NPC's, or given to nobody). */
 function pinnable(p) {
   return isFixed(p.phone) || isNpcHeld(p);
@@ -359,6 +369,11 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       watchAgent: function (event, target) { this._setState({ watchAgent: target.dataset.agent || null, inboxLimit: THREAD_PAGE }); },
       watchLeak: function () { this._setState({ watchLeak: !this._state.watchLeak }); },
       filterAgent: function (event, target) { this._setState({ inboxAgent: target.dataset.agent || null, inboxNpc: null, inboxLimit: THREAD_PAGE }); },
+      // Directory device row: its threads (a PC's device: that PC; an NPC's device: its number).
+      filterDevice: function (event, target) {
+        const { agent = null, npc = null } = target.dataset;
+        this._setState({ inboxAgent: agent, inboxNpc: npc, tab: "inbox", inboxLimit: THREAD_PAGE });
+      },
       filterNpc: function (event, target) {
         const id = target.dataset.npc || null;
         this._setState({ inboxNpc: this._state.inboxNpc === id ? null : id, inboxAgent: null, tab: "inbox", inboxLimit: THREAD_PAGE });
@@ -1104,12 +1119,17 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       return false;
     });
     const off = all.filter((r) => r.title === undefined && r.off && !r.editing);
+    const threads = collectThreads(phones).filter((th) => !th.agents);
     const devices = phones
       .filter((p) => p.phone.number)
       .map((p) => {
-        const model = modelOf(p.phone);
         const name = publicName(p) || p.phone.label || "";
-        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: iconOf(p.phone), place: isFixed(p.phone), pub: !!p.phone.pub, canPin: pinnable(p), pin: pinnable(p) && !!p.phone.pin, search: `${name} ${p.phone.number}`.toLowerCase() };
+        const held = heldBy(p);
+        // Messages link: a PC's device filters on that PC, an NPC's (or nobody's) on its number.
+        let filter = null;
+        if (held.kind === "pc" && threads.some((th) => th.item === p.item)) filter = { agent: p.actor.id };
+        else if ((held.kind === "npc" || held.kind === "nobody") && threads.some((th) => th.npcId === norm(p.phone.number))) filter = { npc: norm(p.phone.number) };
+        return { uuid: p.item.uuid, number: p.phone.number, name, model: modelLabel(p.phone), icon: iconOf(p.phone), held, filter, place: isFixed(p.phone), pub: !!p.phone.pub, canPin: pinnable(p), pin: pinnable(p) && !!p.phone.pin, search: `${name} ${p.phone.number}`.toLowerCase() };
       })
       .sort((a, b) => a.place - b.place || a.name.localeCompare(b.name));
     const unknown = unknownNumbers(phones).map((u) => ({

@@ -319,7 +319,8 @@
           <i class="fas {{icon}} spt-dim spt-dir-icon" title="{{model}}"></i>
           <span class="spt-dir-num">{{number}}</span>
           {{#if canPin}}<a class="spt-dir-star {{#if pin}}on{{/if}}" data-action="devPin" title="{{spt "Directory.DevicePinHint"}}"><i class="fa{{#if pin}}s{{else}}r{{/if}} fa-star"></i></a>{{else}}<span class="spt-dir-star" style="visibility: hidden"><i class="far fa-star"></i></span>{{/if}}
-          <span class="spt-dir-name">{{name}} <small class="spt-dim">· {{model}}</small></span>
+          <span class="spt-dir-name"><i class="fas {{held.icon}} spt-dim spt-dir-held" title="{{held.label}}" aria-label="{{held.label}}"></i> {{name}} <small class="spt-dim">· {{model}}</small></span>
+          {{#if filter}}<a class="spt-dir-act" data-action="filterDevice" {{#if filter.agent}}data-agent="{{filter.agent}}"{{/if}} {{#if filter.npc}}data-npc="{{filter.npc}}"{{/if}} title="{{spt "Directory.OpenMessages"}}"><i class="fas fa-comments"></i></a>{{/if}}
           <a class="spt-dir-flag {{#if pub}}on pub{{/if}}" data-action="devPub" title="{{spt "Directory.DevicePublicHint"}}">{{spt "Directory.Public"}}</a>
         </li>
         {{else}}
