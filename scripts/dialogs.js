@@ -9,7 +9,7 @@ import { t } from "./i18n.js";
 /*  Dialogs (GM, and contacts for the player)    */
 /* -------------------------------------------- */
 
-export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", secure = false, satellite = false, withModel = true, holder = null }) {
+export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", pub = false, secure = false, satellite = false, withModel = true, holder = null }) {
   // Default name = a random brand and model, following the model as long as the GM has not changed it.
   const randomName = (m) => deviceName(m) ?? MODELS[m]?.label ?? MODELS.smartphone.label;
   const autoLabel = label === null;
@@ -54,6 +54,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
           <button type="button" class="spt-dice" data-dice="number" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
         <div class="form-group spt-if-themes"><label>${t("Form.Theme")}</label><select name="theme">${themeOpts}</select></div>
         <div class="form-group spt-if-computer"><label>${t("Form.Inbox")}</label><select name="inbox">${["on", "locked", "none"].map((k) => `<option value="${k}" ${k === inbox ? "selected" : ""}>${t(`Form.Inbox_${k}`)}</option>`).join("")}</select></div>
+        ${MODELS[model]?.jammer ? "" : publicRow(pub)}
         ${secureRow(secure)}
         ${satelliteRow(satellite)}
       </div>`,
@@ -127,6 +128,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
             sceneName,
             theme: f.theme?.value ?? DEFAULT_THEME,
             inbox: MODELS[model ?? "smartphone"]?.mail ? f.inbox?.value ?? "on" : undefined,
+            pub: f.pub ? f.pub.checked : undefined,
             secure: f.secure ? f.secure.checked : undefined,
             satellite: forcedSat(model) ? true : f.satellite ? f.satellite.checked && !!MODELS[model]?.satellite : undefined,
             sceneId: MODELS[model]?.fixed ? scene?.id ?? null : undefined
@@ -137,6 +139,11 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
     ],
     rejectClose: false
   });
+}
+
+/** "Public" option, in New device and Edit device: other PCs find the device by name. */
+function publicRow(checked) {
+  return `<div class="spt-public-row"><label class="spt-secure-check"><input type="checkbox" name="pub" ${checked ? "checked" : ""}> <i class="fas fa-globe"></i> ${t("Gm.NewDevicePublic")}</label></div>`;
 }
 
 /** "Secure (encrypted)" option, in New device and Edit device. */
@@ -289,6 +296,7 @@ function kindForm(kind, { actor = null } = {}) {
       model: kind.model,
       theme: kind.theme ?? f.theme?.value ?? DEFAULT_THEME,
       sceneId: fixed ? f.scene?.value || null : undefined,
+      pub: !!f.pub?.checked,
       secure: !!f.secure?.checked,
       satellite: satPolicy === "forced" || (satPolicy === "option" && !!f.satellite?.checked),
       open
@@ -310,6 +318,7 @@ function kindForm(kind, { actor = null } = {}) {
           <button type="button" class="spt-dice" data-dice="number" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
         ${model.jammer ? `<p class="hint">${t("Jammer.NewHint")}</p>` : ""}
         ${lookRow}
+        ${model.jammer ? "" : publicRow(false)}
         ${model.jammer ? "" : secureRow(false)}
         ${satPolicy === "option" ? satelliteRow(false) : ""}
       </div>`,
@@ -432,6 +441,7 @@ export async function editPhoneDialog(item) {
     sceneId: phone.sceneId,
     theme: phone.theme ?? null,
     inbox: phone.inbox ?? "on",
+    pub: !!phone.pub,
     secure: !!phone.secure,
     satellite: !!phone.satellite,
     holder: item.parent?.name ?? null

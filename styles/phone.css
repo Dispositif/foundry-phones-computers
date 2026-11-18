@@ -1330,6 +1330,7 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm .spt-quick-tag { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); padding: 0 6px; border-radius: 1em; background: var(--spt-warn); color: #fff; font-size: 0.7em; white-space: nowrap; }
 .spt-gm .spt-quick-preview { padding: 4px 8px; border-radius: 6px; background: var(--spt-soft); font-size: 0.9em; }
 .spt-gm .spt-quick-preview a { cursor: pointer; }
+.spt-gm .spt-quick-pub { display: flex; align-items: center; gap: 6px; font-size: 0.85em; }
 .spt-gm .spt-quick-links { display: flex; justify-content: flex-end; gap: 12px; font-size: 0.85em; }
 .spt-gm .spt-quick-links a { cursor: pointer; text-decoration: underline; opacity: 0.8; }
 .spt-gm .spt-reply-drop { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; border-radius: 6px; }
@@ -1518,7 +1519,7 @@ body[data-spt-gm-look] #spt-phone-panel .spt-gm-status.down .spt-pill { color: #
 .spt-bubble.spt-failed { opacity: 0.75; border-style: dashed; }
 .spt-notsent { display: block; margin-top: 4px; font-size: 0.8em; opacity: 0.9; }
 .spt-notsent a { text-decoration: underline; cursor: pointer; }
-.spt-satellite-row { margin-top: 6px; }
+.spt-public-row, .spt-satellite-row { margin-top: 6px; }
 .spt-sat-request .spt-sat-question { font-weight: bold; }
 .spt-sat-request .spt-sat-devices { margin: 6px 0; padding-left: 1.2em; list-style: none; }
 .spt-sat-request .spt-sat-devices i { color: #c98a00; margin-right: 4px; }

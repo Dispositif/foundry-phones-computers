@@ -865,7 +865,7 @@ export function newSatellite(model, choice) {
   return policy === "forced" || (policy === "option" && !!choice);
 }
 
-export async function createPhone(actor, { label, number, model = "smartphone", sceneId = null, theme = null, secure = false, satellite }) {
+export async function createPhone(actor, { label, number, model = "smartphone", sceneId = null, theme = null, secure = false, satellite, pub = false }) {
   satellite = newSatellite(model, satellite);
   label ||= deviceName(model, { satellite }) ?? MODELS[model]?.label ?? MODELS.smartphone.label;
   number ||= randomAddress(model, { name: actor?.name });
@@ -877,7 +877,7 @@ export async function createPhone(actor, { label, number, model = "smartphone", 
       img: modelImg(model),
       flags: {
         core: { sheetClass: SHEET_ID },
-        [MODULE_ID]: { phone: { label, number, model, sceneId, theme: cleanTheme(!theme || theme === DEFAULT_THEME ? newTheme(model) : theme, model), mode: "on", contacts: [], log: [], ...(secure ? { secure: true } : {}), ...(satellite ? { satellite: true } : {}), ...newRing(model) } }
+        [MODULE_ID]: { phone: { label, number, model, sceneId, theme: cleanTheme(!theme || theme === DEFAULT_THEME ? newTheme(model) : theme, model), mode: "on", contacts: [], log: [], ...(secure ? { secure: true } : {}), ...(satellite ? { satellite: true } : {}), ...(pub ? { pub: true } : {}), ...newRing(model) } }
       }
     },
     options
@@ -893,12 +893,13 @@ function newRing(model) {
   return ring && MODELS[model]?.ring ? { ring } : {};
 }
 
-export async function markPhone(item, { label, number, model, sceneId, theme, inbox, secure, satellite }) {
+export async function markPhone(item, { label, number, model, sceneId, theme, inbox, pub, secure, satellite }) {
   const prev = getPhoneData(item) ?? { mode: "on", contacts: [], log: [] };
   const next = { ...prev, label, number };
   if (model) next.model = model;
   if (sceneId !== undefined) next.sceneId = sceneId;
   if (inbox !== undefined) next.inbox = inbox;
+  if (pub !== undefined) next.pub = !!pub;
   if (secure !== undefined) next.secure = !!secure;
   if (satellite !== undefined) next.satellite = !!satellite && !!MODELS[next.model ?? "smartphone"]?.satellite;
   if (theme !== undefined || !next.theme) next.theme = cleanTheme(theme ?? next.theme, next.model ?? "smartphone");
