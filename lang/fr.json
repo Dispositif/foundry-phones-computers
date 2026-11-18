@@ -854,7 +854,7 @@
     "News": {
       "Title": "Nouveautés de Phones & Computers {version}",
       "Changelog": "Toutes les modifications (en anglais)",
-      "Lines": "**Grande refonte du panneau MJ** : réglages, nouvel annuaire, messages…\nOption Équipe : les PJ se connaissent (numéros et mails partagés dans les appareils).\nNombreuses corrections et améliorations de l'interface."
+      "Lines": "## 1.5\nOption **communication satellite** pour les appareils.\n**Onglet Appareils** : favoris (★) pour écrire en tant que PNJ ou lieu, appareils publics que les autres PJ trouvent par leur nom, filtres par porteur, légende.\n**Annuaire** : uniquement les numéros de PNJ ; l'édition en texte devient Importer / exporter.\n**Option Public** à la création ou à la modification d'un appareil.\nNouveau **téléphone brique** (années 80-90, appels seulement) pour l'univers Vintage.\nUnivers choisi dans la fenêtre d'accueil MJ ; le changer ne modifie plus les appareils existants.\nL'onglet Surveillance (écoutes, appels, traçage) devient une fonction avancée.\nFoundry v13 de nouveau pris en charge.\nNombreuses améliorations UX et correctifs.\n## 1.4\n**Grande refonte du panneau MJ** : réglages, nouvel annuaire, messages…\nOption Équipe : les PJ se connaissent (numéros et mails partagés dans les appareils).\nNombreuses corrections et améliorations de l'interface."
     },
     "Satellite": {
       "Device": "Appareil satellite",

@@ -51,6 +51,8 @@ A device is an item carried by a character, or installed in a place (a scene) an
 - **Files** (laptop, terminal): drop journal pages or images on the device. Players read them inside the screen, without access to your Foundry journals. Lock or hide each file.
 - **Shared devices:** give a device from the Items sidebar to several players. A terminal with no location becomes a database they reach from anywhere.
 - **Give to…** passes a device to another character with its number, contacts and history.
+- **Public devices:** other PCs find them by name on their phones.
+- **Advanced features** (GM panel settings): secure devices, jammer, satellite phones and links, compromised devices, tracking.
 
 <img src="docs/cyberpunk-univers.webp" alt="Cyberpunk universe: a Neon smartphone, the Neon pager and the floating buttons" width="520">
 
@@ -73,14 +75,14 @@ The **Network** panel (Ctrl+Shift+P, or the telecom button).
 - **Send:** pick an agent, then one of their devices (or a place's landline), and ring it or text it under any identity (NPC, number, hidden number), with an image or a journal page attached. An agent without a device gets one in a click.
 - **Messages:** the agents' messages to NPCs, unread first, with a text or email icon. Reply as the NPC; name an unknown number or mark it unassigned in one click.
 - **Directory:** your NPCs and their numbers (optional, see below).
-- **Devices:** every device by holder or place. Lock, no signal, give, edit, prepare its history.
+- **Devices:** every device by holder or place. Lock, no signal, give, edit, prepare its history; make it public or a favorite (★) sender.
 - **Files:** every computer file, by computer or by source journal: visible, locked or hidden.
 - **Intel:** wiretaps (the agents' messages to each other, read only), every call with its outcome and duration, and tracking (experimental, how precisely the network can locate each agent).
 - When an agent calls an NPC, you choose: answer, no answer, unreachable, unassigned (not in service).
 - **Cut network** for the whole mobile network, or **cut the line** of any call in progress.
 - The **?** button opens the GM welcome window and a guided tour of the panel. The **GM panel theme** setting picks its look (Ops room, Orange haze, Classic, or Auto by universe).
 
-**NPC directory (optional):** you can text or call under any name, and any number an agent dials reaches you, so there is nothing to set up. The Directory tab only helps you keep track: name a number, make it `public` (pizzeria, taxi, hospital: yellow pages for the players), `pin` it on top of Messages, or switch it `off` (calls and texts get "not in service").
+**NPC directory (optional):** you can text or call under any name, and any number an agent dials reaches you, so there is nothing to set up. The Directory tab only helps you keep track of NPC numbers: name a number, make it public (pizzeria, taxi, hospital: yellow pages for the players), make it a favorite (★) sender in Send and Messages, or put it out of service (calls and texts get "not in service"). Import / export as text, for instance from your notes.
 
 **Journal links:** `@SMS[recipient|sender]{text}` and `@Call[recipient|sender]` (also `@Mail`, `@SecureSMS`, `@SecureMail`, `@SecureCall`) become buttons in your scenario notes. The panel's link button writes them for you. Players see only the text.
 
@@ -102,7 +104,7 @@ Each device is an ordinary Foundry item carrying one flag, `flags["soren-phones-
 }
 ```
 
-- `model`: smartphone, mobile, pager, computer (laptop), desktop (terminal), landline, jammer. Laptops and terminals add `files` and `inbox`.
+- `model`: smartphone, mobile, brick, satphone, pager, computer (laptop), desktop (terminal), landline, jammer. Laptops and terminals add `files` and `inbox`.
 - `log` is newest first, 200 entries max (GM-prepared ones, `prep: true`, are always kept). `t` only orders entries; it is never shown.
 - `with` is the other end's number: names come from contacts or the NPC directory when displayed.
 - Attachments and files hold a reference (`uuid` for a journal page, `src` for an image), not the content.
@@ -114,6 +116,6 @@ Each device is an ordinary Foundry item carrying one flag, `flags["soren-phones-
 
 © 2026 Soren, all rights reserved. Icons and sounds: authors and licenses in [CREDITS.md](CREDITS.md).
 
-[Foundry v14](https://img.shields.io/badge/foundry-v14-blue?style=for-the-badge)
+[Foundry v13-v14](https://img.shields.io/badge/foundry-v13--v14-blue?style=for-the-badge)
 [Downloads](https://img.shields.io/github/downloads/Dispositif/foundry-phones-computers/total.svg?style=for-the-badge)
 [Current version](https://img.shields.io/github/v/release/Dispositif/foundry-phones-computers?display_name=tag&style=for-the-badge&label=Current%20version)
