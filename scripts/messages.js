@@ -1,7 +1,7 @@
 import { attChatHtml } from "./attachments.js";
 import { MASKED, MODULE_ID, PAGER_MAX, SOCKET } from "./constants.js";
-import { addLog, isSecure, secureWith, setSecureWith, allPhones, defaultDeviceFor, getLog, getPhoneData, hasSignal, holders, keyFor, modelOf, msgOn, npcNumber, phoneLabel, phonesByNumber, withItemLock, modeOf } from "./devices.js";
-import { esc, maskedLabel, nl2br } from "./util.js";
+import { addLog, isSecure, secureWith, setSecureWith, allPhones, defaultDeviceFor, getLog, getPhoneData, hasSignal, holders, isFixed, keyFor, modelOf, msgOn, npcDevices, npcNumber, phoneLabel, phonesByNumber, withItemLock, modeOf } from "./devices.js";
+import { esc, isMasked, maskedLabel, nl2br } from "./util.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
 /*  SMS                                         */
@@ -35,13 +35,15 @@ export async function deliverToPhone(p, senderKeyOrName, text, att = null, { fwd
   const key = keyFor(p.phone, senderKeyOrName);
   const extra = { ...(att ? { att } : {}), ...(fwd ? { fwd: true } : {}), ...(secure && isSecure(p.phone) ? { secure: true } : {}) };
   const switchedOff = modeOf(p.phone) === "off";
+  // A carried device no player holds (an NPC's): already read, so PCs who get it later see no unread badge.
+  const read = !isFixed(p.phone) && !holders(p).length;
   if (!hasSignal(p.phone) || switchedOff) {
     // Pending: delivered (chat copy, beep) when signal returns or the device is switched on.
-    await addLog(p.item, { kind: "sms", dir: "in", with: key, text, read: false, pending: true, ...extra });
+    await addLog(p.item, { kind: "sms", dir: "in", with: key, text, read, pending: true, ...extra });
     ui.notifications.info(`📵 ${phoneLabel(p)} : ${t(switchedOff ? "Info.SmsPendingOff" : "Info.SmsPending")}`);
     return true;
   }
-  await addLog(p.item, { kind: "sms", dir: "in", with: key, text, read: false, ...extra });
+  await addLog(p.item, { kind: "sms", dir: "in", with: key, text, read, ...extra });
   // Nothing in the chat: the player reads it on the device (window, floating button badge).
   const users = holders(p);
   if (!users.length) return false;
@@ -100,6 +102,7 @@ export async function sendSms(target, text, { sender = MASKED, att = null, secur
     const p = await defaultDeviceFor(user);
     if (p) {
       await deliverToPhone(p, npcNumber(sender), text, att, { secure: await npcSecure(p, sender, secure) });
+      await logNpcSent(p, sender, text, att);
       return ui.notifications.info(`📱 ${t("Info.SentTo", { name: `${user.name} (${p.phone.label})` })}`);
     }
     // No assigned character to carry a phone: nothing is sent.
@@ -111,10 +114,24 @@ export async function sendSms(target, text, { sender = MASKED, att = null, secur
   for (const p of phones) {
     const ok = await deliverToPhone(p, npcNumber(sender), text, att, { secure: await npcSecure(p, sender, secure) });
     if (ok === false) ui.notifications.warn(`📱 ${phoneLabel(p)} : ${t("Warn.NobodyHolds")}`);
+    else if (ok !== "nosms") await logNpcSent(p, sender, text, att);
   }
   ui.notifications.info(`📱 ${t("Info.SentTo", { name: value })}`);
 }
 
+
+/**
+ * GM writing from a device an NPC carries: the message also goes in that device's history
+ * (found if the PCs get hold of it). Marked npc: not a conversation the GM answers.
+ */
+async function logNpcSent(p, sender, text, att) {
+  const number = keyFor(p.phone, npcNumber(sender));
+  if (isMasked(number)) return;
+  for (const q of npcDevices(number)) {
+    if (q.item === p.item) continue;
+    await addLog(q.item, { kind: "sms", dir: "out", with: keyFor(q.phone, p.phone.number), text, npc: true, ...(att ? { att } : {}) });
+  }
+}
 
 /** GM writing as an NPC: secure line or not (the box, else what the device remembers for that NPC). */
 async function npcSecure(p, sender, secure) {
