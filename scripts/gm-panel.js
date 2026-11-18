@@ -442,7 +442,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       pickSender: function (event, target) { this._focusSend = true; this._pickedSender = target.dataset.value; this._setState({ sender: target.dataset.value }); },
       quickCreate: function (event, target) { this._quickCreate(target.dataset.kind); },
       reroll: function () { this._setState({ draws: null }); },
-      addDevice: function () { this._setState({ adding: true, draws: null }); },
+      addDevice: function () { this._newPub = true; this._setState({ adding: true, draws: null }); },
       cancelAdd: function () { this._setState({ adding: false }); },
       moreOptions: async function () {
         const actor = game.users.get(this._state.sendId)?.character ?? null;
@@ -746,6 +746,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       if (st.draws?.user !== sendUser.id) st.draws = { user: sendUser.id, list: {} };
       const rec = universe().defaultModel;
       createCard = {
+        pub: this._newPub ?? true,
         name: actor.name,
         canCancel: tiles.length > 0,
         kinds: quickKinds().map((k) => {
@@ -1095,6 +1096,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         b.addEventListener("mouseleave", () => (preview.textContent = idle));
       }
     }
+    // Quick device card: "public" is read when a model is clicked (no re-render).
+    this.element.querySelector("[name=newPub]")?.addEventListener("change", (ev) => (this._newPub = ev.target.checked));
     // "From": "add to directory" only for a sender nobody knows yet.
     const sender = this.element.querySelector("[name=sender]");
     const addBox = this.element.querySelector(".spt-add-dir");
@@ -1143,13 +1146,14 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const kind = quickKinds().find((k) => k.key === key);
     if (!actor || !kind) return;
     const draw = this._state.draws?.user === user.id ? this._state.draws.list[key] : null;
-    const item = await createPhone(actor, { model: kind.model, label: draw?.label, number: draw?.number });
+    const item = await createPhone(actor, { model: kind.model, label: draw?.label, number: draw?.number, pub: this._newPub ?? true });
     if (item) this._created(item);
   }
 
   /** A device was just created for the selected agent: it becomes the recipient, its tile lights up. */
   _created(item) {
     const phone = getPhoneData(item);
+    this._newPub = true;
     this._focusSend = true;
     this._setState({
       target: `phone:${phone.number}`,

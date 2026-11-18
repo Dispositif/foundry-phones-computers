@@ -93,6 +93,7 @@
           {{#each createCard.kinds}}<button type="button" class="spt-kind {{#if recommended}}recommended{{/if}}" data-action="quickCreate" data-kind="{{key}}" data-preview="{{drawLabel}} · {{drawNumber}}">{{#if recommended}}<span class="spt-quick-tag">{{spt "Gm.Recommended"}}</span>{{/if}}<img src="{{img}}" alt=""><b>{{label}}</b><small>{{caps}}</small></button>{{/each}}
         </div>
         <div class="spt-quick-preview"><a data-action="reroll" title="{{spt "Gm.Reroll"}}" aria-label="{{spt "Gm.Reroll"}}"><i class="fas fa-dice"></i></a> <span data-quick-preview>{{spt "Gm.QuickPreview"}}</span></div>
+        <label class="spt-quick-pub"><input type="checkbox" name="newPub" {{#if createCard.pub}}checked{{/if}}> {{spt "Gm.NewDevicePublic"}}</label>
         <div class="spt-quick-links">
           {{#if createCard.canCancel}}<a data-action="cancelAdd">{{spt "Cancel"}}</a>{{/if}}
           <a data-action="moreOptions">{{spt "Gm.MoreOptions"}}</a>

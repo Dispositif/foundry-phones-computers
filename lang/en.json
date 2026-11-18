@@ -181,6 +181,7 @@
       "Recommended": "recommended",
       "Reroll": "Draw again",
       "QuickPreview": "Hover a model to see its name and number",
+      "NewDevicePublic": "Public: other PCs can find it by name on their phones",
       "MoreOptions": "More options…",
       "Created": "{label} ({number}) given to {name}",
       "TabWatch": "Intel",
