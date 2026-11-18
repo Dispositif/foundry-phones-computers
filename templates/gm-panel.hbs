@@ -143,6 +143,7 @@
 
   {{#if (eq tab "inbox")}}
     <section class="spt-gm-inbox">
+      {{#if showMarkAll}}<a class="spt-mark-all spt-mark-all-top" data-action="markAllSeen"><i class="fas fa-check-double"></i> {{spt "Gm.MarkAllSeen"}}</a>{{/if}}
       {{#if inboxAgents.length}}
       <div class="spt-chips">
         <a class="spt-chip {{#if inboxAllAgents}}active{{/if}}" data-action="filterAgent" data-agent="">{{spt "Gm.All"}}</a>
@@ -170,7 +171,7 @@
           <div class="spt-gthread-head">{{#if agents}}<i class="fas fa-headphones spt-dim" title="{{spt "Gm.BetweenAgents"}}"></i> {{/if}}<i class="fas {{channel}} spt-dim spt-channel" title="{{channelLabel}}"></i> <strong>{{who}}</strong>{{#if compromised}} <i class="fas fa-triangle-exclamation spt-compromised" title="{{spt "Gm.Compromised"}}"></i>{{/if}} <i class="fas fa-arrow-right" aria-hidden="true"></i> {{#if agents}}{{#each others}}{{#unless @first}}, {{/unless}}{{#if icon}}<i class="fas {{icon}} spt-dim" title="{{modelLabel}}"></i> {{/if}}{{name}}{{/each}}{{else}}<a class="spt-npc-link" data-action="filterNpc" data-npc="{{npcId}}" title="{{spt "Gm.FilterNpc"}}">{{#if pinned}}<i class="fas fa-star spt-star"></i> {{/if}}{{to}}</a>{{#if addr}} <span class="spt-addr">{{addr}}</span>{{/if}}{{/if}}{{#if canSecure}} <a data-action="toggleSecureWith" class="spt-secure-toggle {{#if secure}}on{{/if}}" title="{{#if secure}}{{spt "Secure.On"}}{{else}}{{spt "Secure.Off"}}{{/if}}"><i class="fas fa-shield-halved"></i></a>{{else if secure}} <i class="fas fa-shield-halved spt-secure" title="{{spt "Secure.Line"}}"></i>{{/if}}{{#if unknown}} <span class="spt-unknown-pill">? {{spt "Directory.Unknown"}}</span>{{/if}}{{#if unread}} <span class="spt-badge">{{unread}}</span>{{/if}}</div>
           {{#if more}}<div class="spt-gthread-more">…</div>{{/if}}
           {{#each bubbles}}
-          <div class="spt-bb {{dir}} {{#if pending}}pending{{/if}}">{{#if secure}}<i class="fas fa-shield-halved spt-secure spt-bb-secure" title="{{spt "Secure.Message"}}"></i>{{/if}}{{#if fwd}}<span class="spt-bb-fwd"><i class="fas fa-share"></i> {{spt "Fwd.Forwarded"}}</span>{{/if}}{{{att}}}{{#if text}}<div>{{{text}}}</div>{{/if}}</div>
+          <div class="spt-bb {{dir}} {{#if pending}}pending{{/if}}">{{#if secure}}<i class="fas fa-shield-halved spt-secure spt-bb-secure" title="{{spt "Secure.Message"}}"></i>{{/if}}{{#if fwd}}<span class="spt-bb-fwd"><i class="fas fa-share"></i> {{spt "Fwd.Forwarded"}}</span>{{/if}}{{{att}}}{{#if text}}<div>{{{text}}}</div>{{/if}}{{#if ago}}<small class="spt-bb-ago" title="{{when}}">{{ago}}</small>{{/if}}</div>
           {{/each}}
           {{#if unknown}}
           <div class="spt-unknown-box" data-unknown="{{key}}">
@@ -196,7 +197,6 @@
         {{/each}}
       </div>
       {{#if moreThreads}}<a class="spt-mark-all" data-action="moreThreads">{{spt "Gm.ShowMore"}}</a>{{/if}}
-      {{#if showMarkAll}}<a class="spt-mark-all" data-action="markAllSeen">{{spt "Gm.MarkAllSeen"}}</a>{{/if}}
       {{else}}
       <p class="spt-phone-status">{{spt "Gm.NoInbox"}}</p>
       {{/if}}
@@ -428,6 +428,7 @@
   {{/if}}
   {{#if (eq tab "files")}}
     <section class="spt-gm-files">
+      {{#if files.noFiles}}<p class="spt-fx-intro"><i class="fas fa-circle-info"></i> {{spt "Files.Intro"}}</p>{{/if}}
       {{#if files.hasComputers}}
       <div class="spt-segmented spt-fx-view" role="radiogroup" aria-label="{{spt "Files.GroupBy"}}">
         <a data-action="filesView" data-view="device" class="{{#if (eq files.view "device")}}active{{/if}}" role="radio"><i class="fas fa-desktop"></i> {{spt "Files.ByDevice"}}</a>

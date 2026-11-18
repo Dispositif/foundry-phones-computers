@@ -9,7 +9,7 @@ import { sendSms } from "./messages.js";
 import { hangUpAll, pendingCalls, ring } from "./ring.js";
 import { clock, liveCalls, timerHtml } from "./live-call.js";
 import { esc, isMasked, nl2br, norm } from "./util.js";
-import { t, tn } from "./i18n.js";
+import { currentLang, t, tn } from "./i18n.js";
 import { OPERATORS, SAT_OPERATORS, deviceName } from "./names.js";
 import { satellitePolicy, universe, universeKey } from "./universes.js";
 import { openWelcome } from "./welcome.js";
@@ -184,6 +184,20 @@ function pinnedDevices(phones) {
       return { number: p.phone.number, name: `${where || p.phone.label} · ${where ? modelLabel(p.phone) : p.phone.number}` };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * GM panel only (out of game, real time is fine): "just now", "5 min ago", "3 h ago", "12 days ago",
+ * "4 months ago", "2 years ago".
+ */
+function timeAgo(ts) {
+  if (!ts) return "";
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 60) return t("Gm.JustNow");
+  const rtf = new Intl.RelativeTimeFormat(currentLang(), { numeric: "always", style: "short" });
+  const steps = [["minute", 60, 60], ["hour", 3600, 24], ["day", 86400, 30], ["month", 2592000, 12]];
+  for (const [unit, size, max] of steps) if (s / size < max) return rtf.format(-Math.floor(s / size), unit);
+  return rtf.format(-Math.floor(s / 31536000), "year");
 }
 
 /** Agents: the players' characters, and any player-owned actor carrying a device. */
@@ -818,7 +832,10 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
           secure: !!e.secure,
           pending: !!e.pending,
           att: bubbleAtt(e.att),
-          text: e.text ? nl2br(e.text) : ""
+          text: e.text ? nl2br(e.text) : "",
+          // Messages that reach the GM (sent by the agent): how long ago, the date on hover.
+          ago: e.dir === "out" ? timeAgo(e.t) : "",
+          when: e.dir === "out" && e.t ? new Date(e.t).toLocaleString(currentLang()) : ""
         })),
         more: Math.max(0, conv.length - INBOX_BUBBLES)
       };
@@ -1279,7 +1296,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       { key: "locked", label: t("Files.State_locked"), icon: "fa-lock" },
       { key: "hidden", label: t("Files.State_hidden"), icon: "fa-eye-slash" }
     ].map((f) => ({ ...f, n: counts[f.key], active: f.key === filter }));
-    return { groups, filters, view, query: this._state.filesQuery, hasComputers: computers.length > 0 };
+    return { groups, filters, view, query: this._state.filesQuery, hasComputers: computers.length > 0, noFiles: !counts.all };
   }
 
   /**

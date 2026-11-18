@@ -356,6 +356,7 @@ Hooks.once("ready", async () => {
   if (game.user === game.users.activeGM) {
     ensureDeviceItems();
     await migrateUniverse();
+    await dropOldDirectoryTip();
     resetOpenSky();
   }
   updateFab();
@@ -365,6 +366,23 @@ Hooks.once("ready", async () => {
   maybeWelcome();
   maybeNews();
 });
+
+/**
+ * The old sample directory began with a tip and an agent's number (agents are devices now, not
+ * directory lines). Removed from worlds that still have them, untouched if the GM changed them.
+ */
+async function dropOldDirectoryTip() {
+  const TIP = "# Tip: add the agents' own numbers as public, so they all know each other:";
+  const text = game.settings.get(MODULE_ID, "directory") ?? "";
+  const lines = text.split("\n");
+  const i = lines.findIndex((l) => l.trim() === TIP);
+  if (i < 0) return;
+  let n = 1;
+  if (lines[i + 1]?.trim() === "Agent Reyes | 555-0142 | public") n++;
+  if (lines[i + n] !== undefined && !lines[i + n].trim()) n++;
+  lines.splice(i, n);
+  await game.settings.set(MODULE_ID, "directory", lines.join("\n"));
+}
 
 Hooks.on("userConnected", rerenderAll);
 // Renaming the item also renames the device: they share one name.
