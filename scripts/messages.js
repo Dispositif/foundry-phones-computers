@@ -1,6 +1,6 @@
 import { attChatHtml } from "./attachments.js";
 import { MASKED, MODULE_ID, PAGER_MAX, SOCKET } from "./constants.js";
-import { addLog, isSecure, secureWith, setSecureWith, allPhones, defaultDeviceFor, getLog, getPhoneData, hasSignal, holders, isFixed, keyFor, modelOf, msgOn, npcDevices, npcNumber, phoneLabel, phonesByNumber, withItemLock, modeOf } from "./devices.js";
+import { addLog, isSecure, secureWith, setSecureWith, allPhones, defaultDeviceFor, getLog, getPhoneData, hasSignal, holders, isNpcHeld, keyFor, modelOf, msgOn, npcDevices, npcNumber, phoneLabel, phonesByNumber, withItemLock, modeOf } from "./devices.js";
 import { esc, isMasked, maskedLabel, nl2br } from "./util.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
@@ -36,7 +36,7 @@ export async function deliverToPhone(p, senderKeyOrName, text, att = null, { fwd
   const extra = { ...(att ? { att } : {}), ...(fwd ? { fwd: true } : {}), ...(secure && isSecure(p.phone) ? { secure: true } : {}) };
   const switchedOff = modeOf(p.phone) === "off";
   // A carried device no player holds (an NPC's): already read, so PCs who get it later see no unread badge.
-  const read = !isFixed(p.phone) && !holders(p).length;
+  const read = isNpcHeld(p);
   if (!hasSignal(p.phone) || switchedOff) {
     // Pending: delivered (chat copy, beep) when signal returns or the device is switched on.
     await addLog(p.item, { kind: "sms", dir: "in", with: key, text, read, pending: true, ...extra });

@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf } from "./devices.js";
+import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -162,7 +162,7 @@ function collectThreads(phones) {
 
 /** A device the GM can pin: installed in a place, or carried by no PC (an NPC's, or given to nobody). */
 function pinnable(p) {
-  return isFixed(p.phone) || !holders(p).length;
+  return isFixed(p.phone) || isNpcHeld(p);
 }
 
 /** Pinned devices, for the sender list and Messages: { number, name } ("Dr Kane · Smartphone", "Motel Starlite · Landline"). */
