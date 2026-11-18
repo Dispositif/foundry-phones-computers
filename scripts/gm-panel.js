@@ -640,7 +640,10 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     // Order: agents' devices first, then other carried devices, then fixed ones (by label within each group).
     // An NPC's device is left out: nobody would receive it (the GM writes or calls FROM it instead).
     const rank = (p) => (isFixed(p.phone) ? 2 : p.actor?.hasPlayerOwner ? 0 : 1);
-    const byRank = phones.filter((p) => !isNpcHeld(p)).sort((a, b) => rank(a) - rank(b));
+    // Devices already reached through a PC card or a place card are not repeated here.
+    const pcIds = new Set(reachable.map((u) => u.character.id));
+    const onCard = (p) => (isFixed(p.phone) ? !!game.scenes.get(p.phone.sceneId) && landlineUsers(p.phone).length > 0 : pcIds.has(p.actor?.id));
+    const byRank = phones.filter((p) => !isNpcHeld(p) && !onCard(p)).sort((a, b) => rank(a) - rank(b));
     const numbers = [...new Map(byRank.map((p) => [norm(p.phone.number), p.phone.number])).values()];
     const targetDevices = numbers.map((n) => {
       const ps = phones.filter((p) => norm(p.phone.number) === norm(n));
@@ -678,7 +681,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     };
     const selectedTile = tiles.find((p) => tileValue(p) === st.target);
     const sendAgents = reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img, offline: !u.active, active: st.sendKind === "agent" && st.sendId === u.id }));
-    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, active: st.sendKind === "place" && st.sendId === pl.id }));
+    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, img: game.scenes.get(pl.id)?.thumb || null, active: st.sendKind === "place" && st.sendId === pl.id }));
     const sendTiles = tiles.map((p) => ({
       target: tileValue(p),
       label: p.phone.label,
