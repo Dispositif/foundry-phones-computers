@@ -1,5 +1,5 @@
 import { ApplicationV2, HANGUP_SRC, MODULE_ID, SECURE_SRC, SOCKET } from "./constants.js";
-import { getPhoneData, isFixed, patchLog } from "./devices.js";
+import { getPhoneData, isFixed, npcCarrier, patchLog } from "./devices.js";
 import { esc, isActiveGM, isMasked, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -33,7 +33,10 @@ export function agentSide(item, userId) {
  * secure = the GM speaks for the NPC on a secure line.
  */
 export function npcSide(number, seen, gm = seen, secure = false) {
-  return { pc: false, number: String(number ?? ""), seen, gm, secure: !!secure, userIds: [], itemUuid: null };
+  // Calling from (or to) a device an NPC carries: the GM sees that NPC's name and portrait.
+  const carrier = isMasked(number) ? null : npcCarrier(number);
+  if (carrier && (!gm || gm === String(number ?? ""))) gm = carrier.name;
+  return { pc: false, number: String(number ?? ""), seen, gm, gmImg: carrier?.img ?? null, secure: !!secure, userIds: [], itemUuid: null };
 }
 
 /** A secure line: both ends are secure (encrypted) devices, or a secure NPC. */
@@ -316,7 +319,7 @@ function display(data, side) {
   const user = game.user;
   const mine = mySide(data);
   const number = (name) => (isMasked(side.number) || side.number === name ? "" : side.number);
-  if (user.isGM) return side.pc ? { name: side.name, img: side.img, sub: side.sub, pc: true, compromised: side.compromised } : { name: side.gm, sub: number(side.gm) };
+  if (user.isGM) return side.pc ? { name: side.name, img: side.img, sub: side.sub, pc: true, compromised: side.compromised } : { name: side.gm, img: side.gmImg ?? null, sub: number(side.gm) };
   // On the line: the other end as their own device names it (contact, otherwise number), with the face if it is an agent.
   if (mine) return { name: side.seen, img: side.pc ? side.img : null, sub: number(side.seen), pc: side.pc };
   // The rest of the table hears one side only: an NPC stays unknown.
@@ -351,7 +354,8 @@ class LiveCallWindow extends ApplicationV2 {
     const mine = mySide(data);
     const person = (side, ringing = false) => {
       const d = display(data, side);
-      const face = d.pc && d.img ? `<div class="spt-live-face" style="background-image:url('${esc(d.img)}')"></div>` : `<div class="spt-live-face unknown"><i class="fas fa-user"></i></div>`;
+      // Agents' faces; the GM also sees the portrait of an NPC calling from their own device.
+      const face = d.img ? `<div class="spt-live-face" style="background-image:url('${esc(d.img)}')"></div>` : `<div class="spt-live-face unknown"><i class="fas fa-user"></i></div>`;
       // GM only: a compromised device on the line (tapped, known to the enemy).
       const warn = d.compromised ? `<div class="spt-live-warn"><i class="fas fa-triangle-exclamation"></i> ${t("Live.Tapped")}</div>` : "";
       return `<div class="spt-live-person ${d.pc ? "pc" : ""} ${ringing ? "ringing" : ""}">${face}<div class="spt-live-name">${esc(d.name)}</div>${d.sub ? `<div class="spt-live-sub">${esc(d.sub)}</div>` : ""}${warn}</div>`;
