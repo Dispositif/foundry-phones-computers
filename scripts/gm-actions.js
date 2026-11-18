@@ -1,5 +1,5 @@
 import { MODULE_ID, PAGER_MAX, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
-import { addLog, isComputer, isFixed, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, npcDevices, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
+import { addLog, isComputer, isNpcHeld, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
 import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js";
@@ -10,9 +10,6 @@ import { cancelLink, requestLink, satDevices, satPending } from "./satellite.js"
 
 /** The sending device as a device entry ({ item, phone, actor }), for the satellite check. */
 const entryOf = (item) => ({ item, phone: getPhoneData(item), actor: item?.parent instanceof Actor ? item.parent : null });
-
-/** A carried device no player holds (an NPC's): the GM answers for it, like an NPC. */
-const npcHeld = (p) => !isFixed(p.phone) && !holders(p).length;
 /* -------------------------------------------- */
 /*  GM: handling player actions                 */
 /* -------------------------------------------- */
@@ -45,7 +42,7 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
   // Between PCs, a pager gets the message directly (cut to its one line), like dialing a pager and keying a callback number.
   const reached = phonesByNumber(key).concat(phonesByNumber(to)).filter((p, i, arr) => p.item !== from && arr.findIndex((q) => q.item === p.item) === i);
   // A device an NPC carries: the message goes to the GM, like any NPC.
-  const targets = reached.filter((p) => !npcHeld(p));
+  const targets = reached.filter((p) => !isNpcHeld(p));
   if (targets.some((p) => modelOf(p.phone).pager) && text.replace(/\s+/g, " ").trim().length > PAGER_MAX) {
     game.socket.emit(SOCKET, { type: "smsResult", targetUserId: userId, result: "pagerCut" });
   }
@@ -80,7 +77,7 @@ export async function onPlayerSms({ fromItemUuid, to, text, att = null, fwd = fa
     if (fwd && fwdSecure && !secure) warnLeak(who, displayName(fromPhone, key));
     await addLog(from, { kind: "sms", dir: "out", with: key, text, seen: false, ...extra, ...(secure ? { secure: true } : {}) });
     // A device an NPC carries keeps the message in its history (found if the PCs get hold of it).
-    for (const p of reached.filter(npcHeld)) await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(p.phone, fromPhone.number), text, read: true, npc: true, ...extra });
+    for (const p of reached.filter(isNpcHeld)) await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(p.phone, fromPhone.number), text, read: true, npc: true, ...extra });
     const toName = displayName(fromPhone, key);
     ui.notifications.info(`📱 ${t("Gm.WritesTo", { who, name: toName })}`);
     playLocal(SMS_SRC);
@@ -117,8 +114,8 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   // A landline with nobody in the room: the GM answers in place of whoever is there (NPC).
   const emptyRooms = targets.length > 0 && targets.every((p) => isLandline(p.phone) && !holders(p, { activeOnly: true }).length);
   // A device an NPC carries (no player holds it): the GM answers as that NPC.
-  const npcDevices = targets.length > 0 && !emptyRooms && targets.every(npcHeld);
-  const gmAnswers = emptyRooms || npcDevices;
+  const npcEnd = targets.length > 0 && !emptyRooms && targets.every(isNpcHeld);
+  const gmAnswers = emptyRooms || npcEnd;
 
   // Satellite at either end: the GM decides first; the caller's device searches for the satellite meanwhile.
   const sats = satDevices([entryOf(from), ...targets]);
@@ -143,7 +140,7 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
   if (!targets.length && isOffNumber(fromPhone, key)) return finishOrigin(origin, "unassigned");
   const place = emptyRooms ? `📍 ${targets.map((p) => `${p.phone.label} (${game.scenes.get(p.phone.sceneId)?.name ?? t("NoPlace")})`).join(", ")}` : "";
   // The NPC whose device rings: the GM sees who is called.
-  const npcDevice = npcDevices ? targets.map((p) => `${p.actor?.name ?? holderName(p.item, p.phone)} (${p.phone.label})`).join(", ") : "";
+  const npcDevice = npcEnd ? targets.map((p) => `${p.actor?.name ?? holderName(p.item, p.phone)} (${p.phone.label})`).join(", ") : "";
 
   // To an NPC: the GM picks the outcome.
   const who = `${holderName(from, fromPhone)} (${fromPhone.label})`;

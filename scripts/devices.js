@@ -634,9 +634,17 @@ export function npcCarrier(number) {
   return npcDevices(number).find((p) => p.actor)?.actor ?? null;
 }
 
-/** Carried devices with this number that no player holds (an NPC's, or a world item given to nobody): the GM speaks for them. */
+/**
+ * A carried device no player holds: an NPC's, or a world item given to nobody. The GM speaks for it
+ * (calls and messages reach the GM), and what it receives is already read.
+ */
+export function isNpcHeld(p) {
+  return !isFixed(p.phone) && !holders(p).length;
+}
+
+/** Devices with this number that the GM speaks for (see isNpcHeld). */
 export function npcDevices(number) {
-  return phonesByNumber(number).filter((p) => !isFixed(p.phone) && !holders(p).length);
+  return phonesByNumber(number).filter(isNpcHeld);
 }
 
 /** Number known nowhere (no contact, no directory entry, no device): probably a wrong number. */
