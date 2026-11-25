@@ -1568,6 +1568,7 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 .spt-device-entry .spt-item-sub { font-size: 0.75em; opacity: 0.65; }
 .spt-device-entry .spt-item-sub i { font-size: 0.9em; margin-right: 2px; }
 .spt-device-entry .spt-compromised { color: #d2402f; font-size: 0.85em; }
+.spt-device-entry .spt-item-lock { font-size: 0.8em; opacity: 0.75; }
 .spt-gm .spt-place-card.deadzone { outline: 2px solid #ff9f0a; outline-offset: -2px; }
 /* Player: "you got a device" window */
 .spt-given .spt-given-body { display: flex; align-items: center; gap: 12px; }

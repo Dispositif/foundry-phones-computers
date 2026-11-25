@@ -11,7 +11,7 @@
 import { LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
 import { DIRECTORY_SAMPLE } from "./directory-sample.js";
 import { ensureDeviceItems, openSystemSheet, registerPhoneSheet } from "./item-sheet.js";
-import { allPhones, createPhone, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress, sharedUsers } from "./devices.js";
+import { allPhones, createPhone, freeNpcNumber, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, npcDirectory, randomAddress, saveNpc, sharedUsers } from "./devices.js";
 import { openPager } from "./pager.js";
 import { myJammers, openJammer, registerJammerHooks } from "./jammer.js";
 import { editPhoneDialog, giveDialog, newPhoneDialog, transferPhone } from "./dialogs.js";
@@ -430,7 +430,7 @@ Hooks.on("renderItemDirectory", (app, html) => {
 
 /**
  * GM, Items sidebar: under each device's name, a small caption (place or holder · number/email)
- * and a warning when it is compromised. Display only: the item's name is never changed.
+ * a lock when it is locked, a warning when it is compromised. Display only: the item's name is never changed.
  */
 Hooks.on("renderItemDirectory", (app, html) => {
   if (!game.user.isGM) return;
@@ -444,9 +444,10 @@ Hooks.on("renderItemDirectory", (app, html) => {
       ? `<i class="fas fa-location-dot"></i> ${esc(game.scenes.get(phone.sceneId)?.name ?? t("NoPlace"))}`
       : esc(sharedUsers(item).length ? t("Gm.Shared") : t("Gm.Nobody"));
     const address = isJammer(phone) ? "" : String(phone.number ?? "");
+    const lock = phone.locked ? ` <i class="fas fa-lock spt-item-lock" title="${esc(t("Lock.Locked"))}"></i>` : "";
     const warn = phone.compromised ? ` <i class="fas fa-triangle-exclamation spt-compromised" title="${esc(t("Gm.Compromised"))}"></i>` : "";
     li.classList.add("spt-device-entry");
-    name.innerHTML = `<span class="spt-item-name">${esc(item.name)}${warn}</span><span class="spt-item-sub">${where}${address ? ` · ${esc(address)}` : ""}</span>`;
+    name.innerHTML = `<span class="spt-item-name">${esc(item.name)}${lock}${warn}</span><span class="spt-item-sub">${where}${address ? ` · ${esc(address)}` : ""}</span>`;
   }
 });
 
@@ -487,6 +488,48 @@ Hooks.once("ready", () => {
       o.condition = (li) => !isDevice(li) && (typeof cond === "function" ? cond(li) : cond ?? true);
     }
   });
+});
+
+/**
+ * GM, right-click on an NPC in the Actors sidebar: "Add to the directory" (its name, a new free number).
+ * Nothing when the name is already listed or the NPC carries a device (its number is already known).
+ */
+Hooks.on("getActorContextOptions", (app, options) => {
+  const npc = (li) => {
+    const el = li instanceof HTMLElement ? li : li?.[0];
+    const actor = game.actors.get(el?.dataset.entryId ?? el?.dataset.documentId);
+    return actor && !actor.hasPlayerOwner ? actor : null;
+  };
+  options.push({
+    name: t("Directory.Add"),
+    icon: '<i class="fas fa-phone"></i>',
+    condition: (li) => game.user.isGM && !!npc(li),
+    callback: (li) => addActorToDirectory(npc(li))
+  });
+});
+
+/** GM: adds an NPC to the phone directory (its name, a new free number), unless already listed or carrying a device. */
+async function addActorToDirectory(actor) {
+  if (!game.user.isGM || !actor || actor.hasPlayerOwner) return;
+  const name = actor.name.trim();
+  // Foundry notifications accept simple HTML: the phone handset icon, the actor's name escaped.
+  const notice = (key, data = {}) => ui.notifications.info(`<i class="fas fa-phone"></i> ${t(key, { name: esc(name), ...data })}`);
+  if (npcDirectory().some((e) => norm(e.name ?? "") === norm(name))) return notice("Directory.ActorAlready");
+  if (actor.items.some((i) => getPhoneData(i))) return notice("Directory.ActorHasDevice");
+  const number = freeNpcNumber();
+  if (await saveNpc({ name, number })) notice("Directory.ActorAdded", { number: esc(number) });
+}
+
+/** GM, an NPC's sheet: "Add to the directory" in the window menu (⋮). V2 sheets (Delta Green…) and older V1 sheets. */
+Hooks.on("getHeaderControlsActorSheetV2", (app, controls) => {
+  const actor = app.document;
+  if (!game.user.isGM || !actor || actor.hasPlayerOwner) return;
+  controls.push({ icon: "fas fa-phone", label: t("Directory.Add"), action: "sptAddToDirectory", onClick: () => addActorToDirectory(actor) });
+});
+Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
+  const actor = app.actor ?? app.document;
+  if (!game.user.isGM || !actor || actor.hasPlayerOwner) return;
+  buttons.unshift({ label: t("Directory.Add"), class: "spt-add-directory", icon: "fas fa-phone", onclick: () => addActorToDirectory(actor) });
 });
 
 /** GM: scenes marked "dead zone" get an icon in the Scenes sidebar (Foundry re-renders it when a scene changes). */

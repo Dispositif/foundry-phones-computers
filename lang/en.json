@@ -352,7 +352,8 @@
     "OutOfReach": "{label} is out of reach.",
     "Lock": {
       "Session": "Session locked",
-      "User": "User name"
+      "User": "User name",
+      "Locked": "Locked"
     },
     "NoMessage": "No message",
     "You": "You",
@@ -605,7 +606,10 @@
         "one": "{n} call",
         "other": "{n} calls"
       },
-      "Purpose": "Copy the whole directory, or paste a list (from your notes, another world…). Saving replaces the current directory. The PCs' and places' numbers are not here: they come from their devices (Devices tab)."
+      "Purpose": "Copy the whole directory, or paste a list (from your notes, another world…). Saving replaces the current directory. The PCs' and places' numbers are not here: they come from their devices (Devices tab).",
+      "ActorAdded": "{name} added to the phone directory: {number}.",
+      "ActorAlready": "{name} is already in the phone directory.",
+      "ActorHasDevice": "{name} already carries a device: nothing to add."
     },
     "CallOrMessage": "Call / Message",
     "Renamed": {

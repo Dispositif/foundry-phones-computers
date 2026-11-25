@@ -352,7 +352,8 @@
     "OutOfReach": "{label} n'est plus à portée.",
     "Lock": {
       "Session": "Session verrouillée",
-      "User": "Identifiant"
+      "User": "Identifiant",
+      "Locked": "Verrouillé"
     },
     "NoMessage": "Aucun message",
     "You": "Vous",
@@ -605,7 +606,10 @@
         "one": "{n} appel",
         "other": "{n} appels"
       },
-      "Purpose": "Copiez tout l'annuaire, ou collez une liste (depuis vos notes, un autre monde…). Enregistrer remplace l'annuaire actuel. Les numéros des PJ et des lieux n'y figurent pas : ils viennent de leurs appareils (onglet Appareils)."
+      "Purpose": "Copiez tout l'annuaire, ou collez une liste (depuis vos notes, un autre monde…). Enregistrer remplace l'annuaire actuel. Les numéros des PJ et des lieux n'y figurent pas : ils viennent de leurs appareils (onglet Appareils).",
+      "ActorAdded": "{name} ajouté à l'annuaire téléphonique : {number}.",
+      "ActorAlready": "{name} est déjà dans l'annuaire téléphonique.",
+      "ActorHasDevice": "{name} porte déjà un appareil : rien à ajouter."
     },
     "CallOrMessage": "Appeler / Écrire",
     "Renamed": {
