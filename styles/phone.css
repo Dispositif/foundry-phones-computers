@@ -1562,6 +1562,12 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 .spt-gm .spt-tile.deadzone small { color: #ff9f0a; opacity: 1; }
 /* Scenes sidebar: dead zone mark (GM) */
 .spt-dz-mark { margin-left: 4px; color: #ff9f0a; font-size: 0.8em; }
+/* Items sidebar (GM): device name with a small caption (place or holder · number). */
+.directory .directory-item.spt-device-entry .entry-name { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; min-width: 0; }
+.spt-device-entry .spt-item-name, .spt-device-entry .spt-item-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spt-device-entry .spt-item-sub { font-size: 0.75em; opacity: 0.65; }
+.spt-device-entry .spt-item-sub i { font-size: 0.9em; margin-right: 2px; }
+.spt-device-entry .spt-compromised { color: #d2402f; font-size: 0.85em; }
 .spt-gm .spt-place-card.deadzone { outline: 2px solid #ff9f0a; outline-offset: -2px; }
 /* Player: "you got a device" window */
 .spt-given .spt-given-body { display: flex; align-items: center; gap: 12px; }

@@ -11,7 +11,7 @@
 import { LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
 import { DIRECTORY_SAMPLE } from "./directory-sample.js";
 import { ensureDeviceItems, openSystemSheet, registerPhoneSheet } from "./item-sheet.js";
-import { allPhones, createPhone, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
+import { allPhones, createPhone, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress, sharedUsers } from "./devices.js";
 import { openPager } from "./pager.js";
 import { myJammers, openJammer, registerJammerHooks } from "./jammer.js";
 import { editPhoneDialog, giveDialog, newPhoneDialog, transferPhone } from "./dialogs.js";
@@ -27,7 +27,7 @@ import { maybeWelcome, openWelcome, welcomeOwnedDevices } from "./welcome.js";
 import { maybeNews, openNews } from "./news.js";
 import { hangUp, ring } from "./ring.js";
 import { onSocket } from "./socket.js";
-import { isActiveGM, norm, rerenderAll } from "./util.js";
+import { esc, isActiveGM, norm, rerenderAll } from "./util.js";
 import { initFeatures, registerFeatureSettings } from "./features.js";
 import { resetOpenSky } from "./satellite.js";
 import { loadLanguages, t, tn } from "./i18n.js";
@@ -396,6 +396,11 @@ Hooks.on("preUpdateItem", (item, changes) => {
 // Presence on a scene: who sees installed devices (terminal).
 for (const hook of ["createToken", "deleteToken", "canvasReady"]) Hooks.on(hook, () => rerenderAll());
 
+// A renamed scene: the Items sidebar captions of its installed devices follow.
+Hooks.on("updateScene", (scene, changes) => {
+  if (game.user.isGM && "name" in (changes ?? {}) && game.items.some((i) => getPhoneData(i)?.sceneId === scene.id)) ui.items?.render();
+});
+
 // Dead zones: a scene unmarked delivers what was waiting (a player changing scene: see updateUser).
 Hooks.on("updateScene", (scene, changes) => {
   if (changes?.flags?.[MODULE_ID] === undefined) return;
@@ -424,6 +429,28 @@ Hooks.on("renderItemDirectory", (app, html) => {
 });
 
 /**
+ * GM, Items sidebar: under each device's name, a small caption (place or holder · number/email)
+ * and a warning when it is compromised. Display only: the item's name is never changed.
+ */
+Hooks.on("renderItemDirectory", (app, html) => {
+  if (!game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  for (const li of root?.querySelectorAll("li.directory-item.entry") ?? []) {
+    const item = game.items.get(li.dataset.entryId ?? li.dataset.documentId);
+    const phone = item && getPhoneData(item);
+    const name = li.querySelector(".entry-name");
+    if (!phone || !name || name.querySelector(".spt-item-sub")) continue;
+    const where = isFixed(phone)
+      ? `<i class="fas fa-location-dot"></i> ${esc(game.scenes.get(phone.sceneId)?.name ?? t("NoPlace"))}`
+      : esc(sharedUsers(item).length ? t("Gm.Shared") : t("Gm.Nobody"));
+    const address = isJammer(phone) ? "" : String(phone.number ?? "");
+    const warn = phone.compromised ? ` <i class="fas fa-triangle-exclamation spt-compromised" title="${esc(t("Gm.Compromised"))}"></i>` : "";
+    li.classList.add("spt-device-entry");
+    name.innerHTML = `<span class="spt-item-name">${esc(item.name)}${warn}</span><span class="spt-item-sub">${where}${address ? ` · ${esc(address)}` : ""}</span>`;
+  }
+});
+
+/**
  * GM, right-click on a device in the Items sidebar: edit it, give it, or open Foundry's own item sheet
  * (a plain click opens the device's GM view). v13+ hook, li is the entry element.
  */
@@ -434,17 +461,32 @@ Hooks.on("getItemContextOptions", (app, options) => {
     return item && getPhoneData(item) ? item : null;
   };
   const isDevice = (li) => game.user.isGM && !!device(li);
-  // Foundry's "Edit" opens the GM view, as a plain click does: hidden for devices.
-  const edit = options.find((o) => o.name === "SIDEBAR.Edit" || o.name === game.i18n.localize("SIDEBAR.Edit"));
-  if (edit) {
-    const cond = edit.condition;
-    edit.condition = (li) => !device(li) && (typeof cond === "function" ? cond(li) : cond ?? true);
-  }
   options.unshift(
     { name: t("EditDevice"), icon: '<i class="fas fa-gear"></i>', condition: isDevice, callback: (li) => editPhoneDialog(device(li)) },
     { name: `${t("Give.Give")}…`, icon: '<i class="fas fa-hand-holding-hand"></i>', condition: (li) => isDevice(li) && !isFixed(getPhoneData(device(li))), callback: (li) => giveDialog(device(li)) },
     { name: t("Sheet.ItemSheet"), icon: '<i class="fas fa-file-lines"></i>', condition: isDevice, callback: (li) => openSystemSheet(device(li)) }
   );
+});
+
+/**
+ * "Edit" (added by Foundry v14, the game system or another module) only opens the device's GM view,
+ * as a plain click does: hidden for devices. Registered at ready, so it runs after the other modules' hooks.
+ */
+const EDIT_KEYS = ["SIDEBAR.Edit", "CONTROLS.CommonEdit", "DOCUMENT.Edit", "Edit"];
+const EDIT_ICON = /fa-(pen-to-square|edit|pen|pencil)\b/;
+Hooks.once("ready", () => {
+  const labels = new Set(EDIT_KEYS.flatMap((k) => [k, game.i18n.localize(k)]));
+  Hooks.on("getItemContextOptions", (app, options) => {
+    const isDevice = (li) => {
+      const el = li instanceof HTMLElement ? li : li?.[0];
+      return !!getPhoneData(game.items.get(el?.dataset.entryId ?? el?.dataset.documentId));
+    };
+    for (const o of options) {
+      if (!labels.has(o.name) && !labels.has(game.i18n.localize(o.name ?? "")) && !EDIT_ICON.test(o.icon ?? "")) continue;
+      const cond = o.condition;
+      o.condition = (li) => !isDevice(li) && (typeof cond === "function" ? cond(li) : cond ?? true);
+    }
+  });
 });
 
 /** GM: scenes marked "dead zone" get an icon in the Scenes sidebar (Foundry re-renders it when a scene changes). */
@@ -502,6 +544,8 @@ for (const hook of ["createItem", "updateItem", "deleteItem"]) {
     // Ownership counts too: giving a world device to players gives them access.
     const touched = hook === "updateItem" ? changes?.flags?.[MODULE_ID] !== undefined || (!!changes?.ownership && !!getPhoneData(item)) : !!getPhoneData(item);
     if (touched) rerenderAll();
+    // A world device changed (place, number, compromised…): the GM's Items sidebar captions follow.
+    if (touched && hook === "updateItem" && game.user.isGM && !item.parent) ui.items?.render();
     // Signal back, or switched back on: deliver what was waiting.
     const ph = changes?.flags?.[MODULE_ID]?.phone;
     if (hook === "updateItem" && isActiveGM() && (ph?.noSignal === false || (ph?.mode && ph.mode !== "off"))) flushPending(item);
