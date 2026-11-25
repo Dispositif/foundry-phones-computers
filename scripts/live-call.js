@@ -1,5 +1,5 @@
 import { ApplicationV2, HANGUP_SRC, MODULE_ID, SECURE_SRC, SOCKET } from "./constants.js";
-import { findNpc, getPhoneData, isFixed, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
+import { directoryActor, findNpc, getPhoneData, isFixed, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
 import { esc, isActiveGM, isMasked, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -41,15 +41,16 @@ export function placeSide(item) {
  * secure = the GM speaks for the NPC on a secure line.
  */
 export function npcSide(number, seen, gm = seen, secure = false, agentPhone = null) {
-  // Calling from (or to) a device an NPC carries: the GM sees that NPC's name and portrait.
+  // Calling from (or to) a device an NPC carries: the GM sees that NPC's name and portrait
+  // (otherwise the portrait of the NPC actor named like the directory line).
   const carrier = isMasked(number) ? null : npcCarrier(number);
   // Given only as a number (the GM calls from a directory line): the directory name, the number below it.
   if (!gm || gm === String(number ?? "")) gm = (isMasked(number) ? null : findNpc(number, { all: true })?.name) || carrier?.name || gm;
   // The players see the portrait only if the agent on the line knows the number (contact) or it is public.
-  const face = carrier && agentPhone ? knownNpcFace(agentPhone, number) : null;
+  const face = agentPhone ? knownNpcFace(agentPhone, number) : null;
   // Spectators: only a public number (public device or directory line) shows who it is.
   const pub = publicNpc(number);
-  return { pc: false, number: String(number ?? ""), seen, gm, gmImg: carrier?.img ?? null, face, pub, secure: !!secure, userIds: [], itemUuid: null };
+  return { pc: false, number: String(number ?? ""), seen, gm, gmImg: carrier?.img ?? directoryActor(number)?.img ?? null, face, pub, secure: !!secure, userIds: [], itemUuid: null };
 }
 
 /** A secure line: both ends are secure (encrypted) devices, or a secure NPC. */

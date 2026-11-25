@@ -676,26 +676,44 @@ export function isNpcHeld(p) {
 }
 
 /**
- * Portrait of the NPC behind this number, as an agent's device may show it: only an NPC actor's
- * own device, and only if the agent knows the number (in their contacts) or it is public (device or directory line).
+ * Portrait of the NPC behind this number, as an agent's device may show it: an NPC actor's own device,
+ * otherwise the actor named like the directory line; only if the agent knows the number (in their contacts)
+ * or it is public (device or directory line).
  */
 export function knownNpcFace(agentPhone, number) {
+  if (!number || isMasked(number)) return null;
   const dev = npcDevices(number).find((p) => p.actor);
-  if (!dev) return null;
   // Known: in the agent's contacts, a public device, or a public directory line with this number.
-  return findContact(agentPhone, number) || dev.phone.pub || findNpc(number) ? dev.actor.img : null;
+  if (dev) return findContact(agentPhone, number) || dev.phone.pub || findNpc(number) ? dev.actor.img : null;
+  // A directory line named like an NPC actor: that actor's portrait, same rule (contact or public line).
+  const actor = directoryActor(number);
+  return actor && (findContact(agentPhone, number) || findNpc(number)) ? actor.img : null;
+}
+
+/**
+ * The NPC actor named like this number's directory line (case and extra spaces ignored), when exactly one
+ * actor no player owns has that name. Its portrait stands for the line; nothing is stored.
+ */
+export function directoryActor(number) {
+  if (!number || isMasked(number)) return null;
+  const name = findNpc(number, { all: true })?.name;
+  if (!name) return null;
+  const key = (x) => norm(x).replace(/\s+/g, " ");
+  const k = key(name);
+  const found = game.actors.filter((a) => !a.hasPlayerOwner && key(a.name) === k);
+  return found.length === 1 ? found[0] : null;
 }
 
 /**
  * The NPC behind a public number, as the whole table may see it: { name, img } for a public NPC
- * device or a public directory line (no portrait without an NPC actor). null otherwise.
+ * device or a public directory line (portrait: the NPC actor carrying it, or named like the line). null otherwise.
  */
 export function publicNpc(number) {
   if (!number || isMasked(number)) return null;
   const dev = npcDevices(number).find((p) => p.actor);
   const line = findNpc(number);
   if (dev && (dev.phone.pub || line)) return { name: line?.name || dev.actor.name, img: dev.actor.img };
-  return line?.name ? { name: line.name, img: null } : null;
+  return line?.name ? { name: line.name, img: directoryActor(number)?.img ?? null } : null;
 }
 
 /** Devices with this number that the GM speaks for (see isNpcHeld). */
