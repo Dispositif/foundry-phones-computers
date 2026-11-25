@@ -324,6 +324,28 @@ export function inDeadZone(actor) {
   });
 }
 
+/**
+ * GM: scenes marked "dead zone" where connected players are, with their characters' names.
+ * Jammed scenes are left out (they have their own chips).
+ */
+export function deadZoneScenes() {
+  const out = new Map();
+  for (const u of game.users) {
+    if (u.isGM || !u.active) continue;
+    const scene = game.scenes.get(u.viewedScene);
+    if (!scene?.getFlag(MODULE_ID, "deadZone")) continue;
+    if (!out.has(scene.id)) out.set(scene.id, { id: scene.id, name: scene.name, who: [] });
+    out.get(scene.id).who.push(u.character?.name ?? u.name);
+  }
+  return [...out.values()];
+}
+
+/** Dead zone scene a connected player is on (or null). */
+export function userDeadZone(user) {
+  const scene = user?.active ? game.scenes.get(user.viewedScene) : null;
+  return scene?.getFlag(MODULE_ID, "deadZone") ? scene : null;
+}
+
 /** Mobile network only: network cut, no signal for this device, or its holder in a dead zone (or jammed). */
 export function mobileSignal(phone) {
   // An installed device does not depend on the mobile network: it always has a line.

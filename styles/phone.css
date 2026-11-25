@@ -481,6 +481,7 @@ a.spt-bb-doc { cursor: pointer; text-decoration: underline dotted; }
 #spt-phone-fab .spt-fab.open { outline: 2px solid rgba(232,232,232,0.85); outline-offset: 2px; }
 /* GM: whole network cut */
 #spt-phone-fab .spt-fab.netdown { outline: 3px solid #ff3b30; outline-offset: 2px; }
+#spt-phone-fab .spt-fab.deadzone:not(.netdown) { outline: 3px solid #ff9f0a; outline-offset: 2px; }
 #spt-phone-fab .spt-fab.ringing { animation: spt-fab-ring 0.5s infinite; background: var(--spt-accent); }
 @keyframes spt-fab-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
 
@@ -1549,3 +1550,14 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 .spt-gm-settings .spt-set-advanced .spt-set-row:last-child { border-bottom: none; }
 .spt-gm-settings .spt-set-advanced .spt-set-quip { margin: 0 0 4px; font-size: 0.85em; font-style: italic; opacity: 0.75; }
 .spt-gm-settings .spt-set-icon { width: 1.2em; text-align: center; opacity: 0.8; }
+
+/* ---------- GM panel: PCs in a dead zone ---------- */
+.spt-gm .spt-dz-pill { cursor: pointer; background: rgba(255,159,10,0.18); color: #ffb340; }
+.theme-light .spt-gm .spt-dz-pill { color: #a65a10; }
+.spt-gm .spt-agent-card { position: relative; }
+.spt-gm .spt-agent-card .spt-dz-badge { position: absolute; top: 4px; right: 4px; padding: 3px; border-radius: 50%; background: #ff9f0a; color: #1a0d00; font-size: 0.7em; }
+.spt-gm .spt-tile.deadzone { opacity: 0.55; }
+.spt-gm .spt-tile.deadzone small { color: #ff9f0a; opacity: 1; }
+/* Scenes sidebar: dead zone mark (GM) */
+.spt-dz-mark { margin-left: 4px; color: #ff9f0a; font-size: 0.8em; }
+.spt-gm .spt-place-card.deadzone { outline: 2px solid #ff9f0a; outline-offset: -2px; }

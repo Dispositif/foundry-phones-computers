@@ -400,7 +400,21 @@ for (const hook of ["createToken", "deleteToken", "canvasReady"]) Hooks.on(hook,
 Hooks.on("updateScene", (scene, changes) => {
   if (changes?.flags?.[MODULE_ID] === undefined) return;
   rerenderAll();
+  // Dead zone switched on or off: the GM's Scenes sidebar redraws its mark (Foundry skips it for a flag change).
+  if (game.user.isGM && Object.keys(changes.flags[MODULE_ID] ?? {}).some((k) => k.endsWith("deadZone"))) ui.scenes?.render();
   if (isActiveGM()) flushAll();
+});
+
+/** GM: scenes marked "dead zone" get an icon in the Scenes sidebar (Foundry re-renders it when a scene changes). */
+Hooks.on("renderSceneDirectory", (app, html) => {
+  if (!game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  for (const li of root?.querySelectorAll("li[data-entry-id], li[data-document-id]") ?? []) {
+    const scene = game.scenes.get(li.dataset.entryId ?? li.dataset.documentId);
+    if (!scene?.getFlag(MODULE_ID, "deadZone") || li.querySelector(".spt-dz-mark")) continue;
+    const name = li.querySelector(".entry-name, .document-name, .name") ?? li;
+    name.insertAdjacentHTML("beforeend", ` <i class="fas fa-phone-slash spt-dz-mark" title="${t("Scene.DeadZone")}"></i>`);
+  }
 });
 
 /** Scene configuration: "dead zone" checkbox (no mobile network, no Wi-Fi). */

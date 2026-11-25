@@ -2,6 +2,7 @@
   {{!-- Status bar: network, pending messages, ongoing call --}}
   <header class="spt-gm-status {{#if down}}down{{/if}}" aria-label="{{spt "Gm.Status"}}">
     <span class="spt-pill"><i class="fas fa-signal" title="{{spt "Net.Mobile"}}"></i><i class="fas fa-wifi" title="{{spt "Net.Wifi"}}"></i> {{#if down}}{{spt "Net.DownAll"}}{{else}}{{spt "Net.Ok"}}{{/if}}</span>
+    {{#each deadZones}}<a class="spt-pill spt-dz-pill" data-action="sceneConfig" data-id="{{id}}" title="{{who}}&#10;{{spt "Gm.DeadZoneOpen"}}"><i class="fas fa-phone-slash"></i> {{label}}</a>{{/each}}
     {{#each jams}}<a class="spt-pill spt-jam-pill" data-action="openPhone" data-uuid="{{uuid}}" title="{{spt "Jammer.Open"}}"><i class="fas fa-tower-broadcast"></i> {{label}}</a>{{/each}}
     {{#if pending}}<span class="spt-gm-pending">{{spt "Net.Pending" n=pending}}</span>{{/if}}
     {{#if satSky}}<i class="fas fa-satellite spt-gm-satsky" title="{{spt "Satellite.SkyOpen" scenes=satSky}}"></i>{{/if}}
@@ -62,8 +63,8 @@
         {{#if noAgents}}<p class="spt-no-agents"><i class="fas fa-triangle-exclamation"></i> {{noAgents}}</p>{{/if}}
         {{#if (or sendAgents.length sendPlaces.length)}}
         <div class="spt-agent-cards" role="radiogroup" aria-label="{{spt "Gm.Agents"}}">
-          {{#each sendAgents}}<a class="spt-agent-card {{#if active}}active{{/if}} {{#if offline}}offline{{/if}}" data-action="sendTo" data-kind="agent" data-id="{{id}}" role="radio" title="{{name}}{{#if offline}} ({{spt "Gm.Offline"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></a>{{/each}}
-          {{#each sendPlaces}}<a class="spt-agent-card spt-place-card {{#if active}}active{{/if}} {{#if noLine}}noline{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio" title="{{name}}{{#if noLine}} ({{spt "Gm.NoLineShort"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-location-dot"></i>{{/if}}<span>{{#if noLine}}<i class="fas fa-phone-slash" title="{{spt "Gm.NoLineShort"}}"></i> {{else}}{{#if img}}<i class="fas fa-location-dot"></i> {{/if}}{{/if}}{{name}}</span></a>{{/each}}
+          {{#each sendAgents}}<a class="spt-agent-card {{#if active}}active{{/if}} {{#if offline}}offline{{/if}} {{#if deadZone}}deadzone{{/if}}" data-action="sendTo" data-kind="agent" data-id="{{id}}" role="radio" title="{{name}}{{#if offline}} ({{spt "Gm.Offline"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-user"></i>{{/if}}{{#if deadZone}}<i class="fas fa-phone-slash spt-dz-badge" title="{{spt "Gm.DeadZoneTile" scene=deadZone}}"></i>{{/if}}<span>{{name}}</span></a>{{/each}}
+          {{#each sendPlaces}}<a class="spt-agent-card spt-place-card {{#if active}}active{{/if}} {{#if noLine}}noline{{/if}} {{#if deadZone}}deadzone{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio" title="{{name}}{{#if deadZone}} · {{spt "Scene.DeadZone"}}{{/if}}{{#if noLine}} ({{spt "Gm.NoLineShort"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-location-dot"></i>{{/if}}{{#if deadZone}}<i class="fas fa-phone-slash spt-dz-badge" title="{{spt "Scene.DeadZone"}}"></i>{{/if}}<span>{{#if noLine}}<i class="fas fa-phone-slash" title="{{spt "Gm.NoLineShort"}}"></i> {{else}}{{#if img}}<i class="fas fa-location-dot"></i> {{/if}}{{/if}}{{name}}</span></a>{{/each}}
         </div>
         {{/if}}
         <div class="spt-chips" role="radiogroup" aria-label="{{spt "Gm.OtherDevices"}}">
@@ -78,7 +79,7 @@
         {{else}}
         {{#if sendTiles.length}}
         <div class="spt-tiles" role="radiogroup">
-          {{#each sendTiles}}<a class="spt-tile {{#if selected}}active{{/if}} {{#if fresh}}fresh{{/if}}" data-action="pickDevice" data-target="{{target}}" role="radio"><i class="fas {{icon}}"></i><strong>{{label}}{{#if secure}} <i class="fas fa-shield-halved spt-secure"></i>{{/if}}{{#if satellite}} <i class="fas fa-satellite spt-sat-badge" title="{{spt "Satellite.Device"}}"></i>{{/if}}</strong><small>{{sub}}</small></a>{{/each}}
+          {{#each sendTiles}}<a class="spt-tile {{#if selected}}active{{/if}} {{#if fresh}}fresh{{/if}} {{#if deadZone}}deadzone{{/if}}" data-action="pickDevice" data-target="{{target}}" role="radio"><i class="fas {{icon}}"></i><strong>{{label}}{{#if secure}} <i class="fas fa-shield-halved spt-secure"></i>{{/if}}{{#if satellite}} <i class="fas fa-satellite spt-sat-badge" title="{{spt "Satellite.Device"}}"></i>{{/if}}</strong><small>{{sub}}</small></a>{{/each}}
           {{#if (eq sendKind "agent")}}{{#unless createCard}}<a class="spt-tile spt-tile-add" data-action="addDevice" title="{{spt "Gm.AddDevice"}}" aria-label="{{spt "Gm.AddDevice"}}"><i class="fas fa-plus"></i></a>{{/unless}}{{/if}}
         </div>
         {{/if}}
@@ -137,14 +138,14 @@
         <button type="button" class="spt-icon-btn" data-action="attach" title="{{spt "AttachImage"}}" aria-label="{{spt "AttachImage"}}"><i class="fas fa-paperclip"></i></button>
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
         {{#if canSecure}}<button type="button" class="spt-icon-btn spt-secure-link" data-action="copySecureLink" title="{{spt "Secure.CopyLink"}}" aria-label="{{spt "Secure.CopyLink"}}"><i class="fas fa-link"></i><i class="fas fa-shield-halved"></i></button>{{/if}}
-        <button type="button" class="spt-primary" data-action="sms"><i class="fas fa-paper-plane"></i> {{#if targetName}}{{spt "Gm.SendTo" name=targetName}}{{else}}{{spt "Send"}}{{/if}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
+        <button type="button" class="spt-primary" data-action="sms"><i class="fas fa-paper-plane"></i> {{#if targetName}}{{spt "Gm.SendTo" name=targetName}}{{else}}{{spt "Send"}}{{/if}}{{#if targetDeadZone}} <small>({{spt "Gm.DeadZoneWait"}})</small>{{/if}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
         {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="smsSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Send"}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>{{/if}}
       </div>
       {{else}}
       <div class="spt-phone-row">
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
         {{#if canSecure}}<button type="button" class="spt-icon-btn spt-secure-link" data-action="copySecureLink" title="{{spt "Secure.CopyLink"}}" aria-label="{{spt "Secure.CopyLink"}}"><i class="fas fa-link"></i><i class="fas fa-shield-halved"></i></button>{{/if}}
-        <button type="button" class="spt-primary" data-action="ring"><i class="fas fa-phone-volume"></i> {{#if targetName}}{{spt "Gm.RingTo" name=targetName}}{{else}}{{spt "Gm.Ring"}}{{/if}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
+        <button type="button" class="spt-primary" data-action="ring"><i class="fas fa-phone-volume"></i> {{#if targetName}}{{spt "Gm.RingTo" name=targetName}}{{else}}{{spt "Gm.Ring"}}{{/if}}{{#if targetDeadZone}} <small>({{spt "Gm.DeadZoneNoRing"}})</small>{{/if}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>
         {{#if canSecure}}<button type="button" class="spt-primary spt-secure-btn" data-action="ringSecure" title="{{spt "Secure.BoxHint"}}"><i class="fas fa-shield-halved"></i> {{spt "Secure.Ring"}}{{#if viaSat}} <i class="fas fa-satellite spt-sat-btn" title="{{spt "Satellite.Signal"}}"></i>{{/if}}</button>{{/if}}
       </div>
       {{/if}}

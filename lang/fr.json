@@ -181,6 +181,11 @@
       "PresentHere": "Ici : {names}",
       "InstallLine": "Installer",
       "LineInstalled": "{label} ({number}) installé à {name}",
+      "DeadZoneChip": "Zone blanche : {scene}",
+      "DeadZoneOpen": "Configuration de la scène (zone blanche)",
+      "DeadZoneTile": "Zone blanche ({scene})",
+      "DeadZoneWait": "attendra le réseau",
+      "DeadZoneNoRing": "ne sonnera pas, zone blanche",
       "NoDeviceFor": "{name} n'a pas encore d'appareil",
       "QuickHint": "Un clic lui en donne un. Nom et numéro sont tirés au sort selon l'univers.",
       "Recommended": "conseillé",
@@ -628,7 +633,7 @@
     },
     "Scene": {
       "DeadZone": "Zone blanche",
-      "DeadZoneHint": "Phones & Computers : ni réseau mobile ni Wi-Fi pour les appareils portés par les PJ dont le joueur est sur cette scène. Les fixes et terminaux gardent leur ligne."
+      "DeadZoneHint": "Ni réseau mobile ni Wi-Fi sur cette scène."
     },
     "NewDev": {
       "landline": "Fixe moderne",

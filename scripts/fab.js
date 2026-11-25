@@ -1,6 +1,6 @@
 import { MODULE_ID } from "./constants.js";
 import { t, tn } from "./i18n.js";
-import { allPhones, getLog, getPhoneData, holders, isFixed, isJammer, isPager, jammedScenes, landlineUsers, modeOf, modelOf, playerUnread, iconOf } from "./devices.js";
+import { allPhones, deadZoneScenes, getLog, getPhoneData, holders, isFixed, isJammer, isPager, jammedScenes, landlineUsers, modeOf, modelOf, playerUnread, iconOf } from "./devices.js";
 import { gmIncoming } from "./gm-actions.js";
 import { elapsed, liveCalls, liveOn } from "./live-call.js";
 import { openPanel, openPhone } from "./main.js";
@@ -381,6 +381,10 @@ function updateGmFab() {
   main.title = calling ? t("Gm.AgentCalling") : n ? tn("Unread", n) : t("Gm.PanelTitle");
   if (down) main.title += `\n${t("Net.DownAll")}`;
   if (jams.length) main.title += `\n${t("Jammer.GmFab", { scenes: jams.join(", ") })}`;
+  // PCs in a dead zone: orange outline.
+  const zones = deadZoneScenes();
+  main.classList.toggle("deadzone", zones.length > 0);
+  for (const z of zones) main.title += `\n${t("Gm.DeadZoneChip", { scene: z.name })} (${z.who.join(", ")})`;
   // Devices installed on the scene the GM is viewing: one click opens their GM view.
   const sceneId = canvas?.scene?.id ?? game.user.viewedScene;
   const rooms = sceneId ? allPhones().filter((p) => isFixed(p.phone) && p.phone.sceneId === sceneId) : [];

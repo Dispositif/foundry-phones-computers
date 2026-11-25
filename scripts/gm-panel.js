@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewDoc, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf, newTheme } from "./devices.js";
+import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf, newTheme, deadZoneScenes, userDeadZone } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -444,6 +444,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       reroll: function () { this._setState({ draws: null }); },
       rerollLine: function () { this._setState({ lineDraw: null }); },
       quickLine: function () { this._quickLine(); },
+      sceneConfig: function (event, target) { game.scenes.get(target.dataset.id)?.sheet?.render(true); },
       addDevice: function () { this._newPub = true; this._setState({ adding: true, draws: null }); },
       cancelAdd: function () { this._setState({ adding: false }); },
       moreOptions: async function () {
@@ -734,14 +735,18 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       return [msg, m.noCalls ? null : t("Gm.ModeCall")].filter(Boolean).join(" · ");
     };
     const selectedTile = tiles.find((p) => tileValue(p) === st.target);
-    const sendAgents = reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img, offline: !u.active, active: st.sendKind === "agent" && st.sendId === u.id }));
-    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, img: game.scenes.get(pl.id)?.thumb || null, active: st.sendKind === "place" && st.sendId === pl.id, noLine: !pl.devices.length }));
+    const sendAgents = reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img, offline: !u.active, active: st.sendKind === "agent" && st.sendId === u.id, deadZone: userDeadZone(u)?.name ?? "" }));
+    // The selected PC is in a dead zone: their devices without signal are greyed, the buttons warn.
+    const dz = sendUser ? userDeadZone(sendUser) : null;
+    const dzOff = (p) => !!dz && !isFixed(p.phone) && !hasSignal(p.phone);
+    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, img: game.scenes.get(pl.id)?.thumb || null, active: st.sendKind === "place" && st.sendId === pl.id, noLine: !pl.devices.length, deadZone: !!game.scenes.get(pl.id)?.getFlag(MODULE_ID, "deadZone") }));
     const sendTiles = tiles.map((p) => ({
       target: tileValue(p),
       label: p.phone.label,
       icon: iconOf(p.phone),
       // An agent's device: its number or address; a place's: who is there.
-      sub: st.sendKind === "place" ? landlineUsers(p.phone).map((u) => u.character?.name ?? u.name).join(", ") : p.phone.number,
+      sub: st.sendKind === "place" ? landlineUsers(p.phone).map((u) => u.character?.name ?? u.name).join(", ") : dzOff(p) ? t("Scene.DeadZone") : p.phone.number,
+      deadZone: dzOff(p),
       secure: isSecure(p.phone),
       satellite: isSatellite(p.phone),
       selected: p === selectedTile,
@@ -995,6 +1000,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       down: game.settings.get(MODULE_ID, "networkDown"),
       // Scenes opened to the satellite "for the whole scene": a green satellite in the status bar.
       satSky: feature("satellite") ? (game.settings.get(MODULE_ID, "satSky") ?? []).map((id) => game.scenes.get(id)?.name).filter(Boolean).join(", ") : "",
+      // Dead zones where PCs are: one chip each, a click opens the scene configuration.
+      deadZones: deadZoneScenes().map((z) => ({ id: z.id, label: t("Gm.DeadZoneChip", { scene: z.name }), who: z.who.join(", ") })),
       // Scenes cut by a jammer: one chip each, a click opens the jammer.
       jams: [...jammedScenes()].flatMap(([sceneId, list]) =>
         list.map((p) => ({ uuid: p.item.uuid, label: t("Jammer.Chip", { scene: game.scenes.get(sceneId)?.name ?? "?", who: p.actor?.name ?? p.phone.label }) }))
@@ -1009,6 +1016,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       sendUserId: sendUser?.id ?? "",
       createCard,
       lineCard,
+      targetDeadZone: selectedTile && dzOff(selectedTile) ? dz.name : "",
       createdNote,
       // No agent to write to: no player account, or no player with an assigned character.
       noAgents: reachable.length ? "" : players.length ? t("Gm.NoAgents") : t("Gm.NoPlayers"),

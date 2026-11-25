@@ -181,6 +181,11 @@
       "PresentHere": "Here: {names}",
       "InstallLine": "Install",
       "LineInstalled": "{label} ({number}) installed at {name}",
+      "DeadZoneChip": "Dead zone: {scene}",
+      "DeadZoneOpen": "Scene configuration (dead zone)",
+      "DeadZoneTile": "Dead zone ({scene})",
+      "DeadZoneWait": "will wait for the network",
+      "DeadZoneNoRing": "won't ring, dead zone",
       "NoDeviceFor": "{name} has no device yet",
       "QuickHint": "One click gives one. Name and number are drawn to fit the universe.",
       "Recommended": "recommended",
@@ -628,7 +633,7 @@
     },
     "Scene": {
       "DeadZone": "Dead zone",
-      "DeadZoneHint": "Phones & Computers: no mobile network and no Wi-Fi for the devices carried by PCs whose player is on this scene. Landlines and terminals keep their line."
+      "DeadZoneHint": "No mobile network and no Wi-Fi on this scene."
     },
     "NewDev": {
       "landline": "Modern landline",
