@@ -12,7 +12,7 @@ import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./
 import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
 import { PagerWindow, openPager } from "./pager.js";
 import { skyOpenFor } from "./satellite.js";
-import { BOOT_MS, bootText, hostName, operatorName } from "./names.js";
+import { BOOT_MS, bootText, operatorName } from "./names.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
 /* -------------------------------------------- */
@@ -487,7 +487,6 @@ export class PlayerPhone extends ApplicationV2 {
         </footer>`
       : "";
     return `${this._renderHeader(p, mine)}${this._tabsHtml(p)}
-      <div class="spt-hostname" title="${t("Files.Host")}"><i class="fas fa-network-wired"></i> ${esc(hostName(p.phone))}</div>
       <ul class="spt-files">${rows || `<li class="spt-phone-empty">${t("Files.Empty")}</li>`}</ul>
       ${foot}`;
   }
@@ -681,7 +680,7 @@ export class PlayerPhone extends ApplicationV2 {
     return `<header class="spt-phone-top">${phoneSel}</header>
       <div class="spt-lockscreen">
         <i class="fas ${icon}"></i>
-        ${isComputer(p.phone) ? `<small class="spt-hostname" title="${t("Files.Host")}">${esc(hostName(p.phone))}</small>` : ""}
+        ${isComputer(p.phone) ? `<small class="spt-hostname">${esc(p.phone.label ?? "")}</small>` : ""}
         <p>${text}</p>
         ${login ? `<input type="text" class="spt-fake-login" placeholder="${user}" readonly tabindex="-1"><input type="password" class="spt-fake-login" placeholder="••••••••" readonly tabindex="-1">` : ""}
         ${unread ? `<p class="spt-lock-notif">${tn("Unread", unread)}</p>` : ""}

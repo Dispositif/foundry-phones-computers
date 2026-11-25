@@ -727,8 +727,7 @@
       "NoComputers": "No laptop or terminal yet.",
       "MailFrom": "from {name}",
       "MailTo": "to {name}",
-      "FollowsMailbox": "Email attachment: follows the mailbox ({state})",
-      "Host": "Machine name"
+      "FollowsMailbox": "Email attachment: follows the mailbox ({state})"
     },
     "Secure": {
       "Line": "Secure line",

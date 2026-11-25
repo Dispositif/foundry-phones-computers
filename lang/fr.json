@@ -727,8 +727,7 @@
       "NoComputers": "Aucun laptop ni terminal pour l'instant.",
       "MailFrom": "de {name}",
       "MailTo": "à {name}",
-      "FollowsMailbox": "Pièce jointe d'un mail : suit la messagerie ({state})",
-      "Host": "Nom de la machine"
+      "FollowsMailbox": "Pièce jointe d'un mail : suit la messagerie ({state})"
     },
     "Secure": {
       "Line": "Ligne sécurisée",
