@@ -30,10 +30,7 @@ import { onSocket } from "./socket.js";
 import { esc, isActiveGM, norm, rerenderAll } from "./util.js";
 import { initFeatures, registerFeatureSettings } from "./features.js";
 import { resetOpenSky } from "./satellite.js";
-import { loadLanguages, t, tn } from "./i18n.js";
-
-// Both languages are loaded at startup ("Module language" setting).
-loadLanguages();
+import { t, tn } from "./i18n.js";
 
 
 /* -------------------------------------------- */
@@ -106,7 +103,7 @@ Hooks.once("init", () => {
   registerEnrichers();
   registerJammerHooks();
   registerPhoneSheet();
-  // Templates: {{spt "Key" var=value}} and {{sptn "Key" n}} use the module's texts (module language).
+  // Templates: {{spt "Key" var=value}} and {{sptn "Key" n}} use the module's texts (Foundry's language).
   Handlebars.registerHelper("spt", (key, options) => t(key, options?.hash ?? {}));
   Handlebars.registerHelper("sptn", (key, n) => tn(key, n));
   // Setting labels follow Foundry's language (translated by Foundry from lang/*.json).
@@ -134,16 +131,6 @@ Hooks.once("init", () => {
     choices: Object.fromEntries(["auto", "ops", "haze", "classic"].map((k) => [k, `SPT.Settings.gmLook.${k}`])),
     default: "auto",
     onChange: () => applyGmLook()
-  });
-  game.settings.register(MODULE_ID, "language", {
-    name: "SPT.Settings.language.name",
-    hint: "SPT.Settings.language.hint",
-    scope: "world",
-    config: true,
-    type: String,
-    choices: { auto: "SPT.Settings.language.auto", fr: "Français", en: "English" },
-    default: "auto",
-    requiresReload: true
   });
   game.settings.register(MODULE_ID, "volume", {
     name: "SPT.Settings.volume.name",
@@ -253,7 +240,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
 
 /** Migrates data from former module ids: device flags, item sheet, world and client settings. */
 export async function migrateLegacy() {
-  // Client settings (language, volume): each user's browser, once.
+  // Client settings (volume…): each user's browser, once.
   for (const [key, cfg] of game.settings.settings) {
     if (cfg.namespace !== MODULE_ID || cfg.scope !== "client") continue;
     try {
@@ -345,7 +332,6 @@ Hooks.once("ready", async () => {
   applyGmLook();
   initFeatures(allPhones({ jammers: true }).length > 0);
   game.socket.on(SOCKET, onSocket);
-  await loadLanguages();
   welcomeOwnedDevices();
   document.body.addEventListener("click", (ev) => {
     const link = ev.target.closest?.("a.spt-link");

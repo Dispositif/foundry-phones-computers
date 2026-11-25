@@ -399,11 +399,6 @@
       }
     },
     "Settings": {
-      "language": {
-        "name": "Module language",
-        "hint": "Language of the phone interface for everyone. \"Automatic\" follows each player's Foundry language. Reloads the page.",
-        "auto": "Automatic (Foundry's language)"
-      },
       "volume": {
         "name": "Phone volume",
         "hint": "Volume of the ringtone and message beep on this computer."

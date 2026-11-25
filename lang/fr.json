@@ -399,11 +399,6 @@
       }
     },
     "Settings": {
-      "language": {
-        "name": "Langue du module",
-        "hint": "Langue de l'interface du téléphone pour tout le monde. « Automatique » suit la langue de Foundry de chaque joueur. Recharge la page.",
-        "auto": "Automatique (langue de Foundry)"
-      },
       "volume": {
         "name": "Volume du téléphone",
         "hint": "Volume de la sonnerie et du bip de message sur ce poste."

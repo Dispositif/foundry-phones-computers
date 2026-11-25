@@ -1,56 +1,22 @@
-import { MODULE_ID } from "./constants.js";
 import { universeKey } from "./universes.js";
 
 /* -------------------------------------------- */
-/*  Module language (FR / EN)                   */
+/*  Module texts (Foundry's language, English fallback) */
 /* -------------------------------------------- */
 
-const dicts = {};
-let loading = null;
-
-function flatten(obj, prefix = "", out = {}) {
-  for (const [k, v] of Object.entries(obj ?? {})) {
-    const key = prefix ? `${prefix}.${k}` : k;
-    if (v && typeof v === "object") flatten(v, key, out);
-    else out[key] = v;
-  }
-  return out;
-}
-
-/** Loads both language files (once). */
-export function loadLanguages() {
-  loading ??= Promise.all(
-    ["fr", "en"].map(async (l) => {
-      try {
-        const res = await fetch(`modules/${MODULE_ID}/lang/${l}.json`);
-        dicts[l] = flatten(await res.json());
-      } catch (err) {
-        console.warn(`${MODULE_ID} | lang/${l}.json`, err);
-        dicts[l] = {};
-      }
-    })
-  );
-  return loading;
-}
-
-/** Language chosen in the module settings; "auto" follows Foundry's language. */
+/** "fr" or "en": the user's Foundry language (number and date formats, plurals). */
 export function currentLang() {
-  let l = "auto";
-  try {
-    l = game.settings.get(MODULE_ID, "language");
-  } catch {}
-  if (!l || l === "auto") l = game.i18n?.lang ?? "en";
-  return l.startsWith("fr") ? "fr" : "en";
+  return (game.i18n?.lang ?? "en").startsWith("fr") ? "fr" : "en";
 }
 
 /** Translates a key (SPT. prefix optional), with {name} variables. */
 export function t(key, data = {}) {
   const k = key.startsWith("SPT.") ? key : `SPT.${key}`;
-  const l = currentLang();
-  // The universe's vocabulary first ("Universe.<key>.<same key>"), then the usual text.
+  // The universe's vocabulary first ("Universe.<key>.<same key>"), then the usual text; the user's language, then English.
   const uk = `SPT.Universe.${universeKey()}.${k.slice(4)}`;
-  let s = (uk && dicts[l]?.[uk]) ?? dicts[l]?.[k] ?? (uk && dicts.en?.[uk]) ?? dicts.en?.[k] ?? dicts.fr?.[k];
-  if (s === undefined) s = game.i18n?.has?.(k) ? game.i18n.localize(k) : k;
+  const i18n = game.i18n;
+  const found = [[uk, false], [k, false], [uk, true], [k, true]].find(([x, fb]) => i18n?.has?.(x, fb));
+  const s = found ? i18n.localize(found[0]) : k;
   return String(s).replace(/\{(\w+)\}/g, (m, n) => (n in data ? String(data[n]) : m));
 }
 

@@ -31,7 +31,7 @@ export function tourAvailable() {
   return !!foundry.nue?.Tour && !!game.tours;
 }
 
-/** Built on demand: texts follow the module language, the panel is opened on the right tab at each step. */
+/** Built on demand: texts follow Foundry's language, the panel is opened on the right tab at each step. */
 function buildTour() {
   class NetworkTour extends foundry.nue.Tour {
     async _preStep() {
