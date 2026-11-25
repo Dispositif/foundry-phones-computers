@@ -1561,7 +1561,15 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 .spt-gm .spt-tile.deadzone { opacity: 0.55; }
 .spt-gm .spt-tile.deadzone small { color: #ff9f0a; opacity: 1; }
 /* Scenes sidebar: dead zone mark (GM) */
-.spt-dz-mark { margin-left: 4px; color: #ff9f0a; font-size: 0.8em; }
+.spt-dz-mark { margin-left: 4px; color: #ff453a; font-size: 0.8em; }
+/* Scenes sidebar (GM): landline / terminal icons in a small dark pill, bottom-right (readable on any thumbnail). */
+.spt-scene-devs {
+  position: absolute; right: 4px; bottom: 4px; z-index: 1; display: flex; align-items: center; gap: 5px;
+  padding: 2px 6px; border-radius: 9px; font-size: 9px; line-height: 1;
+  color: rgba(255, 255, 255, 0.9); background: rgba(10, 12, 16, 0.62);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14); backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
 /* Items sidebar (GM): device name with a small caption (place or holder · number). */
 .directory .directory-item.spt-device-entry .entry-name { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; min-width: 0; }
 .spt-device-entry .spt-item-name, .spt-device-entry .spt-item-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

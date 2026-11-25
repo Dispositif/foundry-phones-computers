@@ -11,7 +11,7 @@
 import { LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
 import { DIRECTORY_SAMPLE } from "./directory-sample.js";
 import { ensureDeviceItems, openSystemSheet, registerPhoneSheet } from "./item-sheet.js";
-import { allPhones, createPhone, freeNpcNumber, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, npcDirectory, randomAddress, saveNpc, sharedUsers } from "./devices.js";
+import { MODELS, allPhones, createPhone, freeNpcNumber, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, npcDirectory, randomAddress, saveNpc, sharedUsers } from "./devices.js";
 import { openPager } from "./pager.js";
 import { myJammers, openJammer, registerJammerHooks } from "./jammer.js";
 import { editPhoneDialog, giveDialog, newPhoneDialog, transferPhone } from "./dialogs.js";
@@ -530,6 +530,28 @@ Hooks.on("renderSceneDirectory", (app, html) => {
   }
 });
 
+/** GM, Scenes sidebar: small grey icons in the corner of scenes with landlines or terminals (tooltip: their labels). */
+Hooks.on("renderSceneDirectory", (app, html) => {
+  if (!game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  const byScene = new Map();
+  for (const item of game.items) {
+    const phone = getPhoneData(item);
+    if (!phone?.sceneId || !isFixed(phone)) continue;
+    const kind = phone.model === "desktop" ? "desktop" : "landline";
+    const entry = byScene.get(phone.sceneId) ?? { landline: [], desktop: [] };
+    entry[kind].push(phone.label || item.name);
+    byScene.set(phone.sceneId, entry);
+  }
+  for (const li of root?.querySelectorAll("li[data-entry-id], li[data-document-id]") ?? []) {
+    const entry = byScene.get(li.dataset.entryId ?? li.dataset.documentId);
+    if (!entry || li.querySelector(".spt-scene-devs")) continue;
+    const icons = ["landline", "desktop"].filter((k) => entry[k].length)
+      .map((k) => `<i class="fas ${MODELS[k].icon}" title="${esc(`${MODELS[k].label} — ${entry[k].join(", ")}`)}"></i>`).join("");
+    li.insertAdjacentHTML("beforeend", `<span class="spt-scene-devs">${icons}</span>`);
+  }
+});
+
 /** Scene configuration: "dead zone" checkbox (no mobile network, no Wi-Fi). */
 Hooks.on("renderSceneConfig", (app, html) => {
   const root = html instanceof HTMLElement ? html : html?.[0];
@@ -575,6 +597,8 @@ for (const hook of ["createItem", "updateItem", "deleteItem"]) {
     if (touched) rerenderAll();
     // A world device changed (place, number, compromised…): the GM's Items sidebar captions follow.
     if (touched && hook === "updateItem" && game.user.isGM && !item.parent) ui.items?.render();
+    // A landline or terminal installed, moved or removed: the GM's Scenes sidebar icons follow.
+    if (touched && game.user.isGM && !item.parent && (isFixed(getPhoneData(item) ?? {}) || changes?.flags?.[MODULE_ID]?.phone?.sceneId !== undefined)) ui.scenes?.render();
     // Signal back, or switched back on: deliver what was waiting.
     const ph = changes?.flags?.[MODULE_ID]?.phone;
     if (hook === "updateItem" && isActiveGM() && (ph?.noSignal === false || (ph?.mode && ph.mode !== "off"))) flushPending(item);
