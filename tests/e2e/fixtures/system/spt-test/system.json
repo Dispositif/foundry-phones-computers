@@ -1,0 +1,12 @@
+{
+  "id": "spt-test",
+  "title": "Phones & Computers test system",
+  "description": "Minimal system for the module's end-to-end tests: characters, NPCs and equipment, no rules.",
+  "version": "1.0.0",
+  "compatibility": { "minimum": "13", "verified": "14" },
+  "documentTypes": {
+    "Actor": { "character": {}, "npc": {} },
+    "Item": { "equipment": {} }
+  },
+  "authors": [{ "name": "Soren" }]
+}

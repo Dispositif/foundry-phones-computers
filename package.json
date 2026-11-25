@@ -1,0 +1,14 @@
+{
+  "name": "soren-phones-computers-dev",
+  "private": true,
+  "type": "module",
+  "description": "Development only (tests). Not part of the released module.",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:e2e": "playwright test -c tests/e2e",
+    "test:e2e:headed": "playwright test -c tests/e2e --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
