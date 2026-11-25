@@ -1,7 +1,7 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewDoc, previewEntry, previewFile, setFileStates } from "./files.js";
-import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf } from "./devices.js";
+import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf, newTheme } from "./devices.js";
 import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
@@ -442,6 +442,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       pickSender: function (event, target) { this._focusSend = true; this._pickedSender = target.dataset.value; this._setState({ sender: target.dataset.value }); },
       quickCreate: function (event, target) { this._quickCreate(target.dataset.kind); },
       reroll: function () { this._setState({ draws: null }); },
+      rerollLine: function () { this._setState({ lineDraw: null }); },
+      quickLine: function () { this._quickLine(); },
       addDevice: function () { this._newPub = true; this._setState({ adding: true, draws: null }); },
       cancelAdd: function () { this._setState({ adding: false }); },
       moreOptions: async function () {
@@ -606,7 +608,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     inboxAgent: null, inboxNpc: null, inboxLimit: THREAD_PAGE,
     watchView: "listen", watchAgent: null, watchLeak: false,
     replyAtts: {},
-    sendKind: null, sendId: null, addToDir: false, adding: false, draws: null, justCreated: null, createdNote: "",
+    sendKind: null, sendId: null, addToDir: false, adding: false, draws: null, lineDraw: null, justCreated: null, createdNote: "",
     dirName: "", dirSearch: "", dirOffOpen: false, dirPinNew: false, dirPubNew: false, dirEdit: null,
     filesView: "device", filesFilter: "all", filesQuery: "", devFilter: "all"
   };
@@ -705,6 +707,11 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!places.has(p.phone.sceneId)) places.set(p.phone.sceneId, { id: p.phone.sceneId, name: game.scenes.get(p.phone.sceneId).name, devices: [] });
       places.get(p.phone.sceneId).devices.push(p);
     }
+    // Scenes where connected PCs are, even with no landline yet: the GM can install one in a click.
+    for (const u of reachable) {
+      const scene = u.active ? game.scenes.get(u.viewedScene) : null;
+      if (scene && !places.has(scene.id)) places.set(scene.id, { id: scene.id, name: scene.name, devices: [] });
+    }
     const st = this._state;
     const validKind = (st.sendKind === "agent" && reachable.some((u) => u.id === st.sendId)) || (st.sendKind === "place" && places.has(st.sendId)) || st.sendKind === "other";
     if (!validKind) Object.assign(st, reachable.length ? { sendKind: "agent", sendId: reachable[0].id } : { sendKind: "other", sendId: null });
@@ -728,7 +735,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     };
     const selectedTile = tiles.find((p) => tileValue(p) === st.target);
     const sendAgents = reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img, offline: !u.active, active: st.sendKind === "agent" && st.sendId === u.id }));
-    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, img: game.scenes.get(pl.id)?.thumb || null, active: st.sendKind === "place" && st.sendId === pl.id }));
+    const sendPlaces = [...places.values()].sort((a, b) => a.name.localeCompare(b.name)).map((pl) => ({ id: pl.id, name: pl.name, img: game.scenes.get(pl.id)?.thumb || null, active: st.sendKind === "place" && st.sendId === pl.id, noLine: !pl.devices.length }));
     const sendTiles = tiles.map((p) => ({
       target: tileValue(p),
       label: p.phone.label,
@@ -757,6 +764,19 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
           const d = st.draws.list[k.key];
           return { ...k, drawLabel: d.label, drawNumber: d.number, recommended: k.model === rec };
         })
+      };
+    }
+    // A place with no landline: a small card installs one (drawn name and number), then the GM can call.
+    let lineCard = null;
+    if (st.sendKind === "place" && !tiles.length) {
+      const scene = game.scenes.get(st.sendId);
+      if (st.lineDraw?.scene !== scene.id) st.lineDraw = { scene: scene.id, label: deviceName("landline") ?? t("NewDev.landline"), number: randomAddress("landline") };
+      lineCard = {
+        name: scene.name,
+        label: st.lineDraw.label,
+        number: st.lineDraw.number,
+        img: `modules/${MODULE_ID}/icons/${newTheme("landline") === "vintage" ? "rotary" : "landline"}.svg`,
+        present: landlineUsers({ sceneId: scene.id }).map((u) => u.character?.name ?? u.name).join(", ")
       };
     }
     const createdNote = st.createdNote;
@@ -988,6 +1008,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       sendKind: st.sendKind,
       sendUserId: sendUser?.id ?? "",
       createCard,
+      lineCard,
       createdNote,
       // No agent to write to: no player account, or no player with an assigned character.
       noAgents: reachable.length ? "" : players.length ? t("Gm.NoAgents") : t("Gm.NoPlayers"),
@@ -1151,6 +1172,24 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const draw = this._state.draws?.user === user.id ? this._state.draws.list[key] : null;
     const item = await createPhone(actor, { model: kind.model, label: draw?.label, number: draw?.number, pub: this._newPub ?? true });
     if (item) this._created(item);
+  }
+
+  /** Quick landline for the selected place (Send tab): installed in that scene, it becomes the recipient. */
+  async _quickLine() {
+    const st = this._state;
+    const scene = game.scenes.get(st.sendId);
+    if (st.sendKind !== "place" || !scene) return;
+    const draw = st.lineDraw?.scene === scene.id ? st.lineDraw : null;
+    const item = await createPhone(null, { model: "landline", sceneId: scene.id, label: draw?.label, number: draw?.number });
+    if (!item) return;
+    const phone = getPhoneData(item);
+    this._focusSend = true;
+    this._setState({
+      target: `phone:${phone.number}`,
+      lineDraw: null,
+      justCreated: item.uuid,
+      createdNote: t("Gm.LineInstalled", { label: phone.label, number: phone.number, name: scene.name })
+    });
   }
 
   /** A device was just created for the selected agent: it becomes the recipient, its tile lights up. */

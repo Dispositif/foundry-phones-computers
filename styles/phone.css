@@ -1329,6 +1329,12 @@ body[data-spt-universe="cyberpunk"] #spt-phone-fab .spt-fab-main::before {
 .spt-gm .spt-quick-tag { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); padding: 0 6px; border-radius: 1em; background: var(--spt-warn); color: #fff; font-size: 0.7em; white-space: nowrap; }
 .spt-gm .spt-quick-preview { padding: 4px 8px; border-radius: 6px; background: var(--spt-soft); font-size: 0.9em; }
 .spt-gm .spt-quick-preview a { cursor: pointer; }
+.spt-gm .spt-quick-line { gap: 4px; padding: 8px 10px; }
+.spt-gm .spt-quick-line-row { display: flex; align-items: center; gap: 8px; }
+.spt-gm .spt-quick-line-row img { width: 28px; height: 28px; border: none; flex: 0 0 auto; }
+.spt-gm .spt-quick-line-row .spt-quick-preview { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spt-gm .spt-quick-line-row button { flex: 0 0 auto; width: auto; padding: 0 10px; }
+.spt-gm .spt-place-card.noline img { opacity: 0.55; }
 .spt-gm .spt-quick-pub { display: flex; align-items: center; gap: 6px; font-size: 0.85em; }
 .spt-gm .spt-quick-links { display: flex; justify-content: flex-end; gap: 12px; font-size: 0.85em; }
 .spt-gm .spt-quick-links a { cursor: pointer; text-decoration: underline; opacity: 0.8; }

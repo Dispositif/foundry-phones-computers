@@ -63,7 +63,7 @@
         {{#if (or sendAgents.length sendPlaces.length)}}
         <div class="spt-agent-cards" role="radiogroup" aria-label="{{spt "Gm.Agents"}}">
           {{#each sendAgents}}<a class="spt-agent-card {{#if active}}active{{/if}} {{#if offline}}offline{{/if}}" data-action="sendTo" data-kind="agent" data-id="{{id}}" role="radio" title="{{name}}{{#if offline}} ({{spt "Gm.Offline"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></a>{{/each}}
-          {{#each sendPlaces}}<a class="spt-agent-card spt-place-card {{#if active}}active{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio" title="{{name}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-location-dot"></i>{{/if}}<span>{{#if img}}<i class="fas fa-location-dot"></i> {{/if}}{{name}}</span></a>{{/each}}
+          {{#each sendPlaces}}<a class="spt-agent-card spt-place-card {{#if active}}active{{/if}} {{#if noLine}}noline{{/if}}" data-action="sendTo" data-kind="place" data-id="{{id}}" role="radio" title="{{name}}{{#if noLine}} ({{spt "Gm.NoLineShort"}}){{/if}}">{{#if img}}<img src="{{img}}" alt="">{{else}}<i class="fas fa-location-dot"></i>{{/if}}<span>{{#if noLine}}<i class="fas fa-phone-slash" title="{{spt "Gm.NoLineShort"}}"></i> {{else}}{{#if img}}<i class="fas fa-location-dot"></i> {{/if}}{{/if}}{{name}}</span></a>{{/each}}
         </div>
         {{/if}}
         <div class="spt-chips" role="radiogroup" aria-label="{{spt "Gm.OtherDevices"}}">
@@ -97,6 +97,16 @@
         <div class="spt-quick-links">
           {{#if createCard.canCancel}}<a data-action="cancelAdd">{{spt "Cancel"}}</a>{{/if}}
           <a data-action="moreOptions">{{spt "Gm.MoreOptions"}}</a>
+        </div>
+      </div>
+      {{else if lineCard}}
+      <div class="spt-quick-new spt-quick-line">
+        <strong>{{spt "Gm.NoLineAt" name=lineCard.name}}</strong>
+        {{#if lineCard.present}}<small class="spt-dim">{{spt "Gm.PresentHere" names=lineCard.present}}</small>{{/if}}
+        <div class="spt-quick-line-row">
+          <img src="{{lineCard.img}}" alt="">
+          <span class="spt-quick-preview">{{lineCard.label}} · {{lineCard.number}} <a data-action="rerollLine" title="{{spt "Gm.Reroll"}}" aria-label="{{spt "Gm.Reroll"}}"><i class="fas fa-dice"></i></a></span>
+          <button type="button" class="spt-primary" data-action="quickLine"><i class="fas fa-plus"></i> {{spt "Gm.InstallLine"}}</button>
         </div>
       </div>
       {{else}}
