@@ -2,7 +2,7 @@ import { attChipHtml, attHtml, openAttachment, pickImage } from "./attachments.j
 import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
 import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, isSatellite, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, publicDevices, inboxOf, filesOf, playerUnread, viaSatellite, mobileSignal } from "./devices.js";
 import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
-import { addContactDialog, contactsDialog, editPhoneDialog } from "./dialogs.js";
+import { addContactDialog, contactsDialog, editPhoneDialog, giveDialog, playerCanGive, playerGiveDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
 import { bindDrop, bindIconSelects, deviceSelect } from "./gm-panel.js";
 import { activeCall, endCall, outgoing, playerCall, playerSendSms } from "./player-calls.js";
@@ -143,6 +143,13 @@ export class PlayerPhone extends ApplicationV2 {
         if (live) hangUpLive(live.callId);
       },
       gmEditDevice: function () { const p = this._current(); if (p) editPhoneDialog(p.item); },
+      gmGive: function () { const p = this._current(); if (p && this.gm && !isFixed(p.phone)) giveDialog(p.item); },
+      playerGive: async function () {
+        const p = this._current();
+        if (!p || this.gm || !playerCanGive(p.item)) return;
+        if (!game.users.activeGM) return deviceNotice(t("Net.GmAbsent"), { warn: true });
+        if (await playerGiveDialog(p.item)) this.close();
+      },
       showEntry: async function (event, target) {
         const p = this._current();
         const e = p && findEntry(p.phone, target.dataset.id);
@@ -920,6 +927,19 @@ export class PlayerPhone extends ApplicationV2 {
     this.setPosition({ width: size.width, height: size.height });
   }
 
+  /** "Give…" in the window's menu (⋮): GM, any carried device; player, a personal device they hold. */
+  _getHeaderControls() {
+    const controls = super._getHeaderControls();
+    controls.push({ icon: "fas fa-hand-holding-hand", label: t("Give.Menu"), action: this.gm ? "gmGive" : "playerGive", visible: function () { return this._canGive(); } });
+    return controls;
+  }
+
+  _canGive() {
+    const p = this._current();
+    if (!p) return false;
+    return this.gm ? !isFixed(p.phone) : playerCanGive(p.item);
+  }
+
   _onClose(options) {
     super._onClose?.(options);
     // Closed during a call: the call window takes over. Closed while dialing: the call is dropped (as closing the window did).
@@ -958,6 +978,12 @@ export class PlayerPhone extends ApplicationV2 {
     this.element.classList.toggle("spt-antenna-up", !!cur && !this.gm && modeOf(cur.phone) !== "off");
     this.element.classList.toggle("spt-gm-view", this.gm);
     this._applyFrame(cur);
+    // The menu (⋮) follows the shown device: "Give…" only for a carried one.
+    const giveKey = this._canGive();
+    if (this._giveKey !== giveKey) {
+      this._giveKey = giveKey;
+      this._updateFrame({ window: {} });
+    }
     const el = this.element;
     // Banners: GM preparation, secure device.
     const content = el.querySelector(".window-content");

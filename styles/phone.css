@@ -531,6 +531,8 @@ a.spt-bb-doc { cursor: pointer; text-decoration: underline dotted; }
   border: none; border-radius: 50%; background: rgba(255,255,255,0.08); color: inherit; box-shadow: none;
 }
 .spt-player-phone.spt-framed:not(.minimized) > .window-content { position: relative; z-index: 1; flex: 1; min-height: 0; }
+/* The window menu (⋮, "Give…") opens above the screen and the frame. */
+.spt-player-phone.spt-framed:not(.minimized) > .controls-dropdown { z-index: 5; }
 .spt-player-phone.spt-framed.minimized .spt-frame-deco { display: none; }
 .spt-frame-deco { position: absolute; z-index: 2; pointer-events: none; }
 

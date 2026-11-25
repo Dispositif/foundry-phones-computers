@@ -306,7 +306,12 @@
       "Title": "Donner « {label} » ({number})",
       "Give": "Donner",
       "NowHeld": "« {label} » est maintenant porté par {name}.",
-      "NowWorld": "« {label} » est maintenant dans les objets du monde."
+      "NowWorld": "« {label} » est maintenant dans les objets du monde.",
+      "To": "À",
+      "Nobody": "Personne (abandonner)",
+      "Menu": "Donner…",
+      "PlayerGave": "{from} a donné « {label} » à {name}.",
+      "PlayerLeft": "{from} a abandonné « {label} » (objets du monde)."
     },
     "Given": {
       "Title": "Nouvel appareil",

@@ -89,6 +89,9 @@ export function onSocket(data) {
       // Loaded on demand: a static import of dialogs.js here would change the modules' load order.
       if (data.targetUserIds?.includes(game.user.id)) import("./dialogs.js").then((m) => m.receiveDeviceGiven(data));
       break;
+    case "playerGive":
+      if (isActiveGM()) import("./dialogs.js").then((m) => m.onPlayerGive(data));
+      break;
     case "playerRead":
       if (isActiveGM()) {
         const item = fromUuidSync(data.itemUuid);

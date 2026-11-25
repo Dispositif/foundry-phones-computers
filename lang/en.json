@@ -306,7 +306,12 @@
       "Title": "Give \"{label}\" ({number})",
       "Give": "Give",
       "NowHeld": "\"{label}\" is now held by {name}.",
-      "NowWorld": "\"{label}\" is now among the world items."
+      "NowWorld": "\"{label}\" is now among the world items.",
+      "To": "To",
+      "Nobody": "Nobody (leave it)",
+      "Menu": "Give…",
+      "PlayerGave": "{from} gave \"{label}\" to {name}.",
+      "PlayerLeft": "{from} left \"{label}\" behind (world items)."
     },
     "Given": {
       "Title": "New device",

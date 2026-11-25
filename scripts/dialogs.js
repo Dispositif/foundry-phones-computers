@@ -432,9 +432,63 @@ export async function giveDialog(item) {
   if (actor === undefined) return ui.notifications.warn(t("Warn.ActorNotFound", { name: res }));
   const created = await transferPhone(item, actor);
   ui.notifications.info(`📱 ${actor ? t("Give.NowHeld", { label: phone.label, name: actor.name }) : t("Give.NowWorld", { label: phone.label })}`);
-  // The connected players of that character get a window (Foundry's notifications are too discreet).
+  announceGiven(created, actor);
+}
+
+/** The connected players of the new holder get a window (Foundry's notifications are too discreet). */
+function announceGiven(created, actor) {
   const to = actor ? phoneUsers(actor, { activeOnly: true }).map((u) => u.id) : [];
   if (created && to.length) game.socket.emit(SOCKET, { type: "deviceGiven", targetUserIds: to, itemUuid: created.uuid, name: actor.name });
+}
+
+/** A player may give a personal device they hold (never an installed one). */
+export function playerCanGive(item) {
+  const phone = getPhoneData(item);
+  return !!phone && !MODELS[phone.model ?? "smartphone"]?.fixed && item.parent instanceof Actor && item.isOwner;
+}
+
+/**
+ * Player: gives a device to another PC, or leaves it (nobody).
+ * PCs on the current scene come first. The active GM makes the transfer.
+ */
+export async function playerGiveDialog(item) {
+  if (!playerCanGive(item)) return false;
+  const phone = getPhoneData(item);
+  const holder = item.parent;
+  const here = new Set(canvas?.scene?.tokens?.map((tk) => tk.actorId) ?? []);
+  const pcs = game.actors.filter((a) => a.hasPlayerOwner && a !== holder)
+    .sort((a, b) => (here.has(b.id) - here.has(a.id)) || a.name.localeCompare(b.name));
+  const options = pcs.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join("")
+    + `<option value="">${t("Give.Nobody")}</option>`;
+  const res = await DialogV2.wait({
+    classes: ["spt-dialog"],
+    window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding-hand" },
+    position: { width: 380 },
+    content: `<div class="spt-phone-form"><div class="form-group"><label>${t("Give.To")}</label><select name="target">${options}</select></div></div>`,
+    buttons: [
+      { action: "ok", label: t("Give.Give"), icon: "fas fa-check", default: true, callback: (event, button) => ({ actorId: button.form.elements.target.value || null }) },
+      { action: "cancel", label: t("Cancel"), icon: "fas fa-xmark", callback: () => false }
+    ],
+    rejectClose: false
+  });
+  if (!res || typeof res !== "object") return false;
+  game.socket.emit(SOCKET, { type: "playerGive", itemUuid: item.uuid, actorId: res.actorId, userId: game.user.id });
+  return true;
+}
+
+/** Active GM: makes a player's gift (checked again here: only a holder may give, only to a PC or nobody). */
+export async function onPlayerGive({ itemUuid, actorId, userId }) {
+  const item = fromUuidSync(itemUuid);
+  const phone = getPhoneData(item);
+  if (!phone || MODELS[phone.model ?? "smartphone"]?.fixed || !(item.parent instanceof Actor)) return;
+  const user = game.users.get(userId);
+  if (!user || !item.testUserPermission(user, "OWNER")) return;
+  const actor = actorId ? game.actors.get(actorId) : null;
+  if (actorId && !actor?.hasPlayerOwner) return;
+  const from = item.parent.name;
+  const created = await transferPhone(item, actor);
+  ui.notifications.info(`📱 ${actor ? t("Give.PlayerGave", { from, label: phone.label, name: actor.name }) : t("Give.PlayerLeft", { from, label: phone.label })}`);
+  announceGiven(created, actor);
 }
 
 /** Player: the GM just gave one of their characters a device (name only: a locked device keeps its number hidden). "Open" opens it. */
