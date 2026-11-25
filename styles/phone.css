@@ -1537,7 +1537,7 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 .spt-bubble.spt-failed { opacity: 0.75; border-style: dashed; }
 .spt-notsent { display: block; margin-top: 4px; font-size: 0.8em; opacity: 0.9; }
 .spt-notsent a { text-decoration: underline; cursor: pointer; }
-.spt-public-row, .spt-satellite-row { margin-top: 6px; }
+.spt-satellite-row { margin-top: 6px; }
 .spt-sat-request .spt-sat-question { font-weight: bold; }
 .spt-sat-request .spt-sat-devices { margin: 6px 0; padding-left: 1.2em; list-style: none; }
 .spt-sat-request .spt-sat-devices i { color: #c98a00; margin-right: 4px; }
@@ -1582,3 +1582,24 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 .spt-given .spt-given-body { display: flex; align-items: center; gap: 12px; }
 .spt-given .spt-given-body img { width: 48px; height: 48px; border: none; flex: 0 0 auto; }
 .spt-given .spt-given-body p { margin: 0; }
+
+/* New device / Edit device: tags as toggle pills (Public, Locked, Compromised, Network cut). */
+.spt-phone-form .spt-tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(127, 127, 127, 0.25); }
+.spt-phone-form .spt-tag {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 11px; cursor: pointer;
+  font-size: 0.85em; border: 1px solid rgba(127, 127, 127, 0.4); opacity: 0.6; user-select: none;
+}
+.spt-phone-form .spt-tag input { display: none; }
+.spt-phone-form .spt-tag:hover { opacity: 0.85; }
+.spt-phone-form .spt-tag:has(input:checked) { opacity: 1; font-weight: bold; }
+.spt-phone-form .spt-tag-pub:has(input:checked) { border-color: #3d8bd4; background: rgba(61, 139, 212, 0.18); }
+.spt-phone-form .spt-tag-lock:has(input:checked) { border-color: #ff9f0a; background: rgba(255, 159, 10, 0.18); }
+.spt-phone-form .spt-tag-comp:has(input:checked), .spt-phone-form .spt-tag-signal:has(input:checked) { border-color: #d2402f; background: rgba(210, 64, 47, 0.2); }
+/* Option icons (secure, satellite) in the text colour. */
+body :is(#spt-phone-panel, .spt-dialog) .spt-phone-form .spt-secure-check i { color: inherit; }
+/* Edit device and Give windows (.spt-okcancel): OK light green, Cancel red. */
+body :is(#spt-phone-panel, .spt-dialog).spt-okcancel .form-footer button[data-action="ok"] { background: rgba(46, 158, 79, 0.28); border-color: #2e9e4f; }
+body :is(#spt-phone-panel, .spt-dialog).spt-okcancel .form-footer button[data-action="cancel"] { background: rgba(210, 64, 47, 0.28); border-color: #d2402f; }
+/* Edit device: a visible "Give…" icon button, top right. */
+.spt-phone-form .spt-give-row { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+.spt-phone-form .spt-give-row .spt-give-btn { flex: 0 0 auto; width: 32px; height: 28px; padding: 0; display: grid; place-items: center; font-size: 1.05em; }

@@ -298,7 +298,9 @@
       "Secure": "Secure (encrypted)",
       "SecureHint": "Calls and messages are encrypted when the other end is secure too.",
       "Satellite": "Satellite",
-      "SatelliteHint": "Works without the mobile network (dead zone, jammer). The GM decides each satellite connection."
+      "SatelliteHint": "Works without the mobile network (dead zone, jammer). The GM decides each satellite connection.",
+      "TagCompromised": "Compromised",
+      "TagNoSignal": "Network cut"
     },
     "Ok": "OK",
     "NewDevice": "New device",

@@ -1,6 +1,6 @@
 import { feature } from "./features.js";
 import { DialogV2, MODULE_ID, SOCKET } from "./constants.js";
-import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, modelImg, phoneUsers, randomAddress, shownTheme, themeChoices } from "./devices.js";
+import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, modelImg, npcDirectory, npcLabel, phoneUsers, phonesByNumber, randomAddress, shownTheme, themeChoices } from "./devices.js";
 import { modelAllowed, satellitePolicy } from "./universes.js";
 import { deviceName } from "./names.js";
 import { esc, isMailAddress, norm, shieldIcon } from "./util.js";
@@ -9,7 +9,7 @@ import { t } from "./i18n.js";
 /*  Dialogs (GM, and contacts for the player)    */
 /* -------------------------------------------- */
 
-export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", pub = false, secure = false, satellite = false, withModel = true, holder = null, give = false }) {
+export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", pub = false, secure = false, satellite = false, withModel = true, holder = null, state = null, onGive = null }) {
   // Default name = a random brand and model, following the model as long as the GM has not changed it.
   const randomName = (m) => deviceName(m) ?? MODELS[m]?.label ?? MODELS.smartphone.label;
   const autoLabel = label === null;
@@ -37,11 +37,20 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
   const scenes = game.scenes.map((sc) => `<option value="${esc(sc.name)}">`).join("");
   // An installed device without a place keeps none; a device becoming installed defaults to the current scene.
   const sceneName = sceneId ? game.scenes.get(sceneId)?.name ?? "" : MODELS[model]?.fixed ? "" : canvas?.scene?.name ?? "";
+  // Edit device: "Give…" in the window menu (⋮); it closes this form (unsaved changes dropped) and opens the Give window.
+  const controls = onGive
+    ? [{ icon: "fas fa-hand-holding-hand", label: `${t("Give.Give")}…`, action: "sptGive", onClick: (event) => {
+        const id = event.target.closest(".application")?.id;
+        foundry.applications.instances.get(id)?.close();
+        onGive();
+      } }]
+    : [];
   return DialogV2.wait({
-    classes: ["spt-dialog"],
-    window: { title, icon: "fas fa-mobile-screen" },
+    classes: ["spt-dialog", "spt-okcancel"],
+    window: { title, icon: "fas fa-mobile-screen", controls },
     position: { width: 400 },
     content: `<div class="spt-phone-form">
+        ${onGive ? `<div class="spt-give-row"><button type="button" class="spt-give-btn" title="${t("Give.Give")}…" aria-label="${t("Give.Give")}…"><i class="fas fa-hand-holding-hand"></i></button></div>` : ""}
         ${withModel ? `<div class="form-group"><label>${t("Form.Model")}</label><select name="model">${modelOpts}</select></div>` : ""}
         <div class="spt-if-mobile">${selectHtml}</div>
         <div class="form-group spt-if-landline"><label>${t("Form.Place")}</label>
@@ -55,13 +64,18 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
           <button type="button" class="spt-dice" data-dice="number" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
         <div class="form-group spt-if-themes"><label>${t("Form.Theme")}</label><select name="theme">${themeOpts}</select></div>
         <div class="form-group spt-if-computer"><label>${t("Form.Inbox")}</label><select name="inbox">${["on", "locked", "none"].map((k) => `<option value="${k}" ${k === inbox ? "selected" : ""}>${t(`Form.Inbox_${k}`)}</option>`).join("")}</select></div>
-        ${MODELS[model]?.jammer ? "" : publicRow(pub)}
         ${secureRow(secure)}
         ${satelliteRow(satellite)}
+        ${tagsRow(pub, state)}
       </div>`,
     render: (event, x) => {
       // v13+: (event, dialog); an HTML element is accepted too.
       const root = x?.element ?? x;
+      // Edit device: the "Give…" button closes this form (unsaved changes dropped) and opens the Give window.
+      root?.querySelector?.(".spt-give-btn")?.addEventListener("click", () => {
+        (x?.close ? x : foundry.applications.instances.get(root.closest(".application")?.id))?.close();
+        onGive?.();
+      });
       const select = root?.querySelector?.("[name=model]");
       const labelInput = root?.querySelector?.("[name=label]");
       let lastAuto = autoLabel ? labelInput?.value : null;
@@ -91,6 +105,9 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
         // A jammer has no number.
         root.querySelector(".spt-if-number")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
         root.querySelector(".spt-secure-row")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
+        // Tags: none for a jammer; an installed device always has a line (no "network cut").
+        root.querySelector(".spt-tags-row")?.classList.toggle("hidden", !!MODELS[select?.value ?? model]?.jammer);
+        root.querySelector(".spt-tag-signal")?.classList.toggle("hidden", landline);
         // Satellite: smartphone, pager and laptop (option), satellite phone (always); nothing to tick when the model is satellite-only.
         root.querySelector(".spt-satellite-row")?.classList.toggle("hidden", !MODELS[select?.value ?? model]?.satellite || forcedSat(select?.value ?? model));
         // Looks: only those that fit the chosen model.
@@ -129,24 +146,38 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
             sceneName,
             theme: f.theme?.value ?? DEFAULT_THEME,
             inbox: MODELS[model ?? "smartphone"]?.mail ? f.inbox?.value ?? "on" : undefined,
-            pub: f.pub ? f.pub.checked : undefined,
+            pub: f.pub && !MODELS[model]?.jammer ? f.pub.checked : undefined,
+            locked: f.locked ? f.locked.checked : undefined,
+            compromised: f.compromised ? f.compromised.checked : undefined,
+            noSignal: f.noSignal && !MODELS[model]?.fixed ? f.noSignal.checked : undefined,
             secure: f.secure ? f.secure.checked : undefined,
             satellite: forcedSat(model) ? true : f.satellite ? f.satellite.checked && !!MODELS[model]?.satellite : undefined,
             sceneId: MODELS[model]?.fixed ? scene?.id ?? null : undefined
           };
         }
       },
-      // Edit device: "Give…" closes this form (unsaved changes dropped) and opens the Give window.
-      ...(give ? [{ action: "give", label: `${t("Give.Give")}…`, icon: "fas fa-hand-holding-hand", callback: () => "give" }] : []),
       { action: "cancel", label: t("Cancel"), icon: "fas fa-xmark", callback: () => false }
     ],
     rejectClose: false
   });
 }
 
-/** "Public" option, in New device and Edit device: other PCs find the device by name. */
-function publicRow(checked) {
-  return `<div class="spt-public-row"><label class="spt-secure-check"><input type="checkbox" name="pub" ${checked ? "checked" : ""}> <i class="fas fa-globe"></i> ${t("Gm.NewDevicePublic")}</label></div>`;
+/**
+ * Tags at the bottom of New device / Edit device, as toggle pills: Public (other PCs find the device by name);
+ * when editing (state given), also Locked, Compromised and Network cut, as in the GM panel's Devices tab.
+ */
+function tagsRow(pub, state) {
+  const tag = (name, on, icon, label, title, cls = "") =>
+    `<label class="spt-tag ${cls}" title="${esc(title)}"><input type="checkbox" name="${name}" ${on ? "checked" : ""}><i class="fas ${icon}"></i> ${esc(label)}</label>`;
+  const tags = [tag("pub", pub, "fa-globe", t("Directory.Public"), t("Gm.NewDevicePublic"), "spt-tag-pub")];
+  if (state) {
+    tags.push(
+      tag("locked", state.locked, "fa-lock", t("Lock.Locked"), t("Gm.LegendLock"), "spt-tag-lock"),
+      tag("compromised", state.compromised, "fa-triangle-exclamation", t("Form.TagCompromised"), t("Gm.Compromised"), "spt-tag-comp"),
+      tag("noSignal", state.noSignal, "fa-signal", t("Form.TagNoSignal"), t("Gm.NoSignal"), "spt-tag-signal")
+    );
+  }
+  return `<div class="spt-tags-row">${tags.join("")}</div>`;
 }
 
 /** "Secure (encrypted)" option, in New device and Edit device. */
@@ -321,9 +352,9 @@ function kindForm(kind, { actor = null } = {}) {
           <button type="button" class="spt-dice" data-dice="number" title="${t("NewDev.OtherNumber")}"><i class="fas fa-dice"></i></button></div><p class="hint">${t("Form.NumberHint")}</p></div>
         ${model.jammer ? `<p class="hint">${t("Jammer.NewHint")}</p>` : ""}
         ${lookRow}
-        ${model.jammer ? "" : publicRow(false)}
         ${model.jammer ? "" : secureRow(false)}
         ${satPolicy === "option" ? satelliteRow(false) : ""}
+        ${model.jammer ? "" : tagsRow(false, null)}
       </div>`,
     render: (event, x) => {
       const root = x?.element ?? x;
@@ -378,6 +409,19 @@ function kindForm(kind, { actor = null } = {}) {
   });
 }
 
+/**
+ * A typed number (or email) already used by another device or a directory line: the GM is warned (as in the
+ * Directory) and nothing is saved. The device's own number, and a jammer's hidden id, are fine.
+ */
+function numberTaken(number, item = null) {
+  if (!number || String(number).startsWith("jam-")) return false;
+  const n = norm(number);
+  const line = npcDirectory().find((e) => e.number && norm(e.number) === n);
+  if (line) return ui.notifications.warn(t("Directory.Taken", { number, name: npcLabel(line) })), true;
+  if (phonesByNumber(number).some((p) => p.item.uuid !== item?.uuid)) return ui.notifications.warn(t("Directory.IsDevice", { number })), true;
+  return false;
+}
+
 /** GM: new device in two steps. Resolves with { item, open } or nothing. */
 export async function newPhoneDialog({ actor = null, kind: preset = null } = {}) {
   for (;;) {
@@ -389,6 +433,7 @@ export async function newPhoneDialog({ actor = null, kind: preset = null } = {})
     if (res === "back") continue;
     if (!res || typeof res !== "object") return;
     if (res.actor === undefined) return ui.notifications.warn(t("Warn.ActorNotFound", { name: res.npcName }));
+    if (numberTaken(res.number)) return;
     if (MODELS[res.model]?.fixed) {
       // No scene: a device reached over the network only (shared from the Items sidebar).
       const item = await createPhone(null, res);
@@ -417,7 +462,7 @@ export async function transferPhone(item, actor) {
 export async function giveDialog(item) {
   const phone = getPhoneData(item);
   const res = await DialogV2.wait({
-    classes: ["spt-dialog"],
+    classes: ["spt-dialog", "spt-okcancel"],
     window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding-hand" },
     position: { width: 380 },
     content: `<div class="spt-phone-form">${holderField()}</div>`,
@@ -461,7 +506,7 @@ export async function playerGiveDialog(item) {
   const options = pcs.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join("")
     + `<option value="">${t("Give.Nobody")}</option>`;
   const res = await DialogV2.wait({
-    classes: ["spt-dialog"],
+    classes: ["spt-dialog", "spt-okcancel"],
     window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding-hand" },
     position: { width: 380 },
     content: `<div class="spt-phone-form"><div class="form-group"><label>${t("Give.To")}</label><select name="target">${options}</select></div></div>`,
@@ -530,13 +575,18 @@ export async function editPhoneDialog(item) {
     secure: !!phone.secure,
     satellite: !!phone.satellite,
     holder: item.parent?.name ?? null,
-    give: !MODELS[phone.model ?? "smartphone"]?.fixed
+    state: { locked: !!phone.locked, compromised: !!phone.compromised, noSignal: !!phone.noSignal },
+    onGive: MODELS[phone.model ?? "smartphone"]?.fixed ? null : () => giveDialog(item)
   });
-  if (res === "give") return giveDialog(item);
   if (!res) return;
+  if (numberTaken(res.number, item)) return;
   // An empty place is allowed (network access only); a name that matches no scene is not.
   if (MODELS[res.model]?.fixed && !res.sceneId && res.sceneName) return ui.notifications.warn(t("Warn.SceneNotFound", { name: res.sceneName }));
   await markPhone(item, res);
+  // State tags (as the Devices tab's buttons): only what changed.
+  const patch = {};
+  for (const k of ["locked", "compromised", "noSignal"]) if (res[k] !== undefined && res[k] !== !!getPhoneData(item)?.[k]) patch[`flags.${MODULE_ID}.phone.${k}`] = res[k];
+  if (Object.keys(patch).length) await item.update(patch);
 }
 
 /** Contacts: one per line, "Name | number" (number optional). */

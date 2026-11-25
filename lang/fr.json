@@ -298,7 +298,9 @@
       "Secure": "Sécurisé (chiffré)",
       "SecureHint": "Appels et messages chiffrés quand l'autre bout est sécurisé aussi.",
       "Satellite": "Satellite",
-      "SatelliteHint": "Fonctionne sans réseau mobile (zone blanche, brouilleur). Le MJ décide de chaque connexion satellite."
+      "SatelliteHint": "Fonctionne sans réseau mobile (zone blanche, brouilleur). Le MJ décide de chaque connexion satellite.",
+      "TagCompromised": "Compromis",
+      "TagNoSignal": "Réseau coupé"
     },
     "Ok": "Valider",
     "NewDevice": "Nouvel appareil",
