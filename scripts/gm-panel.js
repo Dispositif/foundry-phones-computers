@@ -385,7 +385,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     position: { width: 660, height: 780 },
     form: { handler: () => {}, submitOnChange: false, closeOnSubmit: false },
     actions: {
-      watchView: function (event, target) { this._setState({ watchView: target.dataset.view, inboxLimit: THREAD_PAGE }); },
+      // Each Intel view opens on its full list: "What the enemy…" is switched off.
+      watchView: function (event, target) { this._setState({ watchView: target.dataset.view, watchLeak: false, inboxLimit: THREAD_PAGE }); },
       watchAgent: function (event, target) { this._setState({ watchAgent: target.dataset.agent || null, inboxLimit: THREAD_PAGE }); },
       watchLeak: function () { this._setState({ watchLeak: !this._state.watchLeak }); },
       filterAgent: function (event, target) { this._setState({ inboxAgent: target.dataset.agent || null, inboxNpc: null, inboxLimit: THREAD_PAGE }); },
@@ -452,7 +453,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         const res = await newPhoneDialog({ actor });
         if (res?.item?.parent === actor) this._created(res.item);
       },
-      switchTab: function (event, target) { this._focusSend = true; this._setState({ tab: target.dataset.tab }); },
+      switchTab: function (event, target) { this._focusSend = true; this._setState({ tab: target.dataset.tab, watchLeak: false }); },
       mode: function (event, target) { this._focusSend = true; this._setState({ mode: target.dataset.mode }); },
       ring: function () { this._doRing(); },
       ringSecure: function () { this._doRing(true); },

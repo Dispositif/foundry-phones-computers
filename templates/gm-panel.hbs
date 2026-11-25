@@ -133,7 +133,6 @@
         {{{attChip}}}
         <textarea name="text" rows="5" placeholder="{{spt "Gm.MessagePlaceholder"}}">{{text}}</textarea>
       </div>
-      <p class="spt-drop-hint"><i class="fas fa-file-import"></i> {{spt "Gm.DropJournal"}}</p>
       <div class="spt-phone-row">
         <button type="button" class="spt-icon-btn" data-action="attach" title="{{spt "AttachImage"}}" aria-label="{{spt "AttachImage"}}"><i class="fas fa-paperclip"></i></button>
         <button type="button" class="spt-icon-btn" data-action="copyLink" title="{{spt "Gm.CopyLink"}}" aria-label="{{spt "Gm.CopyLink"}}"><i class="fas fa-link"></i></button>
@@ -218,14 +217,14 @@
   {{#if (eq tab "watch")}}
     <section class="spt-gm-watch">
       <div class="spt-segmented" role="radiogroup">
-        <a class="{{#if (eq watch.view "listen")}}active{{/if}}" data-action="watchView" data-view="listen" role="radio" title="{{spt "Gm.BetweenAgents"}}"><i class="fas fa-headphones"></i> {{spt "Gm.InboxAgents"}}{{#if listenNew}} <span class="spt-count">{{listenNew}}</span>{{/if}}</a>
-        <a class="{{#if (eq watch.view "calls")}}active{{/if}}" data-action="watchView" data-view="calls" role="radio"><i class="fas fa-phone"></i> {{spt "Calls.Tab"}}</a>
+        <a class="{{#if (eq watch.view "listen")}}active{{/if}}" data-action="watchView" data-view="listen" role="radio" title="{{spt "Gm.BetweenAgents"}}"><i class="fas fa-terminal"></i> {{spt "Gm.InboxAgents"}}{{#if listenNew}} <span class="spt-count">{{listenNew}}</span>{{/if}}</a>
+        <a class="{{#if (eq watch.view "calls")}}active{{/if}}" data-action="watchView" data-view="calls" role="radio"><i class="fas fa-headphones"></i> {{spt "Calls.Tab"}}</a>
         {{#if feat.tracking}}<a class="{{#if (eq watch.view "tracking")}}active{{/if}}" data-action="watchView" data-view="tracking" role="radio" title="{{spt "Track.Hint"}}"><i class="fas fa-location-crosshairs"></i> {{spt "Gm.TabTracking"}}</a>{{/if}}
       </div>
       <div class="spt-chips">
         <a class="spt-chip {{#if watch.allAgents}}active{{/if}}" data-action="watchAgent" data-agent="">{{spt "Gm.All"}}</a>
         {{#each watch.agents}}<a class="spt-chip {{#if active}}active{{/if}}" data-action="watchAgent" data-agent="{{id}}">{{#if img}}<img src="{{img}}" alt="">{{/if}}{{name}}</a>{{/each}}
-        <a class="spt-chip spt-leak {{#if watch.leak}}active{{/if}}" data-action="watchLeak" title="{{spt "Gm.LeakHint"}}"><i class="fas fa-triangle-exclamation"></i> {{spt "Gm.Leak"}}</a>
+        <a class="spt-chip spt-leak {{#if watch.leak}}active{{/if}}" data-action="watchLeak" title="{{spt "Gm.LeakHint"}}"><i class="fas fa-triangle-exclamation"></i> {{#if (eq watch.view "calls")}}{{spt "Gm.Leak_calls"}}{{else if (eq watch.view "tracking")}}{{spt "Gm.Leak_tracking"}}{{else}}{{spt "Gm.Leak_listen"}}{{/if}}</a>
       </div>
       {{#if (eq watch.view "listen")}}
       {{#if watch.threads.length}}
@@ -268,7 +267,7 @@
       {{/if}}
       {{/if}}
       {{#if (eq watch.view "tracking")}}
-      <p class="spt-track-hint"><span class="spt-exp-tag"><i class="fas fa-flask"></i> {{spt "Track.Experimental"}}</span> {{spt "Track.Hint"}}</p>
+      <p class="spt-track-hint">{{spt "Track.Hint"}}</p>
       {{#each watch.tracking}}
       <div class="spt-dev-group spt-track-group">
         <header class="spt-dev-group-head">
