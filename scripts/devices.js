@@ -843,12 +843,43 @@ export function deviceItemPatch(item, phone) {
 export function randomAddress(model, { name } = {}) {
   // A jammer has no number: a hidden id keeps it unique (an item dragged to another character moves).
   if (MODELS[model]?.jammer) return `jam-${foundry.utils.randomID(8)}`;
+  const used = usedAddresses();
+  const mail = MODELS[model]?.mail;
   let address;
-  for (let i = 0; i < 30; i++) {
-    address = MODELS[model]?.mail ? randomEmail(name) : randomNumber();
-    if (!phonesByNumber(address).length && !findNpc(address, { all: true })) break;
+  for (let i = 0; i < 50; i++) {
+    address = mail ? randomEmail(name) : randomNumber();
+    if (!used.has(norm(address))) return address;
+  }
+  // Unlucky draws (a crowded world): take the first free number in order.
+  if (!mail) {
+    const prefix = randomNumber().slice(0, -4); // randomNumber() ends with 0 + 3 digits
+    for (let n = 0; n < 1000; n++) {
+      if (n >= 200 && n < 300) continue; // 555-02xx is reserved
+      const candidate = `${prefix}0${String(n).padStart(3, "0")}`;
+      if (!used.has(norm(candidate))) return candidate;
+    }
   }
   return address;
+}
+
+/**
+ * Every address already in use or seen in the world: devices (jammers aside), directory lines
+ * (out of service included), numbers in device histories and contacts (invented numbers
+ * the players dialed). A new address never lands on one of them.
+ */
+function usedAddresses() {
+  const used = new Set();
+  const add = (a) => {
+    const k = norm(a);
+    if (k) used.add(k);
+  };
+  for (const p of allPhones()) {
+    add(p.phone.number);
+    for (const c of p.phone.contacts ?? []) add(c.number);
+    for (const e of p.phone.log ?? []) add(e.with);
+  }
+  for (const e of npcDirectory()) add(e.number);
+  return used;
 }
 
 export function pickItemType() {
