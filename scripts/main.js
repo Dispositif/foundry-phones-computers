@@ -8,7 +8,8 @@
  * Target: Foundry VTT v14 (ApplicationV2 / DialogV2 only).
  */
 
-import { DIRECTORY_SAMPLE, LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
+import { LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
+import { DIRECTORY_SAMPLE } from "./directory-sample.js";
 import { ensureDeviceItems, registerPhoneSheet } from "./item-sheet.js";
 import { allPhones, createPhone, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
 import { openPager } from "./pager.js";
