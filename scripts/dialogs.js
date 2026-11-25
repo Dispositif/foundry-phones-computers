@@ -38,6 +38,7 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
   // An installed device without a place keeps none; a device becoming installed defaults to the current scene.
   const sceneName = sceneId ? game.scenes.get(sceneId)?.name ?? "" : MODELS[model]?.fixed ? "" : canvas?.scene?.name ?? "";
   return DialogV2.wait({
+    classes: ["spt-dialog"],
     window: { title, icon: "fas fa-mobile-screen" },
     position: { width: 400 },
     content: `<div class="spt-phone-form">
@@ -225,7 +226,7 @@ async function pickKind() {
   // DialogV2.wait wires the render callback (a plain constructor ignores it); a tile click closes it.
   await DialogV2.wait({
     window: { title: `${t("NewDevice")} · 1/2`, icon: "fas fa-plus" },
-    classes: ["spt-new-device"],
+    classes: ["spt-dialog", "spt-new-device"],
     position: { width: 500 },
     content: `<div class="spt-kinds">
         <h4>${t("NewDev.Carried")}</h4><div class="spt-kind-grid">${kinds.filter((k) => k.carried).map(tile).join("")}</div>
@@ -304,7 +305,7 @@ function kindForm(kind, { actor = null } = {}) {
   };
   return DialogV2.wait({
     window: { title: `${t("NewDevice")} · 2/2`, icon: "fas fa-plus" },
-    classes: ["spt-new-device"],
+    classes: ["spt-dialog", "spt-new-device"],
     position: { width: 500 },
     content: `<div class="spt-phone-form">
         <div class="spt-chosen"><img src="${kindIcon(kind)}" alt="">
@@ -414,6 +415,7 @@ export async function transferPhone(item, actor) {
 export async function giveDialog(item) {
   const phone = getPhoneData(item);
   const res = await DialogV2.wait({
+    classes: ["spt-dialog"],
     window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding" },
     position: { width: 380 },
     content: `<div class="spt-phone-form">${holderField()}
@@ -458,7 +460,7 @@ export async function contactsDialog(item) {
   const text = (phone.contacts ?? []).map((c) => (c.number ? `${c.name} | ${c.number}` : c.name)).join("\n");
   const res = await DialogV2.wait({
     window: { title: `${t("Contacts.Title")} — ${item.parent?.name ?? ""} (${phone.label})`, icon: "fas fa-address-book", resizable: true },
-    classes: ["spt-text-dialog"],
+    classes: ["spt-dialog", "spt-text-dialog"],
     position: { width: 480, height: 420 },
     content: `<div class="spt-phone-form">
         <p class="hint">${t("Contacts.Hint")}</p>
@@ -483,6 +485,7 @@ export async function contactsDialog(item) {
 /** Names a correspondent: adds a contact with this number (or address). */
 export async function addContactDialog(item, key, name = "") {
   const chosen = await DialogV2.prompt({
+    classes: ["spt-dialog"],
     window: { title: t("Contacts.Add"), icon: "fas fa-user-plus" },
     position: { width: 340 },
     content: `<div class="spt-phone-form">
@@ -502,7 +505,7 @@ export async function addContactDialog(item, key, name = "") {
 export async function directoryDialog() {
   const res = await DialogV2.wait({
     window: { title: `${t("Directory.Title")} · ${t("Directory.EditText")}`, icon: "fas fa-file-import", resizable: true },
-    classes: ["spt-text-dialog"],
+    classes: ["spt-dialog", "spt-text-dialog"],
     position: { width: 640, height: 560 },
     content: `<div class="spt-phone-form">
         <p class="spt-dir-purpose">${t("Directory.Purpose")}</p>

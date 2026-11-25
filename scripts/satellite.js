@@ -76,7 +76,7 @@ export function requestLink(id, { sats, who, to, kind, text = "" }) {
     const quote = kind !== "call" && text ? `<blockquote class="spt-sat-text">${esc(text)}</blockquote>` : "";
     const dialog = new SatDialog({
       window: { title: t("Satellite.Title"), icon: "fas fa-satellite-dish" },
-      classes: ["spt-sat-dialog"],
+      classes: ["spt-dialog", "spt-sat-dialog"],
       position: { width: 460 },
       content: `<div class="spt-sat-request">
           <p class="spt-sat-question">${t("Satellite.Question")}</p>

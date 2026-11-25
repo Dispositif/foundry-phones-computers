@@ -326,6 +326,7 @@ async function migrateUniverse() {
 function renamedNotice(n, oldActive) {
   const lines = [t("Renamed.Body"), n ? t("Migrated", { n }) : "", oldActive ? `<strong>${t("Renamed.Disable")}</strong>` : t("Renamed.Uninstall")];
   foundry.applications.api.DialogV2.prompt({
+    classes: ["spt-dialog"],
     window: { title: t("Renamed.Title"), icon: "fas fa-mobile-screen" },
     content: lines.filter(Boolean).map((l) => `<p>${l}</p>`).join(""),
     ok: { label: t("Renamed.Ok") }

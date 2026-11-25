@@ -32,6 +32,7 @@ export function openNews() {
   }
   if (open) lines += "</ul>";
   return DialogV2.prompt({
+    classes: ["spt-dialog"],
     window: { title: t("News.Title", { version: NEWS_VERSION.replace(/\.0$/, "") }), icon: "fas fa-gift" },
     position: { width: 520 },
     content: `<div class="spt-news">${lines}

@@ -118,3 +118,15 @@ export function applyGmLook() {
   if (look === "classic") delete document.body.dataset.sptGmLook;
   else document.body.dataset.sptGmLook = look;
 }
+
+/**
+ * The ops and haze looks are dark: the GM panel and the module's dialogs use Foundry's dark theme
+ * there (text and form colors), even when Foundry is in light theme.
+ */
+Hooks.on("renderApplicationV2", (app, element) => {
+  const el = element instanceof HTMLElement ? element : app.element;
+  if (!el || !(el.id === "spt-phone-panel" || el.classList.contains("spt-dialog"))) return;
+  if (!document.body.dataset.sptGmLook) return;
+  el.classList.remove("theme-light");
+  el.classList.add("themed", "theme-dark");
+});

@@ -431,7 +431,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       dirDelete: async function (event, target) {
         const e = this._dirEntry(target);
         if (!e) return;
-        const ok = await DialogV2.confirm({ window: { title: t("Directory.Title"), icon: "fas fa-trash" }, content: `<p>${t("Directory.DeleteConfirm", { name: esc(npcLabel(e)) })}</p>`, rejectClose: false });
+        const ok = await DialogV2.confirm({ classes: ["spt-dialog"], window: { title: t("Directory.Title"), icon: "fas fa-trash" }, content: `<p>${t("Directory.DeleteConfirm", { name: esc(npcLabel(e)) })}</p>`, rejectClose: false });
         if (ok) await deleteNpc(e.line);
       },
       sendTo: function (event, target) {
@@ -482,6 +482,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         // Removing the device deletes the item. "Keep the item" only removes the device function.
         const item = await fromUuid(target.dataset.uuid);
         const choice = await DialogV2.wait({
+          classes: ["spt-dialog"],
           window: { title: t("Unmark.Title"), icon: "fas fa-trash" },
           content: `<p>${t("Unmark.Confirm", { name: esc(item.name) })}</p>`,
           buttons: [

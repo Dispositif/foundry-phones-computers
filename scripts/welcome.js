@@ -34,7 +34,7 @@ export class WelcomeApp extends ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: "spt-welcome",
     tag: "form",
-    classes: ["spt-welcome"],
+    classes: ["spt-dialog", "spt-welcome"],
     window: { icon: "fas fa-tower-cell" },
     position: { width: 540, height: "auto" },
     form: { handler: () => {}, submitOnChange: false, closeOnSubmit: false },
@@ -183,7 +183,7 @@ export function openPlayerGuide() {
     .join("");
   return new foundry.applications.api.DialogV2({
     window: { title: t("Guide.Title"), icon: "fas fa-circle-question" },
-    classes: ["spt-guide"],
+    classes: ["spt-dialog", "spt-guide"],
     position: { width: 440 },
     content: `<ul class="spt-guide-list">${items}</ul><p class="spt-guide-credit"><i class="fas fa-tower-cell"></i> ${t("Guide.Credit")}</p>`,
     buttons: [{ action: "ok", label: t("Guide.Ok"), icon: "fas fa-check", default: true }]

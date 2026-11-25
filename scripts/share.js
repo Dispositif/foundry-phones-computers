@@ -54,6 +54,7 @@ export async function showScreen(p, title, html) {
   if (!users.length) return deviceNotice(t("Share.NobodyNear"));
   const boxes = users.map((u) => `<label class="spt-check"><input type="checkbox" name="u" value="${u.id}" checked> ${esc(userName(u))}</label>`).join("");
   const ids = await DialogV2.wait({
+    classes: ["spt-dialog"],
     window: { title: t("Share.ShowScreen"), icon: "fas fa-eye" },
     position: { width: 320 },
     content: `<div class="spt-phone-form"><p>${t("Share.ShowTo")}</p>${boxes}</div>`,
@@ -108,6 +109,7 @@ export async function forwardEntry(p, e) {
     .join("");
   const what = att ? (att.type === "image" ? t("Fwd.AnImage") : `« ${att.name} »`) : t("Fwd.ThisMessage");
   const to = await DialogV2.wait({
+    classes: ["spt-dialog"],
     window: { title: t("Fwd.Forward"), icon: "fas fa-share" },
     position: { width: 340 },
     content: `<div class="spt-phone-form"><p>${t("Fwd.ForwardTo", { what: esc(what) })}</p>

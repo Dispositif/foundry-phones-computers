@@ -41,6 +41,7 @@ export async function renameFile(item, id) {
   const file = findFile(getPhoneData(item), id);
   if (!file) return;
   const name = await DialogV2.wait({
+    classes: ["spt-dialog"],
     window: { title: t("Files.Rename"), icon: "fas fa-pen" },
     position: { width: 360 },
     content: `<div class="spt-phone-form"><input type="text" name="name" value="${esc(file.name)}" autofocus></div>`,

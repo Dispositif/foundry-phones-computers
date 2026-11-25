@@ -102,7 +102,7 @@ function alertOn(item, phone, userId) {
   const scene = `<strong>${esc(sceneName(phone.jamScene))}</strong>`;
   const dialog = new DialogV2({
     window: { title: t("Jammer.OnTitle"), icon: "fas fa-tower-broadcast" },
-    classes: ["spt-jammer-alert"],
+    classes: ["spt-dialog", "spt-jammer-alert"],
     position: { width: 420 },
     content: `<div class="spt-jammer-alert-body"><i class="fas fa-tower-broadcast"></i><div><p>${t("Jammer.OnBody", { who, scene })}</p><p class="hint">${t("Jammer.OnHint")}</p></div></div>`,
     buttons: [

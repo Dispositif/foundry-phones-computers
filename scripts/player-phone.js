@@ -234,7 +234,7 @@ export class PlayerPhone extends ApplicationV2 {
         // Player: confirm first (the GM deletes in one click).
         if (!this.gm) {
           if (isComputer(p.phone) || isFixed(p.phone)) return;
-          const ok = await foundry.applications.api.DialogV2.confirm({ window: { title: t("Delete"), icon: "fas fa-trash" }, content: `<p>${t("DeleteEntryConfirm")}</p>`, rejectClose: false });
+          const ok = await foundry.applications.api.DialogV2.confirm({ classes: ["spt-dialog"], window: { title: t("Delete"), icon: "fas fa-trash" }, content: `<p>${t("DeleteEntryConfirm")}</p>`, rejectClose: false });
           if (!ok) return;
         }
         const match = (e) => (e.id ? e.id === id : String(e.t) === ts);
