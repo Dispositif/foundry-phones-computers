@@ -1561,3 +1561,7 @@ body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones
 /* Scenes sidebar: dead zone mark (GM) */
 .spt-dz-mark { margin-left: 4px; color: #ff9f0a; font-size: 0.8em; }
 .spt-gm .spt-place-card.deadzone { outline: 2px solid #ff9f0a; outline-offset: -2px; }
+/* Player: "you got a device" window */
+.spt-given .spt-given-body { display: flex; align-items: center; gap: 12px; }
+.spt-given .spt-given-body img { width: 48px; height: 48px; border: none; flex: 0 0 auto; }
+.spt-given .spt-given-body p { margin: 0; }

@@ -304,12 +304,17 @@
     "NewDevice": "New device",
     "Give": {
       "Title": "Give \"{label}\" ({number})",
-      "Hint": "The device moves with its number, contacts and history.",
       "Give": "Give",
       "NowHeld": "\"{label}\" is now held by {name}.",
       "NowWorld": "\"{label}\" is now among the world items."
     },
-    "EditDevice": "Edit device",
+    "Given": {
+      "Title": "New device",
+      "Body": "{name} received a device: {label}.",
+      "Open": "Open",
+      "Later": "Later"
+    },
+    "EditDevice": "Configure device",
     "Contacts": {
       "Title": "Contacts",
       "Add": "Add to contacts",

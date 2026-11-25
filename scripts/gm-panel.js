@@ -2,7 +2,7 @@ import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
 import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
 import { filesOverview, previewDoc, previewEntry, previewFile, setFileStates } from "./files.js";
 import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf, newTheme, deadZoneScenes, userDeadZone } from "./devices.js";
-import { contactsDialog, directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
+import { directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
 import { copyJournalLink } from "./journal-links.js";
 import { openPhone } from "./main.js";
 import { sendSms } from "./messages.js";
@@ -478,7 +478,6 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
         foundry.utils.debouncedReload();
       },
       editPhone: async function (event, target) { editPhoneDialog(await fromUuid(target.dataset.uuid)); },
-      contacts: async function (event, target) { contactsDialog(await fromUuid(target.dataset.uuid)); },
       give: async function (event, target) { giveDialog(await fromUuid(target.dataset.uuid)); },
       openPhone: function (event, target) { openPhone(target.dataset.uuid); },
       unmarkPhone: async function (event, target) {

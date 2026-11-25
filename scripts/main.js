@@ -10,11 +10,11 @@
 
 import { LEGACY_IDS, MODULE_ID, SHEET_ID, SOCKET } from "./constants.js";
 import { DIRECTORY_SAMPLE } from "./directory-sample.js";
-import { ensureDeviceItems, registerPhoneSheet } from "./item-sheet.js";
+import { ensureDeviceItems, openSystemSheet, registerPhoneSheet } from "./item-sheet.js";
 import { allPhones, createPhone, freezeLooks, migrateSatphones, getPhoneData, isFixed, isJammer, isPager, markPhone, randomAddress } from "./devices.js";
 import { openPager } from "./pager.js";
 import { myJammers, openJammer, registerJammerHooks } from "./jammer.js";
-import { transferPhone } from "./dialogs.js";
+import { editPhoneDialog, giveDialog, newPhoneDialog, transferPhone } from "./dialogs.js";
 import { myPhones, updateFab } from "./fab.js";
 import { PhonePanel } from "./gm-panel.js";
 import { registerEnrichers, runJournalLink } from "./journal-links.js";
@@ -403,6 +403,48 @@ Hooks.on("updateScene", (scene, changes) => {
   // Dead zone switched on or off: the GM's Scenes sidebar redraws its mark (Foundry skips it for a flag change).
   if (game.user.isGM && Object.keys(changes.flags[MODULE_ID] ?? {}).some((k) => k.endsWith("deadZone"))) ui.scenes?.render();
   if (isActiveGM()) flushAll();
+});
+
+/** GM: a "New device" button at the top of the Items sidebar opens the device choice. */
+Hooks.on("renderItemDirectory", (app, html) => {
+  if (!game.user.isGM) return;
+  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  const actions = root?.querySelector(".header-actions");
+  if (!actions || actions.querySelector(".spt-new-device-btn")) return;
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spt-new-device-btn";
+  btn.innerHTML = `<i class="fas fa-mobile-screen"></i> ${t("NewDevice")}`;
+  btn.addEventListener("click", async (ev) => {
+    ev.preventDefault();
+    const res = await newPhoneDialog();
+    if (res?.open && res.item) openPhone(res.item.uuid);
+  });
+  actions.append(btn);
+});
+
+/**
+ * GM, right-click on a device in the Items sidebar: edit it, give it, or open Foundry's own item sheet
+ * (a plain click opens the device's GM view). v13+ hook, li is the entry element.
+ */
+Hooks.on("getItemContextOptions", (app, options) => {
+  const device = (li) => {
+    const el = li instanceof HTMLElement ? li : li?.[0];
+    const item = game.items.get(el?.dataset.entryId ?? el?.dataset.documentId);
+    return item && getPhoneData(item) ? item : null;
+  };
+  const isDevice = (li) => game.user.isGM && !!device(li);
+  // Foundry's "Edit" opens the GM view, as a plain click does: hidden for devices.
+  const edit = options.find((o) => o.name === "SIDEBAR.Edit" || o.name === game.i18n.localize("SIDEBAR.Edit"));
+  if (edit) {
+    const cond = edit.condition;
+    edit.condition = (li) => !device(li) && (typeof cond === "function" ? cond(li) : cond ?? true);
+  }
+  options.unshift(
+    { name: t("EditDevice"), icon: '<i class="fas fa-gear"></i>', condition: isDevice, callback: (li) => editPhoneDialog(device(li)) },
+    { name: `${t("Give.Give")}…`, icon: '<i class="fas fa-hand-holding-hand"></i>', condition: (li) => isDevice(li) && !isFixed(getPhoneData(device(li))), callback: (li) => giveDialog(device(li)) },
+    { name: t("Sheet.ItemSheet"), icon: '<i class="fas fa-file-lines"></i>', condition: isDevice, callback: (li) => openSystemSheet(device(li)) }
+  );
 });
 
 /** GM: scenes marked "dead zone" get an icon in the Scenes sidebar (Foundry re-renders it when a scene changes). */

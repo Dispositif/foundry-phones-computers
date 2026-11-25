@@ -1,9 +1,8 @@
 import { attChipHtml, attHtml, openAttachment, pickImage } from "./attachments.js";
-import { openSystemSheet } from "./item-sheet.js";
 import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
 import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, isSatellite, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, publicDevices, inboxOf, filesOf, playerUnread, viaSatellite, mobileSignal } from "./devices.js";
 import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
-import { addContactDialog, contactsDialog } from "./dialogs.js";
+import { addContactDialog, contactsDialog, editPhoneDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
 import { bindDrop, bindIconSelects, deviceSelect } from "./gm-panel.js";
 import { activeCall, endCall, outgoing, playerCall, playerSendSms } from "./player-calls.js";
@@ -143,7 +142,7 @@ export class PlayerPhone extends ApplicationV2 {
         const live = liveOn(this._current()?.item.uuid);
         if (live) hangUpLive(live.callId);
       },
-      gmItemSheet: function () { const p = this._current(); if (p) openSystemSheet(p.item); },
+      gmEditDevice: function () { const p = this._current(); if (p) editPhoneDialog(p.item); },
       showEntry: async function (event, target) {
         const p = this._current();
         const e = p && findEntry(p.phone, target.dataset.id);
@@ -711,7 +710,7 @@ export class PlayerPhone extends ApplicationV2 {
       ? `<a data-action="contacts" title="${t("Contacts.Title")}" aria-label="${t("Contacts.Title")}"><i class="fas fa-address-book"></i></a>`
       : "";
     const gmTools = this.gm
-      ? `${contactsBtn}<a data-action="gmItemSheet" title="${t("Sheet.ItemSheet")}" aria-label="${t("Sheet.ItemSheet")}"><i class="fas fa-file-lines"></i></a>`
+      ? `${contactsBtn}<a data-action="gmEditDevice" title="${t("EditDevice")}" aria-label="${t("EditDevice")}"><i class="fas fa-gear"></i></a>`
       : contactsBtn;
     // Secure device: a shield next to the signal.
     const secure = isSecure(p.phone) ? shieldIcon({ title: t("Secure.Device"), cls: "spt-secure-badge" }) : "";

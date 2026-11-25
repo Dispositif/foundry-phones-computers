@@ -304,12 +304,17 @@
     "NewDevice": "Nouvel appareil",
     "Give": {
       "Title": "Donner « {label} » ({number})",
-      "Hint": "L'appareil est déplacé avec son numéro, ses contacts et son historique.",
       "Give": "Donner",
       "NowHeld": "« {label} » est maintenant porté par {name}.",
       "NowWorld": "« {label} » est maintenant dans les objets du monde."
     },
-    "EditDevice": "Modifier l'appareil",
+    "Given": {
+      "Title": "Nouvel appareil",
+      "Body": "{name} a reçu un appareil : {label}.",
+      "Open": "Ouvrir",
+      "Later": "Plus tard"
+    },
+    "EditDevice": "Configurer l'appareil",
     "Contacts": {
       "Title": "Contacts",
       "Add": "Ajouter aux contacts",

@@ -421,12 +421,11 @@
               <a data-action="toggleLock" data-uuid="{{uuid}}" class="{{#if locked}}spt-locked{{/if}}" title="{{#if locked}}{{spt "Gm.Locked"}}{{else}}{{spt "Gm.Unlocked"}}{{/if}}" aria-label="{{#if locked}}{{spt "Gm.Locked"}}{{else}}{{spt "Gm.Unlocked"}}{{/if}}"><i class="fas {{#if locked}}fa-lock{{else}}fa-lock-open{{/if}}"></i></a>
               <a data-action="toggleCompromised" data-uuid="{{uuid}}" class="{{#if compromised}}spt-compromised{{/if}}" title="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}" aria-label="{{#if compromised}}{{spt "Gm.Compromised"}}{{else}}{{spt "Gm.NotCompromised"}}{{/if}}"><i class="fas fa-triangle-exclamation"></i></a>
               {{#unless fixed}}<a data-action="toggleSignal" data-uuid="{{uuid}}" class="{{#if noSignal}}spt-nosignal{{/if}}" title="{{#if noSignal}}{{spt "Gm.NoSignal"}}{{else}}{{spt "Gm.SignalOk"}}{{/if}}" aria-label="{{#if noSignal}}{{spt "Gm.NoSignal"}}{{else}}{{spt "Gm.SignalOk"}}{{/if}}"><i class="fas fa-signal"></i></a>{{/unless}}
-              <a data-action="contacts" data-uuid="{{uuid}}" title="{{spt "Contacts.Title"}}" aria-label="{{spt "Contacts.Title"}}"><i class="fas fa-address-book"></i></a>
               {{#if canPin}}<a data-action="devPin" data-uuid="{{uuid}}" class="{{#if pin}}spt-pinned{{/if}}" title="{{spt "Directory.DevicePinHint"}}" aria-label="{{spt "Directory.DevicePinHint"}}"><i class="fa{{#if pin}}s{{else}}r{{/if}} fa-star"></i></a>{{/if}}
               {{#if number}}<a data-action="devPub" data-uuid="{{uuid}}" class="{{#if pub}}spt-public{{/if}}" title="{{spt "Directory.DevicePublicHint"}}" aria-label="{{spt "Directory.DevicePublicHint"}}"><i class="fas fa-globe"></i></a>{{/if}}
               {{/unless}}
-              {{#unless fixed}}<a data-action="give" data-uuid="{{uuid}}" title="{{spt "Gm.GiveTo"}}" aria-label="{{spt "Gm.GiveTo"}}"><i class="fas fa-hand-holding"></i></a>{{/unless}}
-              <a data-action="editPhone" data-uuid="{{uuid}}" title="{{spt "Gm.Edit"}}" aria-label="{{spt "Gm.Edit"}}"><i class="fas fa-gear"></i></a>
+              {{#unless fixed}}<a data-action="give" data-uuid="{{uuid}}" title="{{spt "Gm.GiveTo"}}" aria-label="{{spt "Gm.GiveTo"}}"><i class="fas fa-hand-holding-hand"></i></a>{{/unless}}
+              <a data-action="editPhone" data-uuid="{{uuid}}" title="{{spt "EditDevice"}}" aria-label="{{spt "EditDevice"}}"><i class="fas fa-gear"></i></a>
               <a data-action="unmarkPhone" data-uuid="{{uuid}}" title="{{spt "Gm.Remove"}}" aria-label="{{spt "Gm.Remove"}}"><i class="fas fa-trash"></i></a>
             </span>
           </li>

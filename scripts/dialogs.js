@@ -1,6 +1,6 @@
 import { feature } from "./features.js";
-import { DialogV2, MODULE_ID } from "./constants.js";
-import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, randomAddress, shownTheme, themeChoices } from "./devices.js";
+import { DialogV2, MODULE_ID, SOCKET } from "./constants.js";
+import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, modelImg, phoneUsers, randomAddress, shownTheme, themeChoices } from "./devices.js";
 import { modelAllowed, satellitePolicy } from "./universes.js";
 import { deviceName } from "./names.js";
 import { esc, isMailAddress, norm, shieldIcon } from "./util.js";
@@ -9,7 +9,7 @@ import { t } from "./i18n.js";
 /*  Dialogs (GM, and contacts for the player)    */
 /* -------------------------------------------- */
 
-export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", pub = false, secure = false, satellite = false, withModel = true, holder = null }) {
+export async function phoneFormDialog({ title, selectHtml = "", label = null, number = null, model = "smartphone", sceneId = null, theme = null, inbox = "on", pub = false, secure = false, satellite = false, withModel = true, holder = null, give = false }) {
   // Default name = a random brand and model, following the model as long as the GM has not changed it.
   const randomName = (m) => deviceName(m) ?? MODELS[m]?.label ?? MODELS.smartphone.label;
   const autoLabel = label === null;
@@ -136,6 +136,8 @@ export async function phoneFormDialog({ title, selectHtml = "", label = null, nu
           };
         }
       },
+      // Edit device: "Give…" closes this form (unsaved changes dropped) and opens the Give window.
+      ...(give ? [{ action: "give", label: `${t("Give.Give")}…`, icon: "fas fa-hand-holding-hand", callback: () => "give" }] : []),
       { action: "cancel", label: t("Cancel"), icon: "fas fa-xmark", callback: () => false }
     ],
     rejectClose: false
@@ -416,10 +418,9 @@ export async function giveDialog(item) {
   const phone = getPhoneData(item);
   const res = await DialogV2.wait({
     classes: ["spt-dialog"],
-    window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding" },
+    window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding-hand" },
     position: { width: 380 },
-    content: `<div class="spt-phone-form">${holderField()}
-      <p class="hint">${t("Give.Hint")}</p></div>`,
+    content: `<div class="spt-phone-form">${holderField()}</div>`,
     buttons: [
       { action: "ok", label: t("Give.Give"), icon: "fas fa-check", default: true, callback: (event, button) => button.form.elements.target.value },
       { action: "cancel", label: t("Cancel"), icon: "fas fa-xmark", callback: () => false }
@@ -429,8 +430,36 @@ export async function giveDialog(item) {
   if (res === false || res == null) return; // Cancel (DialogV2 turns a null callback result into the action name)
   const actor = resolveHolder(res);
   if (actor === undefined) return ui.notifications.warn(t("Warn.ActorNotFound", { name: res }));
-  await transferPhone(item, actor);
+  const created = await transferPhone(item, actor);
   ui.notifications.info(`📱 ${actor ? t("Give.NowHeld", { label: phone.label, name: actor.name }) : t("Give.NowWorld", { label: phone.label })}`);
+  // The connected players of that character get a window (Foundry's notifications are too discreet).
+  const to = actor ? phoneUsers(actor, { activeOnly: true }).map((u) => u.id) : [];
+  if (created && to.length) game.socket.emit(SOCKET, { type: "deviceGiven", targetUserIds: to, itemUuid: created.uuid, name: actor.name });
+}
+
+/** Player: the GM just gave one of their characters a device (name only: a locked device keeps its number hidden). "Open" opens it. */
+export async function receiveDeviceGiven({ itemUuid, name }) {
+  // The message can arrive before the new item reaches this client: a few short retries.
+  let phone = null;
+  for (let i = 0; i < 10 && !phone; i++) {
+    phone = getPhoneData(fromUuidSync(itemUuid));
+    if (!phone) await new Promise((r) => setTimeout(r, 200));
+  }
+  if (!phone) return;
+  DialogV2.wait({
+    classes: ["spt-dialog", "spt-given"],
+    window: { title: t("Given.Title"), icon: "fas fa-hand-holding-hand" },
+    position: { width: 360 },
+    content: `<div class="spt-given-body"><img src="${modelImg(phone.model)}" alt=""><p>${t("Given.Body", { name: esc(name ?? ""), label: `<strong>${esc(phone.label)}</strong>` })}</p></div>`,
+    buttons: [
+      { action: "open", label: t("Given.Open"), icon: "fas fa-mobile-screen", default: true },
+      { action: "later", label: t("Given.Later"), icon: "fas fa-clock" }
+    ],
+    rejectClose: false
+  }).then(async (res) => {
+    // main.js imports this file: loaded on demand.
+    if (res === "open") (await import("./main.js")).openPhone(itemUuid);
+  });
 }
 
 export async function editPhoneDialog(item) {
@@ -446,8 +475,10 @@ export async function editPhoneDialog(item) {
     pub: !!phone.pub,
     secure: !!phone.secure,
     satellite: !!phone.satellite,
-    holder: item.parent?.name ?? null
+    holder: item.parent?.name ?? null,
+    give: !MODELS[phone.model ?? "smartphone"]?.fixed
   });
+  if (res === "give") return giveDialog(item);
   if (!res) return;
   // An empty place is allowed (network access only); a name that matches no scene is not.
   if (MODELS[res.model]?.fixed && !res.sceneId && res.sceneName) return ui.notifications.warn(t("Warn.SceneNotFound", { name: res.sceneName }));
