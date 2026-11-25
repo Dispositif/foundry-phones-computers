@@ -748,6 +748,8 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       const rec = universe().defaultModel;
       createCard = {
         pub: this._newPub ?? true,
+        // Team setting: PCs already know each other's devices, the Public box would say nothing more.
+        showPub: !game.settings.get(MODULE_ID, "team"),
         name: actor.name,
         canCancel: tiles.length > 0,
         kinds: quickKinds().map((k) => {
