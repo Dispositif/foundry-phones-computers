@@ -1,5 +1,6 @@
 import { MODULE_ID, PLAYERS } from "./env.mjs";
-import { reload } from "./helpers.mjs";
+import { expect } from "@playwright/test";
+import { join, myDevice, reload } from "./helpers.mjs";
 
 /**
  * The test world, rebuilt from scratch before each run:
@@ -35,6 +36,9 @@ export async function resetWorld(gm) {
       await set("welcomeShown", true);
       await set("universe", "modern");
       await set("directory", `Mr Smith | ${numbers["Mr Smith"]} | public`);
+      // Settings some tests change: back to their defaults if a run stopped halfway.
+      await set("networkDown", false);
+      await set("ringTimeout", 60);
       await game.user.setFlag(id, "newsSeen", "999.0.0");
 
       await Actor.create({ name: "Mr Smith", type: "npc" });
@@ -49,4 +53,20 @@ export async function resetWorld(gm) {
     },
     { id: MODULE_ID, players: PLAYERS, numbers: NUMBERS }
   );
+}
+
+/**
+ * A clean world and the three people connected: for spec files that change the world
+ * (devices given away, settings…). The world is reset before the players join.
+ */
+export async function freshSession(browser) {
+  const gm = await join(browser, "Gamemaster");
+  await resetWorld(gm);
+  const alice = await join(browser, "Alice");
+  const bob = await join(browser, "Bob");
+  const aliceDevice = await myDevice(alice);
+  const bobDevice = await myDevice(bob);
+  expect(aliceDevice?.number).toBe(NUMBERS.Alice);
+  expect(bobDevice?.number).toBe(NUMBERS.Bob);
+  return { gm, alice, bob, aliceDevice, bobDevice, close: async () => { for (const page of [gm, alice, bob]) await page.context().close(); } };
 }

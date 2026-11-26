@@ -59,3 +59,47 @@ export async function expectLogEntry(page, uuid, fields, timeout = 10_000) {
 }
 
 export const unique = (prefix) => `${prefix} ${Math.random().toString(36).slice(2, 8)}`;
+
+/** GM: changes fields of a device (flags.<module>.phone.<key>), e.g. { noSignal: true }. */
+export function patchPhone(gm, uuid, patch) {
+  return gm.evaluate(
+    async ({ id, uuid, patch }) => {
+      const update = Object.fromEntries(Object.entries(patch).map(([k, v]) => [`flags.${id}.phone.${k}`, v]));
+      await fromUuidSync(uuid).update(update);
+    },
+    { id: MODULE_ID, uuid, patch }
+  );
+}
+
+/** Waits until this page sees the device with these fields (the update reached this client). */
+export async function expectPhone(page, uuid, fields) {
+  await expect
+    .poll(() => page.evaluate(async (uuid) => (await window.spt("devices.js")).getPhoneData(fromUuidSync(uuid)), uuid), { message: `${page.userName}: ${uuid} has ${JSON.stringify(fields)}` })
+    .toMatchObject(fields);
+}
+
+/** GM: sets a world setting of the module, and waits until every page sees it. */
+export async function setModuleSetting(gm, key, value, pages = []) {
+  await gm.evaluate(({ id, key, value }) => game.settings.set(id, key, value), { id: MODULE_ID, key, value });
+  for (const page of pages) await expect.poll(() => page.evaluate(({ id, key }) => game.settings.get(id, key), { id: MODULE_ID, key })).toEqual(value);
+}
+
+/** A module string in the page's language (t("Warn.PhoneOff")). */
+export function moduleText(page, key) {
+  return page.evaluate(async (key) => (await window.spt("i18n.js")).t(key), key);
+}
+
+/** Opens the player's device window on this device. */
+export async function openDevice(page, uuid) {
+  await page.evaluate(async (uuid) => (await window.spt("main.js")).openPhone(uuid), uuid);
+  await expect.poll(() => page.evaluate(async () => !!(await window.spt("player-phone.js")).PlayerPhone.instance?.rendered)).toBe(true);
+}
+
+/**
+ * Checks that nothing happens: waits a moment (time for a socket round trip through the GM),
+ * then compares the device history with what it was before.
+ */
+export async function expectLogUnchanged(page, uuid, before, ms = 1500) {
+  await page.waitForTimeout(ms);
+  expect(await deviceLog(page, uuid), `${page.userName}: history of ${uuid} unchanged`).toEqual(before);
+}
