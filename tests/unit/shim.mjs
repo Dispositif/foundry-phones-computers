@@ -63,6 +63,7 @@ function list(arr) {
 }
 
 globalThis.game = {
+  ready: true,
   user: { id: "gm", isGM: true },
   users: list([]),
   i18n: { lang: "en", has: () => false, localize: (k) => k },

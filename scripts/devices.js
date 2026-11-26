@@ -45,7 +45,6 @@ export function isJamming(phone) {
 
 /* Scenes cut by a jammer, cached until a device item changes. */
 let jamCache = null;
-for (const hook of ["createItem", "updateItem", "deleteItem", "deleteActor"]) Hooks.on(hook, () => (jamCache = null));
 
 /** Scene id -> jammers cutting it ({ item, phone, actor }). */
 export function jammedScenes() {
@@ -373,7 +372,6 @@ export function hasSignal(phone) {
 /* -------------------------------------------- */
 
 let teamCache = null;
-for (const hook of ["createItem", "updateItem", "deleteItem", "updateActor", "updateUser", "updateSetting"]) Hooks.on(hook, () => (teamCache = null));
 
 /** Devices carried by player characters, when the "team" setting is on (cached until something changes). */
 function teamDevices() {
@@ -408,25 +406,55 @@ export function contactsOf(phone) {
   return [...own, ...teamContacts(phone).filter((c) => !known.has(norm(c.number)))];
 }
 
-export function allPhones({ jammers = false } = {}) {
-  const out = [];
+/*
+ * Device index: every device item of the world (carried by actors, then world items), found once and
+ * kept until a document changes. Built only once the world is ready (before, the collections are not filled).
+ * The device caches below (jammed scenes, team) are forgotten at the same time.
+ */
+let deviceIndex = null; // { all, phones, jammers, byNumber: Map<norm number, entries> }
+export function forgetDevices() {
+  deviceIndex = null;
+  jamCache = null;
+  teamCache = null;
+}
+for (const hook of ["createItem", "updateItem", "deleteItem", "createActor", "updateActor", "deleteActor", "updateUser", "updateSetting"]) Hooks.on(hook, forgetDevices);
+
+function devices() {
+  if (deviceIndex) return deviceIndex;
+  const all = [];
   const push = (item) => {
     const phone = getPhoneData(item);
-    if (phone && (jammers || !isJammer(phone))) out.push({ item, phone, actor: item.parent instanceof Actor ? item.parent : null });
+    // Frozen: shared by every caller until the next change.
+    if (phone) all.push(Object.freeze({ item, phone, actor: item.parent instanceof Actor ? item.parent : null }));
   };
   for (const actor of game.actors) for (const item of actor.items) push(item);
   for (const item of game.items) push(item);
-  return out;
+  const phones = all.filter((p) => !isJammer(p.phone));
+  const byNumber = new Map();
+  for (const p of phones) {
+    const n = norm(p.phone.number);
+    if (!n) continue;
+    if (!byNumber.has(n)) byNumber.set(n, []);
+    byNumber.get(n).push(p);
+  }
+  const index = { all, phones, jammers: all.filter((p) => isJammer(p.phone)), byNumber };
+  if (game.ready) deviceIndex = index;
+  return index;
+}
+
+/** All devices (a new array each time, the caller may sort it): jammers only if asked for. */
+export function allPhones({ jammers = false } = {}) {
+  return [...(jammers ? devices().all : devices().phones)];
 }
 
 export function allJammers() {
-  return allPhones({ jammers: true }).filter((p) => isJammer(p.phone));
+  return [...devices().jammers];
 }
 
 export function phonesByNumber(number) {
   const n = norm(number);
   if (!n) return [];
-  return allPhones().filter((p) => norm(p.phone.number) === n);
+  return [...(devices().byNumber.get(n) ?? [])];
 }
 
 /** Players who "hold" the device carried by this actor. */
