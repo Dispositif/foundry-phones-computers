@@ -1,6 +1,6 @@
 import { DialogV2, MODULE_ID } from "./constants.js";
 import { holderName, phoneUsers, viaSatellite } from "./devices.js";
-import { esc, rerenderAll } from "./util.js";
+import { esc, isActiveGM, rerenderAll } from "./util.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Satellite link: the GM decides each one     */
@@ -16,7 +16,7 @@ function openSky() {
 
 /** Active GM: every scene asks again (session start, network cut or restored). */
 export function resetOpenSky() {
-  if (game.users.activeGM !== game.user || !openSky().size) return;
+  if (!isActiveGM() || !openSky().size) return;
   game.settings.set(MODULE_ID, "satSky", []);
 }
 

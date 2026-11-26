@@ -4,7 +4,7 @@ import { operatorName } from "./names.js";
 import { openPanel } from "./main.js";
 import { startTour, tourAvailable } from "./tour.js";
 import { UNIVERSES, universeKey } from "./universes.js";
-import { esc } from "./util.js";
+import { esc, isActiveGM } from "./util.js";
 import { t } from "./i18n.js";
 
 /* -------------------------------------------- */
@@ -125,7 +125,7 @@ export function openWelcome() {
  * A world that already has devices was set up before: no welcome.
  */
 export async function maybeWelcome() {
-  if (game.user !== game.users.activeGM || game.settings.get(MODULE_ID, "welcomeShown")) return;
+  if (!isActiveGM() || game.settings.get(MODULE_ID, "welcomeShown")) return;
   await game.settings.set(MODULE_ID, "welcomeShown", true);
   if (!allPhones({ jammers: true }).length) openWelcome();
 }

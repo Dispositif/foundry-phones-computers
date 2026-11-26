@@ -322,11 +322,6 @@ function renamedNotice(n, oldActive) {
   }).catch(() => {});
 }
 
-// Another scene activated: satellite approvals "for the whole scene" are forgotten.
-Hooks.on("updateScene", (scene, changes) => {
-  if (changes.active === true) resetOpenSky();
-});
-
 Hooks.once("ready", async () => {
   // Universe accent on the GM panel and floating buttons (CSS: body[data-spt-universe]).
   document.body.dataset.sptUniverse = universeKey();
@@ -342,7 +337,7 @@ Hooks.once("ready", async () => {
     runJournalLink(link.dataset);
   });
   await migrateLegacy();
-  if (game.user === game.users.activeGM) {
+  if (isActiveGM()) {
     ensureDeviceItems();
     await migrateUniverse();
     await dropOldDirectoryTip();
@@ -395,13 +390,12 @@ Hooks.on("canvasReady", (canvas) => {
   if (!game.user.isGM) game.socket.emit(SOCKET, { type: "sceneChanged", userId: game.user.id, sceneId: canvas.scene?.id ?? null });
 });
 
-// A renamed scene: the Items sidebar captions of its installed devices follow.
 Hooks.on("updateScene", (scene, changes) => {
+  // Another scene activated: satellite approvals "for the whole scene" are forgotten.
+  if (changes?.active === true) resetOpenSky();
+  // A renamed scene: the Items sidebar captions of its installed devices follow.
   if (game.user.isGM && "name" in (changes ?? {}) && game.items.some((i) => getPhoneData(i)?.sceneId === scene.id)) ui.items?.render();
-});
-
-// Dead zones: a scene unmarked delivers what was waiting (a player changing scene: see updateUser).
-Hooks.on("updateScene", (scene, changes) => {
+  // Dead zones: a scene unmarked delivers what was waiting (a player changing scene: see the sceneChanged message).
   if (changes?.flags?.[MODULE_ID] === undefined) return;
   rerenderAll();
   // Dead zone switched on or off: the GM's Scenes sidebar redraws its mark (Foundry skips it for a flag change).
@@ -409,10 +403,26 @@ Hooks.on("updateScene", (scene, changes) => {
   if (isActiveGM()) flushAll();
 });
 
-/** GM: a "New device" button at the top of the Items sidebar opens the device choice. */
+/** Root element of a rendered sidebar or sheet: an HTMLElement (v13+), a jQuery object (older sheets), else the app's own. */
+function rootOf(html, app = null) {
+  return html instanceof HTMLElement ? html : html?.[0] ?? app?.element;
+}
+
+/** Document id of a sidebar entry (an element or a jQuery object): data-entry-id (v13+) or data-document-id. */
+function entryId(li) {
+  const el = li instanceof HTMLElement ? li : li?.[0];
+  return el?.dataset.entryId ?? el?.dataset.documentId;
+}
+
 Hooks.on("renderItemDirectory", (app, html) => {
   if (!game.user.isGM) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  const root = rootOf(html, app);
+  addNewDeviceButton(root);
+  captionDevices(root);
+});
+
+/** GM: a "New device" button at the top of the Items sidebar opens the device choice. */
+function addNewDeviceButton(root) {
   const actions = root?.querySelector(".header-actions");
   if (!actions || actions.querySelector(".spt-new-device-btn")) return;
   const btn = document.createElement("button");
@@ -425,17 +435,15 @@ Hooks.on("renderItemDirectory", (app, html) => {
     if (res?.open && res.item) openPhone(res.item.uuid);
   });
   actions.append(btn);
-});
+}
 
 /**
  * GM, Items sidebar: under each device's name, a small caption (place or holder · number/email)
  * a lock when it is locked, a warning when it is compromised. Display only: the item's name is never changed.
  */
-Hooks.on("renderItemDirectory", (app, html) => {
-  if (!game.user.isGM) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+function captionDevices(root) {
   for (const li of root?.querySelectorAll("li.directory-item.entry") ?? []) {
-    const item = game.items.get(li.dataset.entryId ?? li.dataset.documentId);
+    const item = game.items.get(entryId(li));
     const phone = item && getPhoneData(item);
     const name = li.querySelector(".entry-name");
     if (!phone || !name || name.querySelector(".spt-item-sub")) continue;
@@ -448,7 +456,7 @@ Hooks.on("renderItemDirectory", (app, html) => {
     li.classList.add("spt-device-entry");
     name.innerHTML = `<span class="spt-item-name">${esc(item.name)}${lock}${warn}</span><span class="spt-item-sub">${where}${address ? ` · ${esc(address)}` : ""}</span>`;
   }
-});
+}
 
 /**
  * GM, right-click on a device in the Items sidebar: edit it, give it, or open Foundry's own item sheet
@@ -456,8 +464,7 @@ Hooks.on("renderItemDirectory", (app, html) => {
  */
 Hooks.on("getItemContextOptions", (app, options) => {
   const device = (li) => {
-    const el = li instanceof HTMLElement ? li : li?.[0];
-    const item = game.items.get(el?.dataset.entryId ?? el?.dataset.documentId);
+    const item = game.items.get(entryId(li));
     return item && getPhoneData(item) ? item : null;
   };
   const isDevice = (li) => game.user.isGM && !!device(li);
@@ -477,10 +484,7 @@ const EDIT_ICON = /fa-(pen-to-square|edit|pen|pencil)\b/;
 Hooks.once("ready", () => {
   const labels = new Set(EDIT_KEYS.flatMap((k) => [k, game.i18n.localize(k)]));
   Hooks.on("getItemContextOptions", (app, options) => {
-    const isDevice = (li) => {
-      const el = li instanceof HTMLElement ? li : li?.[0];
-      return !!getPhoneData(game.items.get(el?.dataset.entryId ?? el?.dataset.documentId));
-    };
+    const isDevice = (li) => !!getPhoneData(game.items.get(entryId(li)));
     for (const o of options) {
       if (!labels.has(o.name) && !labels.has(game.i18n.localize(o.name ?? "")) && !EDIT_ICON.test(o.icon ?? "")) continue;
       const cond = o.condition;
@@ -495,8 +499,7 @@ Hooks.once("ready", () => {
  */
 Hooks.on("getActorContextOptions", (app, options) => {
   const npc = (li) => {
-    const el = li instanceof HTMLElement ? li : li?.[0];
-    const actor = game.actors.get(el?.dataset.entryId ?? el?.dataset.documentId);
+    const actor = game.actors.get(entryId(li));
     return actor && !actor.hasPlayerOwner ? actor : null;
   };
   options.push({
@@ -531,22 +534,25 @@ Hooks.on("getActorSheetHeaderButtons", (app, buttons) => {
   buttons.unshift({ label: t("Directory.Add"), class: "spt-add-directory", icon: "fas fa-phone", onclick: () => addActorToDirectory(actor) });
 });
 
-/** GM: scenes marked "dead zone" get an icon in the Scenes sidebar (Foundry re-renders it when a scene changes). */
 Hooks.on("renderSceneDirectory", (app, html) => {
   if (!game.user.isGM) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+  const root = rootOf(html, app);
+  markDeadZones(root);
+  markSceneDevices(root);
+});
+
+/** GM: scenes marked "dead zone" get an icon in the Scenes sidebar (Foundry re-renders it when a scene changes). */
+function markDeadZones(root) {
   for (const li of root?.querySelectorAll("li[data-entry-id], li[data-document-id]") ?? []) {
-    const scene = game.scenes.get(li.dataset.entryId ?? li.dataset.documentId);
+    const scene = game.scenes.get(entryId(li));
     if (!scene?.getFlag(MODULE_ID, "deadZone") || li.querySelector(".spt-dz-mark")) continue;
     const name = li.querySelector(".entry-name, .document-name, .name") ?? li;
     name.insertAdjacentHTML("beforeend", ` <i class="fas fa-phone-slash spt-dz-mark" title="${t("Scene.DeadZone")}"></i>`);
   }
-});
+}
 
 /** GM, Scenes sidebar: small grey icons in the corner of scenes with landlines or terminals (tooltip: their labels). */
-Hooks.on("renderSceneDirectory", (app, html) => {
-  if (!game.user.isGM) return;
-  const root = html instanceof HTMLElement ? html : html?.[0] ?? app.element;
+function markSceneDevices(root) {
   const byScene = new Map();
   for (const item of game.items) {
     const phone = getPhoneData(item);
@@ -557,17 +563,17 @@ Hooks.on("renderSceneDirectory", (app, html) => {
     byScene.set(phone.sceneId, entry);
   }
   for (const li of root?.querySelectorAll("li[data-entry-id], li[data-document-id]") ?? []) {
-    const entry = byScene.get(li.dataset.entryId ?? li.dataset.documentId);
+    const entry = byScene.get(entryId(li));
     if (!entry || li.querySelector(".spt-scene-devs")) continue;
     const icons = ["landline", "desktop"].filter((k) => entry[k].length)
       .map((k) => `<i class="fas ${MODELS[k].icon}" title="${esc(`${MODELS[k].label} — ${entry[k].join(", ")}`)}"></i>`).join("");
     li.insertAdjacentHTML("beforeend", `<span class="spt-scene-devs">${icons}</span>`);
   }
-});
+}
 
 /** Scene configuration: "dead zone" checkbox (no mobile network, no Wi-Fi). */
 Hooks.on("renderSceneConfig", (app, html) => {
-  const root = html instanceof HTMLElement ? html : html?.[0];
+  const root = rootOf(html);
   const tab = root?.querySelector('.tab[data-tab="basics"]') ?? root?.querySelector("form");
   if (!tab || tab.querySelector(".spt-deadzone")) return;
   const checked = app.document?.getFlag(MODULE_ID, "deadZone") ? "checked" : "";
