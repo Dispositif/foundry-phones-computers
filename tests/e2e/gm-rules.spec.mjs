@@ -75,6 +75,28 @@ test.describe("GM rules", () => {
     expect(await gm.evaluate((uuid) => fromUuidSync(uuid)?.parent?.name, aliceDevice.uuid)).toBe("Agent Alice");
   });
 
+  test("A player cannot pass for another one: Bob's client claiming to be Alice is ignored", async () => {
+    const { gm, alice, bob, aliceDevice } = s;
+    const unread = unique("Still unread");
+    await gmSms(NUMBERS.Alice, unread, "Mr Smith");
+    await expectLogEntry(alice, aliceDevice.uuid, { text: unread, read: false });
+    const before = await deviceLog(alice, aliceDevice.uuid);
+    const aliceId = await alice.evaluate(() => game.user.id);
+    const bobActor = await bob.evaluate(() => game.user.character.id);
+    // Raw messages with Alice's user id written in them, sent from Bob's browser.
+    const forge = (data) => bob.evaluate(({ socket, data }) => game.socket.emit(socket, data), { socket: SOCKET, data: { ...data, userId: aliceId } });
+
+    await forge({ type: "playerSms", fromItemUuid: aliceDevice.uuid, to: NUMBERS["Mr Smith"], text: "Forged" });
+    await forge({ type: "playerCall", fromItemUuid: aliceDevice.uuid, to: NUMBERS["Mr Smith"], callId: "forgedcall000001" });
+    await forge({ type: "playerRead", itemUuid: aliceDevice.uuid, key: NUMBERS["Mr Smith"] });
+    await forge({ type: "playerGive", itemUuid: aliceDevice.uuid, actorId: bobActor });
+
+    await expectLogUnchanged(alice, aliceDevice.uuid, before);
+    expect(await gmIncoming()).toBe(0);
+    await expect(ringDialog()).toBeHidden();
+    expect(await gm.evaluate((uuid) => fromUuidSync(uuid)?.parent?.name, aliceDevice.uuid)).toBe("Agent Alice");
+  });
+
   test("Network busy: while a call rings, and while one is in progress, a second call gets “busy” (on the device and from the GM)", async () => {
     const { gm, alice, bob, aliceDevice, bobDevice } = s;
     // Alice calls Mr Smith: it rings at the GM.
