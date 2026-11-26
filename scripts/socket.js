@@ -8,7 +8,8 @@ import { closeDial, endLive, openDial, openLive, openRinging } from "./live-call
 import { receiveShow } from "./share.js";
 import { onDocRequest, onFileContent, onFileRequest } from "./files.js";
 import { onJamSound, onJammerRequest } from "./jammer.js";
-import { deviceNotice, isActiveGM, playLocal } from "./util.js";
+import { deviceNotice, isActiveGM, playLocal, rerenderAll } from "./util.js";
+import { flushAll } from "./messages.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
 /*  Socket                                      */
@@ -88,6 +89,11 @@ export function onSocket(data) {
     case "deviceGiven":
       // Loaded on demand: a static import of dialogs.js here would change the modules' load order.
       if (data.targetUserIds?.includes(game.user.id)) import("./dialogs.js").then((m) => m.receiveDeviceGiven(data));
+      break;
+    case "sceneChanged":
+      // A player changed scene: dead zones and who is in a room follow. Leaving a dead zone delivers what was waiting.
+      rerenderAll();
+      if (isActiveGM()) flushAll();
       break;
     case "playerGive":
       if (isActiveGM()) import("./dialogs.js").then((m) => m.onPlayerGive(data));

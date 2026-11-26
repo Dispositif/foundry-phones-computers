@@ -381,6 +381,10 @@ Hooks.on("preUpdateItem", (item, changes) => {
 });
 // Presence on a scene: who sees installed devices (terminal).
 for (const hook of ["createToken", "deleteToken", "canvasReady"]) Hooks.on(hook, () => rerenderAll());
+// A player changed scene: tell the others (Foundry fires no updateUser for viewedScene). Leaving a dead zone delivers what was waiting.
+Hooks.on("canvasReady", (canvas) => {
+  if (!game.user.isGM) game.socket.emit(SOCKET, { type: "sceneChanged", userId: game.user.id, sceneId: canvas.scene?.id ?? null });
+});
 
 // A renamed scene: the Items sidebar captions of its installed devices follow.
 Hooks.on("updateScene", (scene, changes) => {
@@ -566,11 +570,6 @@ Hooks.on("renderSceneConfig", (app, html) => {
 });
 Hooks.on("updateUser", (user, changes) => {
   if (user.isSelf && "character" in changes) updateFab();
-  if ("viewedScene" in changes) {
-    rerenderAll();
-    // Leaving a dead zone: what was waiting arrives.
-    if (isActiveGM()) flushAll();
-  }
 });
 /**
  * A carried device exists only once. Dragged onto another character (Foundry copies it),
