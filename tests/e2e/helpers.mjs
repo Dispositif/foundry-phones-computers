@@ -53,9 +53,16 @@ export function deviceLog(page, uuid) {
 
 /** Waits until the device history (seen from this page) has an entry matching all these fields. */
 export async function expectLogEntry(page, uuid, fields, timeout = 10_000) {
-  await expect
-    .poll(async () => (await deviceLog(page, uuid)).some((e) => Object.entries(fields).every(([k, v]) => e[k] === v)), { timeout, message: `${page.userName}: entry ${JSON.stringify(fields)} in ${uuid}` })
-    .toBe(true);
+  try {
+    await expect
+      .poll(async () => (await deviceLog(page, uuid)).some((e) => Object.entries(fields).every(([k, v]) => e[k] === v)), { timeout, message: `${page.userName}: entry ${JSON.stringify(fields)} in ${uuid}` })
+      .toBe(true);
+  } catch (err) {
+    // Show what the history holds, to tell a missing entry from one with other fields.
+    const log = await deviceLog(page, uuid).catch(() => "unreadable");
+    err.message += `\nHistory seen by ${page.userName}: ${JSON.stringify(log)}`;
+    throw err;
+  }
 }
 
 export const unique = (prefix) => `${prefix} ${Math.random().toString(36).slice(2, 8)}`;
@@ -102,4 +109,61 @@ export async function openDevice(page, uuid) {
 export async function expectLogUnchanged(page, uuid, before, ms = 1500) {
   await page.waitForTimeout(ms);
   expect(await deviceLog(page, uuid), `${page.userName}: history of ${uuid} unchanged`).toEqual(before);
+}
+
+/** GM: creates scenes (name -> dead zone?), activates the first one, and returns their ids by name. */
+export function createScenes(gm, scenes) {
+  return gm.evaluate(
+    async ({ id, scenes }) => {
+      const ids = {};
+      for (const [name, deadZone] of Object.entries(scenes)) {
+        const scene = await Scene.create({ name, navigation: true, ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER }, flags: { [id]: { deadZone } } });
+        ids[name] = scene.id;
+      }
+      await game.scenes.get(Object.values(ids)[0]).activate();
+      return ids;
+    },
+    { id: MODULE_ID, scenes }
+  );
+}
+
+/** The player views this scene (what the module uses to place them), as the GM sees it. */
+export async function viewScene(gm, page, sceneId) {
+  // Foundry ignores a scene change while the canvas is still loading: wait for it, then ask again until the GM sees it.
+  await expect
+    .poll(async () => {
+      await page.evaluate(async (sceneId) => {
+        if (!canvas.loading && canvas.scene?.id !== sceneId) await game.scenes.get(sceneId).view();
+      }, sceneId);
+      return gm.evaluate(({ name, sceneId }) => game.users.getName(name).viewedScene === sceneId, { name: page.userName, sceneId });
+    }, { timeout: 20_000, message: `${page.userName} views scene ${sceneId}` })
+    .toBe(true);
+}
+
+/** Calls from this player's device; returns the call id at once (the GM may clear it as soon as this task yields). */
+export function playerCall(page, uuid, to) {
+  return page.evaluate(
+    async ({ uuid, to }) => {
+      const calls = await window.spt("player-calls.js");
+      calls.playerCall(fromUuidSync(uuid), to);
+      return calls.outgoing?.callId ?? null;
+    },
+    { uuid, to }
+  );
+}
+
+/** Sends a message from this player's device (true if the device let it go). */
+export function playerSms(page, uuid, to, text, options = {}) {
+  return page.evaluate(async ({ uuid, to, text, options }) => (await window.spt("player-calls.js")).playerSendSms(fromUuidSync(uuid), to, text, options), { uuid, to, text, options });
+}
+
+/** The call ringing on this player's side (its id), or null. */
+export function ringingAt(page) {
+  return page.evaluate(async () => (await window.spt("player-calls.js")).activeCall?.callId ?? null);
+}
+
+/** A warning shown in the GM's Foundry notifications. */
+export async function expectGmWarning(gm, key, data = {}) {
+  const text = await gm.evaluate(async ({ key, data }) => (await window.spt("i18n.js")).t(key, data), { key, data });
+  await expect(gm.locator("#notifications .notification.warning").filter({ hasText: text }).first()).toBeVisible();
 }

@@ -40,7 +40,7 @@ export async function resetWorld(gm) {
       await set("networkDown", false);
       await set("ringTimeout", 60);
       await set("satSky", []);
-      await set("feature-satellite", false);
+      for (const feature of ["satellite", "secure", "jammer", "intel"]) await set(`feature-${feature}`, false);
       await game.user.setFlag(id, "newsSeen", "999.0.0");
 
       await Actor.create({ name: "Mr Smith", type: "npc" });
