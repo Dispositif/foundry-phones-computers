@@ -681,10 +681,57 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Template data: everything is computed here, the template only displays. */
   async _prepareContext() {
     const phones = allPhones().sort((a, b) => phoneLabel(a).localeCompare(phoneLabel(b)));
+    const st = this._state;
+    // Conversations: agents with NPCs (the GM answers), and listening to agents between themselves.
+    const allThreads = collectThreads(phones);
+    const threads = { npc: allThreads.filter((th) => !th.agents), agents: allThreads.filter((th) => th.agents), actors: agentActors(phones) };
+    // In this order: Send settles the recipient and the mode, Intel may leave its tab (feature switched off).
+    const send = this._sendContext(phones);
+    const inbox = this._inboxContext(phones, threads, send.reachable);
+    const watch = this._watchContext(phones, threads);
+    const devices = this._devicesContext(phones, threads);
+    return {
+      ...this._statusContext(phones),
+      tab: st.tab,
+      mode: st.mode,
+      ...send.context,
+      ...inbox,
+      ...watch,
+      ...devices,
+      directory: st.tab === "directory" ? this._directoryContext(phones) : null,
+      unknownCount: unknownNumbers(phones).length,
+      files: st.tab === "files" ? this._filesContext(phones) : null,
+      fileCount: phones.reduce((n, p) => n + (isComputer(p.phone) ? (p.phone.files ?? []).length + getLog(p.phone, { includePending: true }).filter((e) => e.att?.type === "doc").length : 0), 0)
+    };
+  }
+
+  /** Status bar and settings view: network, dead zones, jammers, waiting messages, the call ringing. */
+  _statusContext(phones) {
+    return {
+      settingsView: this._state.settingsOpen ? this._settingsContext() : null,
+      feat: Object.fromEntries([...FEATURES, "jammer", "tracking"].map((k) => [k, feature(k)])),
+      down: game.settings.get(MODULE_ID, "networkDown"),
+      // Scenes opened to the satellite "for the whole scene": a green satellite in the status bar.
+      satSky: feature("satellite") ? (game.settings.get(MODULE_ID, "satSky") ?? []).map((id) => game.scenes.get(id)?.name).filter(Boolean).join(", ") : "",
+      // Dead zones where PCs are: one chip each, a click opens the scene configuration.
+      deadZones: deadZoneScenes().map((z) => ({ id: z.id, label: t("Gm.DeadZoneChip", { scene: z.name }), who: z.who.join(", ") })),
+      // Scenes cut by a jammer: one chip each, a click opens the jammer.
+      jams: [...jammedScenes()].flatMap(([sceneId, list]) =>
+        list.map((p) => ({ uuid: p.item.uuid, label: t("Jammer.Chip", { scene: game.scenes.get(sceneId)?.name ?? "?", who: p.actor?.name ?? p.phone.label }) }))
+      ),
+      pending: phones.reduce((n, p) => n + getLog(p.phone, { includePending: true }).filter((e) => e.pending).length, 0),
+      ringing: [...pendingCalls.values()].map((c) => c.label).join(", ")
+    };
+  }
+
+  /**
+   * Send tab: who to write to or call (an agent, a place, another device), the device, the sender.
+   * Also settles the recipient and the mode in the state. Returns the context and the agents one can reach.
+   */
+  _sendContext(phones) {
     const players = game.users.filter((u) => !u.isGM);
     // Direct to a player: only with an assigned character, who carries (or gets) the phone.
     const reachable = players.filter((u) => u.character).sort((a, b) => Number(b.active) - Number(a.active) || a.character.name.localeCompare(b.character.name));
-    const countByNumber = phones.reduce((m, p) => m.set(norm(p.phone.number), (m.get(norm(p.phone.number)) ?? 0) + 1), new Map());
 
     // "Other devices": one line per number, however it is written (555-133 = 555133).
     // Order: agents' devices first, then other carried devices, then fixed ones (by label within each group).
@@ -792,11 +839,50 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     // A satellite phone: just the agent, no device name (too long on the button).
     const targetName = selectedTile && who ? (selectedTile.phone.model === "satphone" ? who : t("Gm.DeviceOf", { name: who, device: modelLabel(selectedTile.phone) })) : selectedTile?.phone.label ?? "";
 
-    // Conversations: agents with NPCs (the GM answers), and listening to agents between themselves.
-    const allThreads = collectThreads(phones);
-    const npcThreads = allThreads.filter((th) => !th.agents);
-    const agentThreads = allThreads.filter((th) => th.agents);
-    const actors = agentActors(phones);
+    // What the chosen recipient accepts: only the possible forms are shown.
+    const [kind, id] = (this._state.target ?? "").split(/:(.*)/s);
+    const tp = kind === "phone" ? phones.filter((p) => norm(p.phone.number) === norm(id)) : [];
+    const canMessage = kind === "phone" ? tp.some((p) => msgOn(p.phone)) : kind === "user";
+    const canCall = kind === "phone" ? tp.some((p) => !modelOf(p.phone).noCalls) : kind === "user";
+    if (!canMessage && canCall) this._state.mode = "call";
+    if (!canCall && canMessage) this._state.mode = "message";
+    const messaging = canMessage && canCall;
+    // "Secure line" box: only for a secure recipient (a player: their character's carried phone).
+    const tpUser = kind === "user" ? carriedPhone(game.users.get(id)) : null;
+    const canSecure = [...tp, ...(tpUser ? [tpUser] : [])].some((p) => isSecure(p.phone));
+    const context = {
+      messaging,
+      canSecure,
+      targetDevices,
+      sendAgents,
+      sendPlaces,
+      sendTiles,
+      sendKind: st.sendKind,
+      sendUserId: sendUser?.id ?? "",
+      createCard,
+      lineCard,
+      targetDeadZone: selectedTile && dzOff(selectedTile) ? dz.name : "",
+      createdNote,
+      // No agent to write to: no player account, or no player with an assigned character.
+      noAgents: reachable.length ? "" : players.length ? t("Gm.NoAgents") : t("Gm.NoPlayers"),
+      targetName,
+      viaSat: tp.some((p) => viaSatellite(p.phone)),
+      sender: this._state.sender,
+      senderOptions: this._senderOptions(phones, kind, id),
+      // The favorite last clicked stays highlighted, until the GM goes back to the "From" field.
+      pinnedSenders: [...npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })), ...pinnedDevices(phones).map((d) => ({ value: d.number, label: d.name }))]
+        .map((c) => ({ ...c, active: !!this._pickedSender && c.value === this._pickedSender && this._state.sender === c.value })),
+      knownSenders: JSON.stringify(this._knownSenders(phones)),
+      addToDir: this._state.addToDir,
+      text: this._state.text,
+      attChip: attChipHtml(this._state.att)
+    };
+    return { context, reachable };
+  }
+
+  /** Messages tab: the agents' threads with NPCs, filtered by agent or NPC, and the pinned NPCs. */
+  _inboxContext(phones, { npc: npcThreads, agents: agentThreads, actors }, reachable) {
+    const st = this._state;
     if (st.inboxAgent && !actors.some((a) => a.id === st.inboxAgent)) st.inboxAgent = null;
     let shown = npcThreads;
     if (st.inboxAgent) shown = shown.filter((th) => th.actor?.id === st.inboxAgent);
@@ -824,56 +910,74 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       const name = npc ? npcLabel(npc) : dev ? dev.name : th ? gmName(th.phone, th.key) : st.inboxNpc;
       npcFocus = { name, number: npc?.name ? npc.number : dev?.number ?? "", sender: npc ? npc.name || npc.number : dev?.number ?? th?.key ?? "", agents: reachable.map((u) => ({ id: u.id, name: u.character.name, img: u.character.img })) };
     }
-    const threadView = (th) => {
-      const conv = getLog(th.phone, { includePending: true }).filter((e) => e.kind === "sms" && !e.prep && sameConv(th.phone, e.with, th.key));
-      const unknown = !th.agents && isUnknownNumber(th.phone, th.key);
-      return {
-        id: th.id,
-        uuid: th.item.uuid,
-        key: th.key,
-        npcId: th.npcId,
-        who: holderName(th.item, th.phone),
-        // The agent's device icon: the GM sees at a glance a text (phone) or an email (computer).
-        icon: iconOf(th.phone),
-        modelLabel: modelOf(th.phone).label,
-        // Channel of the thread (text or email): replies always go back the same way.
-        channel: isComputer(th.phone) ? "fa-envelope" : "fa-comment",
-        channelLabel: isComputer(th.phone) ? t("Gm.Mail") : t("Gm.ModeMessage"),
-        // Between agents: the other agent's name (with their device icon); to an NPC: the directory name.
-        others: th.agents ? otherAgents(th) : [],
-        to: th.agents ? "" : gmName(th.phone, th.key),
-        // The NPC's number or email, shown small after a known name.
-        addr: th.agents || isMasked(th.key) || gmName(th.phone, th.key) === th.key ? "" : th.key,
-        pinned: !th.agents && !!findNpc(keyFor(th.phone, th.key), { all: true })?.pin,
-        agents: th.agents,
-        unknown,
-        compromised: !!th.phone.compromised,
-        // Secure device: the shield switches the secure line with this NPC (between agents: shown only).
-        canSecure: !th.agents && isSecure(th.phone),
-        secure: th.agents ? !!conv[0]?.secure : secureWith(th.phone, th.key),
-        unread: th.unread,
-        canCall: !th.agents && !modelOf(th.phone).noCalls,
-        // The link would go through the satellite (no mobile network there): shown on the buttons.
-        viaSat: viaSatellite(th.phone),
-        draft: this._state.drafts[th.id] ?? "",
-        attChip: attChipHtml(this._state.replyAtts[th.id]),
-        bubbles: conv.slice(0, INBOX_BUBBLES).reverse().map((e) => ({
-          dir: e.dir,
-          fwd: !!e.fwd,
-          secure: !!e.secure,
-          pending: !!e.pending,
-          att: bubbleAtt(e.att),
-          text: e.text ? nl2br(e.text) : "",
-          // Messages that reach the GM (sent by the agent): how long ago, the date on hover.
-          ago: e.dir === "out" ? timeAgo(e.t) : "",
-          when: e.dir === "out" && e.t ? new Date(e.t).toLocaleString(currentLang()) : ""
-        })),
-        more: Math.max(0, conv.length - INBOX_BUBBLES)
-      };
-    };
-    const inbox = shown.slice(0, st.inboxLimit).map(threadView);
+    const inbox = shown.slice(0, st.inboxLimit).map((th) => this._threadView(th));
     const inboxUnread = npcThreads.reduce((n, th) => n + th.unread, 0);
+    return {
+      inbox,
+      inboxUnread,
+      inboxAgents,
+      inboxAllAgents: !st.inboxAgent,
+      pinned,
+      npcFocus,
+      moreThreads: shown.length > st.inboxLimit,
+      showMarkAll: inboxUnread > 0,
+      npcThreadCount: npcThreads.length,
+      agentThreadCount: agentThreads.length
+    };
+  }
 
+  /** One thread as the Messages and Intel tabs show it. */
+  _threadView(th) {
+    const conv = getLog(th.phone, { includePending: true }).filter((e) => e.kind === "sms" && !e.prep && sameConv(th.phone, e.with, th.key));
+    const unknown = !th.agents && isUnknownNumber(th.phone, th.key);
+    return {
+      id: th.id,
+      uuid: th.item.uuid,
+      key: th.key,
+      npcId: th.npcId,
+      who: holderName(th.item, th.phone),
+      // The agent's device icon: the GM sees at a glance a text (phone) or an email (computer).
+      icon: iconOf(th.phone),
+      modelLabel: modelOf(th.phone).label,
+      // Channel of the thread (text or email): replies always go back the same way.
+      channel: isComputer(th.phone) ? "fa-envelope" : "fa-comment",
+      channelLabel: isComputer(th.phone) ? t("Gm.Mail") : t("Gm.ModeMessage"),
+      // Between agents: the other agent's name (with their device icon); to an NPC: the directory name.
+      others: th.agents ? otherAgents(th) : [],
+      to: th.agents ? "" : gmName(th.phone, th.key),
+      // The NPC's number or email, shown small after a known name.
+      addr: th.agents || isMasked(th.key) || gmName(th.phone, th.key) === th.key ? "" : th.key,
+      pinned: !th.agents && !!findNpc(keyFor(th.phone, th.key), { all: true })?.pin,
+      agents: th.agents,
+      unknown,
+      compromised: !!th.phone.compromised,
+      // Secure device: the shield switches the secure line with this NPC (between agents: shown only).
+      canSecure: !th.agents && isSecure(th.phone),
+      secure: th.agents ? !!conv[0]?.secure : secureWith(th.phone, th.key),
+      unread: th.unread,
+      canCall: !th.agents && !modelOf(th.phone).noCalls,
+      // The link would go through the satellite (no mobile network there): shown on the buttons.
+      viaSat: viaSatellite(th.phone),
+      draft: this._state.drafts[th.id] ?? "",
+      attChip: attChipHtml(this._state.replyAtts[th.id]),
+      bubbles: conv.slice(0, INBOX_BUBBLES).reverse().map((e) => ({
+        dir: e.dir,
+        fwd: !!e.fwd,
+        secure: !!e.secure,
+        pending: !!e.pending,
+        att: bubbleAtt(e.att),
+        text: e.text ? nl2br(e.text) : "",
+        // Messages that reach the GM (sent by the agent): how long ago, the date on hover.
+        ago: e.dir === "out" ? timeAgo(e.t) : "",
+        when: e.dir === "out" && e.t ? new Date(e.t).toLocaleString(currentLang()) : ""
+      })),
+      more: Math.max(0, conv.length - INBOX_BUBBLES)
+    };
+  }
+
+  /** Intel tab (surveillance, read only), and the count of new messages between agents on its tab. */
+  _watchContext(phones, { agents: agentThreads, actors }) {
+    const st = this._state;
     // Wiretaps: messages between agents the GM has not looked at yet (reset when the GM opens Wiretaps).
     // Intel is an advanced feature: switched off, its tab is gone.
     if (st.tab === "watch" && !feature("intel")) st.tab = this._state.tab = "send";
@@ -902,7 +1006,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       };
       if (view === "listen") {
         const list = agentThreads.filter((th) => agentOk(threadActors(th)) && leakOk(th));
-        watch.threads = list.slice(0, st.inboxLimit).map(threadView);
+        watch.threads = list.slice(0, st.inboxLimit).map((th) => this._threadView(th));
         watch.more = list.length > st.inboxLimit;
       } else if (view === "calls") {
         watch.calls = callGroups(callRows(phones).filter((r) => agentOk(new Set(r.actorIds)) && (!st.watchLeak || r.compromised)));
@@ -913,8 +1017,13 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
           .filter((r) => !st.watchLeak || r.devices.length);
       }
     }
+    return { watch, listenNew };
+  }
 
-    const npcThreadsAll = collectThreads(phones).filter((th) => !th.agents);
+  /** Devices tab: every device grouped by holder or place, and the filter by kind of holder. */
+  _devicesContext(phones, { npc: npcThreadsAll }) {
+    const st = this._state;
+    const countByNumber = phones.reduce((m, p) => m.set(norm(p.phone.number), (m.get(norm(p.phone.number)) ?? 0) + 1), new Map());
     // Devices grouped: by holder, then by place, then "held by nobody".
     const groups = new Map();
     const groupOf = (p) => {
@@ -978,80 +1087,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       ...cats.map((c) => ({ key: c, label: t(`Gm.DevCat_${c}`), n: count(c) })).filter((f) => f.n)
     ].map((f) => ({ ...f, active: f.key === st.devFilter }));
     const sortedGroups = st.devFilter === "all" ? allGroups : allGroups.filter((g) => g.cat === st.devFilter);
-
-    // What the chosen recipient accepts: only the possible forms are shown.
-    const [kind, id] = (this._state.target ?? "").split(/:(.*)/s);
-    const tp = kind === "phone" ? phones.filter((p) => norm(p.phone.number) === norm(id)) : [];
-    const canMessage = kind === "phone" ? tp.some((p) => msgOn(p.phone)) : kind === "user";
-    const canCall = kind === "phone" ? tp.some((p) => !modelOf(p.phone).noCalls) : kind === "user";
-    if (!canMessage && canCall) this._state.mode = "call";
-    if (!canCall && canMessage) this._state.mode = "message";
-    const messaging = canMessage && canCall;
-    // "Secure line" box: only for a secure recipient (a player: their character's carried phone).
-    const tpUser = kind === "user" ? carriedPhone(game.users.get(id)) : null;
-    const canSecure = [...tp, ...(tpUser ? [tpUser] : [])].some((p) => isSecure(p.phone));
-    return {
-      settingsView: st.settingsOpen ? this._settingsContext() : null,
-      feat: Object.fromEntries([...FEATURES, "jammer", "tracking"].map((k) => [k, feature(k)])),
-      tab: this._state.tab,
-      mode: this._state.mode,
-      messaging,
-      canSecure,
-      down: game.settings.get(MODULE_ID, "networkDown"),
-      // Scenes opened to the satellite "for the whole scene": a green satellite in the status bar.
-      satSky: feature("satellite") ? (game.settings.get(MODULE_ID, "satSky") ?? []).map((id) => game.scenes.get(id)?.name).filter(Boolean).join(", ") : "",
-      // Dead zones where PCs are: one chip each, a click opens the scene configuration.
-      deadZones: deadZoneScenes().map((z) => ({ id: z.id, label: t("Gm.DeadZoneChip", { scene: z.name }), who: z.who.join(", ") })),
-      // Scenes cut by a jammer: one chip each, a click opens the jammer.
-      jams: [...jammedScenes()].flatMap(([sceneId, list]) =>
-        list.map((p) => ({ uuid: p.item.uuid, label: t("Jammer.Chip", { scene: game.scenes.get(sceneId)?.name ?? "?", who: p.actor?.name ?? p.phone.label }) }))
-      ),
-      pending: phones.reduce((n, p) => n + getLog(p.phone, { includePending: true }).filter((e) => e.pending).length, 0),
-      ringing: [...pendingCalls.values()].map((c) => c.label).join(", "),
-      targetDevices,
-      sendAgents,
-      sendPlaces,
-      sendTiles,
-      sendKind: st.sendKind,
-      sendUserId: sendUser?.id ?? "",
-      createCard,
-      lineCard,
-      targetDeadZone: selectedTile && dzOff(selectedTile) ? dz.name : "",
-      createdNote,
-      // No agent to write to: no player account, or no player with an assigned character.
-      noAgents: reachable.length ? "" : players.length ? t("Gm.NoAgents") : t("Gm.NoPlayers"),
-      targetName,
-      viaSat: tp.some((p) => viaSatellite(p.phone)),
-      sender: this._state.sender,
-      senderOptions: this._senderOptions(phones, kind, id),
-      // The favorite last clicked stays highlighted, until the GM goes back to the "From" field.
-      pinnedSenders: [...npcDirectory().filter((e) => e.pin).map((e) => ({ value: e.name || e.number, label: npcLabel(e) })), ...pinnedDevices(phones).map((d) => ({ value: d.number, label: d.name }))]
-        .map((c) => ({ ...c, active: !!this._pickedSender && c.value === this._pickedSender && this._state.sender === c.value })),
-      knownSenders: JSON.stringify(this._knownSenders(phones)),
-      addToDir: this._state.addToDir,
-      text: this._state.text,
-      attChip: attChipHtml(this._state.att),
-      inbox,
-      inboxUnread,
-
-      inboxAgents,
-      inboxAllAgents: !st.inboxAgent,
-      pinned,
-      npcFocus,
-      moreThreads: shown.length > st.inboxLimit,
-      showMarkAll: inboxUnread > 0,
-      npcThreadCount: npcThreads.length,
-      agentThreadCount: agentThreads.length,
-      directory: this._state.tab === "directory" ? this._directoryContext(phones) : null,
-      unknownCount: unknownNumbers(phones).length,
-      groups: sortedGroups,
-      devFilters,
-      deviceCount: phones.length,
-      watch,
-      listenNew,
-      files: this._state.tab === "files" ? this._filesContext(phones) : null,
-      fileCount: phones.reduce((n, p) => n + (isComputer(p.phone) ? (p.phone.files ?? []).length + getLog(p.phone, { includePending: true }).filter((e) => e.att?.type === "doc").length : 0), 0)
-    };
+    return { groups: sortedGroups, devFilters, deviceCount: phones.length };
   }
 
   _onRender(context, options) {
