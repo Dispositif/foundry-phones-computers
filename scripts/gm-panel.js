@@ -682,25 +682,28 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext() {
     const phones = allPhones().sort((a, b) => phoneLabel(a).localeCompare(phoneLabel(b)));
     const st = this._state;
+    // Intel is an advanced feature: switched off, its tab is gone.
+    if (st.tab === "watch" && !feature("intel")) st.tab = "send";
+    const tab = st.tab;
     // Conversations: agents with NPCs (the GM answers), and listening to agents between themselves.
     const allThreads = collectThreads(phones);
     const threads = { npc: allThreads.filter((th) => !th.agents), agents: allThreads.filter((th) => th.agents), actors: agentActors(phones) };
-    // In this order: Send settles the recipient and the mode, Intel may leave its tab (feature switched off).
-    const send = this._sendContext(phones);
-    const inbox = this._inboxContext(phones, threads, send.reachable);
-    const watch = this._watchContext(phones, threads);
-    const devices = this._devicesContext(phones, threads);
+    // Only the tab shown is computed (its own part of the state is settled when it shows: recipient, mode…).
+    // The tab bar's badges and counts are computed every time.
+    const send = tab === "send" ? this._sendContext(phones) : {};
     return {
       ...this._statusContext(phones),
-      tab: st.tab,
+      tab,
       mode: st.mode,
-      ...send.context,
-      ...inbox,
-      ...watch,
-      ...devices,
-      directory: st.tab === "directory" ? this._directoryContext(phones) : null,
+      ...send,
+      ...(tab === "inbox" ? this._inboxContext(phones, threads) : {}),
+      inboxUnread: threads.npc.reduce((n, th) => n + th.unread, 0),
+      ...this._watchContext(phones, threads),
+      ...(tab === "devices" ? this._devicesContext(phones, threads) : {}),
+      deviceCount: phones.length,
+      directory: tab === "directory" ? this._directoryContext(phones) : null,
       unknownCount: unknownNumbers(phones).length,
-      files: st.tab === "files" ? this._filesContext(phones) : null,
+      files: tab === "files" ? this._filesContext(phones) : null,
       fileCount: phones.reduce((n, p) => n + (isComputer(p.phone) ? (p.phone.files ?? []).length + getLog(p.phone, { includePending: true }).filter((e) => e.att?.type === "doc").length : 0), 0)
     };
   }
@@ -724,14 +727,18 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
+  /** Players one can write to or call directly: those with an assigned character (connected ones first). */
+  _reachable() {
+    return game.users.filter((u) => !u.isGM && u.character).sort((a, b) => Number(b.active) - Number(a.active) || a.character.name.localeCompare(b.character.name));
+  }
+
   /**
    * Send tab: who to write to or call (an agent, a place, another device), the device, the sender.
-   * Also settles the recipient and the mode in the state. Returns the context and the agents one can reach.
+   * Also settles the recipient and the mode in the state.
    */
   _sendContext(phones) {
     const players = game.users.filter((u) => !u.isGM);
-    // Direct to a player: only with an assigned character, who carries (or gets) the phone.
-    const reachable = players.filter((u) => u.character).sort((a, b) => Number(b.active) - Number(a.active) || a.character.name.localeCompare(b.character.name));
+    const reachable = this._reachable();
 
     // "Other devices": one line per number, however it is written (555-133 = 555133).
     // Order: agents' devices first, then other carried devices, then fixed ones (by label within each group).
@@ -850,7 +857,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     // "Secure line" box: only for a secure recipient (a player: their character's carried phone).
     const tpUser = kind === "user" ? carriedPhone(game.users.get(id)) : null;
     const canSecure = [...tp, ...(tpUser ? [tpUser] : [])].some((p) => isSecure(p.phone));
-    const context = {
+    return {
       messaging,
       canSecure,
       targetDevices,
@@ -877,12 +884,12 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       text: this._state.text,
       attChip: attChipHtml(this._state.att)
     };
-    return { context, reachable };
   }
 
   /** Messages tab: the agents' threads with NPCs, filtered by agent or NPC, and the pinned NPCs. */
-  _inboxContext(phones, { npc: npcThreads, agents: agentThreads, actors }, reachable) {
+  _inboxContext(phones, { npc: npcThreads, agents: agentThreads, actors }) {
     const st = this._state;
+    const reachable = this._reachable();
     if (st.inboxAgent && !actors.some((a) => a.id === st.inboxAgent)) st.inboxAgent = null;
     let shown = npcThreads;
     if (st.inboxAgent) shown = shown.filter((th) => th.actor?.id === st.inboxAgent);
@@ -914,7 +921,6 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const inboxUnread = npcThreads.reduce((n, th) => n + th.unread, 0);
     return {
       inbox,
-      inboxUnread,
       inboxAgents,
       inboxAllAgents: !st.inboxAgent,
       pinned,
@@ -979,8 +985,6 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   _watchContext(phones, { agents: agentThreads, actors }) {
     const st = this._state;
     // Wiretaps: messages between agents the GM has not looked at yet (reset when the GM opens Wiretaps).
-    // Intel is an advanced feature: switched off, its tab is gone.
-    if (st.tab === "watch" && !feature("intel")) st.tab = this._state.tab = "send";
     const listenSeen = game.user.getFlag(MODULE_ID, "listenSeen") ?? 0;
     const viewingListen = st.tab === "watch" && (st.watchView ?? "listen") === "listen";
     let listenNew = 0;
@@ -1087,7 +1091,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       ...cats.map((c) => ({ key: c, label: t(`Gm.DevCat_${c}`), n: count(c) })).filter((f) => f.n)
     ].map((f) => ({ ...f, active: f.key === st.devFilter }));
     const sortedGroups = st.devFilter === "all" ? allGroups : allGroups.filter((g) => g.cat === st.devFilter);
-    return { groups: sortedGroups, devFilters, deviceCount: phones.length };
+    return { groups: sortedGroups, devFilters };
   }
 
   _onRender(context, options) {
