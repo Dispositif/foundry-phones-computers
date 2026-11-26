@@ -170,7 +170,8 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
       if (canSecure) setSecureWith(from, key, secure);
       startLive(callId, agentSide(from, userId), npcSide(key, origin.name, gmName(fromPhone, key), secure, fromPhone));
     }
-    else addLog(from, { kind: "call", call: callId, dir: "out", with: key, result: "cancelled" });
+    // Hung up by the agent: finishOrigin was skipped, so the history gets the entry here (other outcomes are already logged).
+    else if (result === "cancelled") addLog(from, { kind: "call", call: callId, dir: "out", with: key, result: "cancelled" });
   };
   const dialog = new RingDialog({
     window: { title: emptyRooms ? t("Gm.EmptyLandlineCall") : t("Gm.AgentCalling"), icon: emptyRooms ? "fas fa-phone" : "fas fa-mobile-screen" },
