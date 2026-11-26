@@ -14,63 +14,11 @@ import { skyOpenFor } from "./satellite.js";
 import { BOOT_MS, bootText, operatorName } from "./names.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
 import { t, tn } from "./i18n.js";
+import { FRAMES, frameKind } from "./frames.js";
+import { DIAL_ANGLE, DIAL_DIGITS, DIAL_STOP, keypad, rotaryDial } from "./dialer.js";
 /* -------------------------------------------- */
 /*  Player window: My phone                      */
 /* -------------------------------------------- */
-
-/** Device frames, by kind (see frameKind). Sizes are the window's, frame included. */
-const LANDLINE_DECO = `<span class="spt-frame-deco spt-frame-handset"></span><span class="spt-frame-deco spt-frame-cord"></span>`;
-const FRAMES = {
-  smartphone: {
-    width: 340, height: 640,
-    before: `<span class="spt-frame-deco spt-frame-side r"></span><span class="spt-frame-deco spt-frame-side l"></span><span class="spt-frame-deco spt-frame-side l2"></span><span class="spt-frame-deco spt-frame-camera"></span>`,
-    after: `<span class="spt-frame-deco spt-frame-homebar"></span>`
-  },
-  mobile: {
-    width: 290, height: 600, gm: { width: 330, height: 660 },
-    before: `<div class="spt-frame-deco spt-frame-speaker"></div>`,
-    after: `<div class="spt-frame-deco spt-frame-keys" aria-hidden="true"><span class="nav"><i class="fas fa-caret-left"></i><b>OK</b><i class="fas fa-caret-right"></i></span>${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div>`
-  },
-  // 1980s brick: huge tall shell, tiny screen, tiny keys, antenna pulled out during a call.
-  brick: {
-    width: 240, height: 680, gm: { width: 300, height: 720 },
-    before: `<span class="spt-frame-deco spt-frame-antenna"></span><div class="spt-frame-deco spt-brick-grille"></div><div class="spt-frame-deco spt-brick-brand">CELLULAR</div>`,
-    after: `<div class="spt-frame-deco spt-brick-pad" aria-hidden="true"><div class="fn">${["RCL", "STO", "FCN", "CLR", "PWR", "VOL"].map((k) => `<span>${k}</span>`).join("")}</div><div class="num">${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div><div class="fn"><span class="snd">SND</span><span class="end">END</span></div></div><div class="spt-frame-deco spt-brick-mic"></div>`
-  },
-  // Satellite phone (2000s): short screen, big keys, thick antenna.
-  bricksat: {
-    width: 270, height: 570, gm: { width: 320, height: 610 },
-    before: `<span class="spt-frame-deco spt-frame-antenna"></span><span class="spt-frame-deco spt-frame-sat">SAT</span><div class="spt-frame-deco spt-frame-speaker"></div>`,
-    after: `<div class="spt-frame-deco spt-frame-keys spt-brick-keys" aria-hidden="true"><span class="snd">SND</span><span class="clr">CLR</span><span class="end">END</span>${"123456789*0#".split("").map((k) => `<span>${k}</span>`).join("")}</div>`
-  },
-  computer: {
-    width: 640, height: 460,
-    before: `<span class="spt-frame-deco spt-frame-webcam"></span>`,
-    after: `<span class="spt-frame-deco spt-frame-base"></span>`
-  },
-  monitor: {
-    width: 640, height: 440,
-    before: `<span class="spt-frame-deco spt-frame-led"></span>`,
-    after: `<span class="spt-frame-deco spt-frame-stand"></span>`
-  },
-  crt: {
-    width: 620, height: 480,
-    before: `<span class="spt-frame-deco spt-frame-led"></span>`,
-    after: `<span class="spt-frame-deco spt-frame-scan"></span><span class="spt-frame-deco spt-frame-vents"></span>`
-  },
-  desk: { width: 330, height: 520, before: LANDLINE_DECO },
-  rotary: { width: 370, height: 540, before: LANDLINE_DECO }
-};
-
-/** Frame drawn around a device: by model, and by look for terminals and landlines. */
-function frameKind(phone) {
-  const model = phone?.model ?? "smartphone";
-  const skin = skinOf(phone);
-  if (model === "desktop") return ["console", "military"].includes(skin) ? "crt" : "monitor";
-  if (model === "landline") return skin === "modern" ? "desk" : "rotary";
-  if (model === "satphone") return "bricksat";
-  return FRAMES[model] ? model : null;
-}
 
 /**
  * Player: deletes an entry of their device (never the operator's guide). The GM's browser writes it,
@@ -1071,39 +1019,11 @@ export class PlayerPhone extends ApplicationV2 {
   }
 }
 
-/* Rotary dial (landline): 1 at the top right, then counter-clockwise; finger stop between 0 and 1. */
-const DIAL_DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
-const DIAL_STOP = 15;
-const DIAL_ANGLE = (d) => 60 + 30 * DIAL_DIGITS.indexOf(d);
-
 /** Stable case reference, derived from the message id (e.g. 27-B-4417). */
 function caseRef(e) {
   let h = 0;
   for (const c of String(e.id ?? e.t)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return `${10 + (h % 90)}-${"ABCDFGHKMNPRST"[(h >>> 7) % 14]}-${String((h >>> 11) % 10000).padStart(4, "0")}`;
-}
-
-/** Push-button keypad (modern landline, 1980-2020). */
-export function keypad() {
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
-  return `<div class="spt-keypad">${keys.map((k) => `<button type="button" data-action="dial" data-digit="${k}">${k}</button>`).join("")}</div>`;
-}
-
-export function rotaryDial(number) {
-  const pos = (deg, r) => [r * Math.cos((deg * Math.PI) / 180), -r * Math.sin((deg * Math.PI) / 180)].map((v) => v.toFixed(1));
-  const holes = DIAL_DIGITS.map((d) => ({ d, xy: pos(DIAL_ANGLE(d), 68) }));
-  const [s1, s2] = [pos(DIAL_STOP, 80), pos(DIAL_STOP, 99)];
-  return `<svg class="spt-rotary" viewBox="-100 -100 200 200" aria-label="${t("Number")}">
-      <defs><mask id="spt-holes"><rect x="-100" y="-100" width="200" height="200" fill="#fff"/>${holes.map((h) => `<circle cx="${h.xy[0]}" cy="${h.xy[1]}" r="14" fill="#000"/>`).join("")}<circle r="40" fill="#000"/></mask>
-        <radialGradient id="spt-bakelite" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#4a4541"/><stop offset="0.55" stop-color="#1b1917"/><stop offset="1" stop-color="#0c0b0a"/></radialGradient></defs>
-      <circle class="spt-dial-plate" r="96"/>
-      ${holes.map((h) => `<text class="spt-dial-digit" x="${h.xy[0]}" y="${h.xy[1]}">${h.d}</text>`).join("")}
-      <g class="spt-rotor"><circle r="92" fill="url(#spt-bakelite)" mask="url(#spt-holes)"/></g>
-      <circle class="spt-dial-card" r="38"/>
-      <text class="spt-dial-number" y="4">${esc(number ?? "")}</text>
-      <line class="spt-dial-stop" x1="${s1[0]}" y1="${s1[1]}" x2="${s2[0]}" y2="${s2[1]}"/>
-      ${holes.map((h) => `<circle class="spt-dial-hole" data-action="dial" data-digit="${h.d}" cx="${h.xy[0]}" cy="${h.xy[1]}" r="15"><title>${h.d}</title></circle>`).join("")}
-    </svg>`;
 }
 
 /** Entry types the GM can write into a history (preparation). */
@@ -1122,7 +1042,6 @@ export function callLabel(e) {
   }
   return t(`CallLog.in.${["answer", "decline"].includes(e.result) ? e.result : "missed"}`);
 }
-
 
 /** Modern landline display on the line: the other end's number, like while it rang (a name only when there is no number to show). */
 function lcdCaller(other) {
