@@ -20,6 +20,7 @@ import { PhonePanel } from "./gm-panel.js";
 import { registerEnrichers, runJournalLink } from "./journal-links.js";
 import { flushAll, flushPending, sendSms } from "./messages.js";
 import { restoreLive } from "./live-call.js";
+import { onNetworkGone } from "./player-calls.js";
 import { DEFAULT_UNIVERSE, UNIVERSES, applyGmLook, storedUniverseKey, universeKey } from "./universes.js";
 import { PlayerPhone, cycleDevices } from "./player-phone.js";
 import { registerTour } from "./tour.js";
@@ -372,7 +373,11 @@ async function dropOldDirectoryTip() {
   await game.settings.set(MODULE_ID, "directory", lines.join("\n"));
 }
 
-Hooks.on("userConnected", rerenderAll);
+Hooks.on("userConnected", (user, connected) => {
+  rerenderAll();
+  // The GM's browser is the network: when the last GM leaves, ringing calls end on the players' side.
+  if (!connected && user.isGM) onNetworkGone();
+});
 // Renaming the item also renames the device: they share one name.
 Hooks.on("preUpdateItem", (item, changes) => {
   const phone = getPhoneData(item);
