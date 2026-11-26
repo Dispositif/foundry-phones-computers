@@ -80,9 +80,18 @@ function saveLive() {
   game.settings.set(MODULE_ID, "liveCalls", keep);
 }
 
-/** On load: reopens the calls in progress (more than an hour old: forgotten). */
+/**
+ * On load: reopens the calls in progress (more than an hour old: forgotten).
+ * None without a GM, and none for a GM who becomes the network alone: the calls stored ended with the GM who left
+ * (see onNetworkGone), their duration unknown.
+ */
 export function restoreLive() {
   const stored = game.settings.get(MODULE_ID, "liveCalls") ?? {};
+  if (!game.users.activeGM) return;
+  if (isActiveGM() && game.users.filter((u) => u.isGM && u.active).length === 1) {
+    if (Object.keys(stored).length) saveLive();
+    return;
+  }
   let stale = false;
   for (const data of Object.values(stored)) {
     if (now() - data.since > 3600 * 1000) stale = true;

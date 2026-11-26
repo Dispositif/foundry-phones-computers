@@ -373,10 +373,14 @@ async function dropOldDirectoryTip() {
   await game.settings.set(MODULE_ID, "directory", lines.join("\n"));
 }
 
+// The active GM's browser is the network. When that GM leaves (even if another GM stays), its calls end.
+let networkGmId = null;
+Hooks.once("ready", () => (networkGmId = game.users.activeGM?.id ?? null));
 Hooks.on("userConnected", (user, connected) => {
   rerenderAll();
-  // The GM's browser is the network: when the last GM leaves, ringing calls end on the players' side.
-  if (!connected && user.isGM) onNetworkGone();
+  const wasNetwork = !connected && user.id === networkGmId;
+  networkGmId = game.users.activeGM?.id ?? null;
+  if (wasNetwork) onNetworkGone();
 });
 // Renaming the item also renames the device: they share one name.
 Hooks.on("preUpdateItem", (item, changes) => {

@@ -4,7 +4,7 @@ import { updateFab } from "./fab.js";
 import { deviceNotice, esc, isMasked, maskedLabel, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { PlayerPhone } from "./player-phone.js";
 import { t } from "./i18n.js";
-import { calledOn, closeDial, lineBusy, liveCalls } from "./live-call.js";
+import { calledOn, closeDial, endLive, lineBusy, liveCalls } from "./live-call.js";
 /* -------------------------------------------- */
 /*  Player: incoming calls                      */
 /* -------------------------------------------- */
@@ -321,11 +321,17 @@ function stopEntry(id, { tombstone = false } = {}) {
 }
 
 /**
- * The last GM left: their browser is the network, so nobody can finish the calls that ring or are being
- * dialed. They end here (no history: the GM is not there to write it). Calls in progress are kept and come back with the GM.
+ * The active GM left: their browser was the network, so it is gone with every call it carried (in-game, a
+ * network failure; the agents call back). Calls ringing or being dialed end on the players' side (no history:
+ * that GM is not there to write it), calls in progress are cut for everyone. Another GM still connected becomes
+ * the network: it records the durations of the cut calls.
  */
 export function onNetworkGone() {
-  if (game.user.isGM || game.users.activeGM) return;
+  for (const d of [...liveCalls.values()]) {
+    if (d.dialing) closeDial(d.callId);
+    else if (!d.ended) endLive(d.callId, "cut");
+  }
+  if (game.user.isGM) return;
   if (activeCall) endCall("cancelled");
   const call = outgoing;
   if (call && !call.done) {
@@ -338,5 +344,4 @@ export function onNetworkGone() {
   }
   // Other agents' phones ringing nearby, and the "who is calling" windows.
   for (const id of [...nearby.keys()]) stopEntry(id);
-  for (const d of [...liveCalls.values()]) if (d.dialing) closeDial(d.callId);
 }
