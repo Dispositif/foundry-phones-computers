@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.0
+- **Give a device**: players give their own device to another PC, the GM any carried device.
+- **Dead zones** shown to the GM (Send tab, status bar, floating button, Scenes sidebar).
+- NPCs: add to the phone directory from the Actors list or the sheet menu.
+- NPC portraits in calls.
+- Send: places where PCs are, even without a landline.
+- Texts follow Foundry's language (module language setting removed).
+- QoL: New device button and Items context menu, device marks in the Items and Scenes sidebars, light theme, GM panel.
+- Fix: a call no longer rings forever when the player has not clicked in Foundry yet.
+- Fix: no extra "Cancelled" line after the GM's answer to a call to an NPC.
+- Fix: messages waiting in a dead zone arrive when the PC leaves it.
+- Fix: random numbers never reuse a number already in use.
+
 ## 1.5.0
 - **Satellite** (advanced feature): satellite phone, smartphone and pager; the GM approves each satellite connection.
 - New device: **Brick phone** (1980-90s, calls only).
