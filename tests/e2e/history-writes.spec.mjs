@@ -70,6 +70,36 @@ test.describe("History writes", () => {
       .toEqual({ deleted: true, kept: true });
   });
 
+  test("The GM saves Bob's device (edit window) while a message to it is being written: the message is kept", async () => {
+    const { gm, bobDevice } = s;
+    const result = await gm.evaluate(async (uuid) => {
+      const { addLog, getPhoneData, markPhone } = await window.spt("devices.js");
+      const item = fromUuidSync(uuid);
+      const phone = getPhoneData(item);
+      const form = { label: phone.label, number: phone.number, model: phone.model, sceneId: phone.sceneId ?? null, theme: phone.theme, inbox: phone.inbox ?? "on", pub: !!phone.pub, secure: !!phone.secure, satellite: !!phone.satellite };
+      // The GM saves the edit window at the very moment the message's write leaves for the server.
+      let saved = null;
+      const hook = Hooks.on("preUpdateItem", (doc, changes) => {
+        if (doc !== item || saved || changes?.flags?.["soren-phones-computers"]?.phone?.log === undefined) return;
+        saved = markPhone(item, { ...form, label: "Bob's edited phone" });
+      });
+      try {
+        await addLog(item, { kind: "sms", dir: "in", with: "555-0199", text: "Written while edited", read: false });
+        await saved;
+      } finally {
+        Hooks.off("preUpdateItem", hook);
+      }
+      const after = getPhoneData(item);
+      const out = { label: after.label, kept: after.log.some((e) => e.text === "Written while edited"), raced: !!saved };
+      // Back as it was for the next tests.
+      await markPhone(item, form);
+      return out;
+    }, bobDevice.uuid);
+    expect(result).toEqual({ label: "Bob's edited phone", kept: true, raced: true });
+    // The server kept it too (what every other client sees).
+    await expect.poll(async () => (await deviceLog(s.bob, bobDevice.uuid)).some((e) => e.text === "Written while edited")).toBe(true);
+  });
+
   test("No GM connected: Bob still marks a message read and deletes one on his phone (written by his own browser)", async ({ browser }) => {
     const { bob, bobDevice } = s;
     const send = (text) => s.gm.evaluate(async ({ to, text }) => (await window.spt("messages.js")).sendSms(`phone:${to}`, text, { sender: "Mr Smith" }), { to: NUMBERS.Bob, text });
