@@ -1,0 +1,42 @@
+/* Phones & Computers — Floating button (players and GM). */
+
+/* ---------- Floating button (players) ---------- */
+/* The group is the size of the main button; satellites and room squares are placed around it by layoutFab(). */
+#spt-phone-fab { position: fixed; left: 16px; bottom: 140px; z-index: 100; width: 44px; height: 44px; user-select: none; touch-action: none; }
+#spt-phone-fab .spt-fab {
+  position: absolute; left: 0; top: 0; width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  /* Default look (Any setting, Modern): frosted glass, the map shows through blurred. */
+  background: rgba(255,255,255,0.14); color: #fff; font-size: 20px;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.35); cursor: pointer;
+}
+#spt-phone-fab .spt-fab > i { text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
+#spt-phone-fab .spt-fab[hidden] { display: none; }
+#spt-phone-fab .spt-fab:hover { background: rgba(255,255,255,0.24); }
+/* Other carried devices: small round satellites. */
+#spt-phone-fab .spt-fab-sat { width: 30px; height: 30px; font-size: 13px; }
+#spt-phone-fab .spt-fab-sat .spt-fab-badge { min-width: 14px; height: 14px; padding: 0 3px; font-size: 9px; top: -4px; right: -4px; }
+#spt-phone-fab .spt-fab-sat.off::after { height: 2px; }
+/* Room device (installed in a place): rounded square, "office" blue tint, location pin. */
+#spt-phone-fab .spt-fab-room { width: 34px; height: 34px; font-size: 15px; border-radius: 9px; background: rgba(120,170,255,0.18); border-color: rgba(170,200,255,0.55); }
+#spt-phone-fab .spt-fab-room:hover { background: rgba(120,170,255,0.3); }
+#spt-phone-fab .spt-fab-pin {
+  position: absolute; left: -5px; bottom: -5px; width: 15px; height: 15px; border-radius: 50%;
+  background: #3a6ea8; color: #fff; font-size: 8px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px #1b1d22; pointer-events: none;
+}
+#spt-phone-fab .spt-fab-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 9px; background: var(--spt-danger); color: #fff; font-size: 11px; font-weight: bold; z-index: 2;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px rgba(255,255,255,0.7);
+}
+#spt-phone-fab .spt-fab-room .spt-fab-badge { min-width: 15px; height: 15px; font-size: 10px; top: -5px; right: -5px; }
+#spt-phone-fab .spt-fab-badge[hidden] { display: none; }
+/* Device whose window is open: thin white ring (an outline, so it never fights the call or jammer glows). */
+#spt-phone-fab .spt-fab.open { outline: 2px solid rgba(232,232,232,0.85); outline-offset: 2px; }
+/* GM: whole network cut */
+#spt-phone-fab .spt-fab.netdown { outline: 3px solid #ff3b30; outline-offset: 2px; }
+#spt-phone-fab .spt-fab.deadzone:not(.netdown) { outline: 3px solid #ff9f0a; outline-offset: 2px; }
+#spt-phone-fab .spt-fab.ringing { animation: spt-fab-ring 0.5s infinite; background: var(--spt-accent); }
+@keyframes spt-fab-ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }

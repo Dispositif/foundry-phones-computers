@@ -20,7 +20,19 @@
     "scripts/main.js"
   ],
   "styles": [
-    "styles/phone.css"
+    "styles/base.css",
+    "styles/gm-panel.css",
+    "styles/player.css",
+    "styles/looks.css",
+    "styles/fab.css",
+    "styles/legacy-chat.css",
+    "styles/frames.css",
+    "styles/screens.css",
+    "styles/neon.css",
+    "styles/universes.css",
+    "styles/jammer.css",
+    "styles/gm-looks.css",
+    "styles/gm-settings.css"
   ],
   "socket": true,
   "languages": [

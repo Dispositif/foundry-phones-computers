@@ -856,7 +856,7 @@ export function conversations(phone) {
 /** Item icon for each model (shipped with the module, always available). */
 /**
  * Icon class of a device (shown as `fas <class>`): Font Awesome, or the brick / satellite phone
- * drawings (CSS mask, styles/phone.css) since Font Awesome has none.
+ * drawings (CSS mask, styles/gm-settings.css) since Font Awesome has none.
  */
 export function iconOf(phone) {
   return modelOf(phone).icon;

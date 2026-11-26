@@ -1,0 +1,207 @@
+/* Phones & Computers — Looks per model (spt-skin-*): each look sets its own variables. */
+
+/* ---------- Looks per model ---------- */
+/* Common rules: each look only sets its variables. */
+.spt-player-phone[class*="spt-skin-"] .window-content { background: var(--skin-bg); color: var(--skin-fg); font-family: var(--skin-font, inherit); }
+.spt-player-phone[class*="spt-skin-"] .spt-phone-top,
+.spt-player-phone[class*="spt-skin-"] .spt-composer,
+.spt-player-phone[class*="spt-skin-"] .spt-phone-foot { border-color: var(--skin-line); }
+.spt-player-phone[class*="spt-skin-"] .spt-conv { border-color: var(--skin-line-soft); background: var(--skin-row, transparent); }
+.spt-player-phone[class*="spt-skin-"] .spt-conv:hover { background: var(--skin-hover); }
+.spt-player-phone[class*="spt-skin-"] textarea,
+.spt-player-phone[class*="spt-skin-"] input,
+.spt-player-phone[class*="spt-skin-"] .window-content select { background: var(--skin-input-bg); color: var(--skin-fg); border: 1px solid var(--skin-input-border); border-radius: var(--skin-radius); font-family: inherit; }
+.spt-player-phone[class*="spt-skin-"] .window-content button { background: var(--skin-btn-bg); color: var(--skin-btn-fg); border: 1px solid var(--skin-btn-border); border-radius: var(--skin-radius); font-family: inherit; }
+.spt-player-phone[class*="spt-skin-"] a { color: var(--skin-link); }
+
+/* Smartphone: dark, rounded, modern */
+.spt-player-phone.spt-skin-smartphone {
+  --skin-bg: #121316; --skin-fg: #ececec; --skin-line: rgba(255,255,255,0.12); --skin-line-soft: rgba(255,255,255,0.08);
+  --skin-hover: rgba(255,255,255,0.06); --skin-input-bg: #1f2125; --skin-input-border: rgba(255,255,255,0.18);
+  --skin-btn-bg: #24262b; --skin-btn-fg: #ececec; --skin-btn-border: rgba(255,255,255,0.15); --skin-radius: 14px; --skin-link: #ececec;
+}
+.spt-player-phone.spt-skin-smartphone .spt-bubble { border-radius: 18px; }
+.spt-player-phone.spt-skin-smartphone .spt-bubble.in { background: #2a2c31; color: #ececec; }
+.spt-player-phone.spt-skin-smartphone .spt-bubble.out { background: #2e7d5b; color: #fff; }
+
+/* Mobile phone: monochrome LCD screen */
+.spt-player-phone.spt-skin-mobile {
+  --skin-bg: #b7c79c; --skin-fg: #1e2a17; --skin-font: "Courier New", Courier, monospace; --skin-line: rgba(30,42,23,0.4); --skin-line-soft: rgba(30,42,23,0.25);
+  --skin-hover: rgba(30,42,23,0.1); --skin-input-bg: rgba(255,255,255,0.15); --skin-input-border: #1e2a17;
+  --skin-btn-bg: rgba(255,255,255,0.15); --skin-btn-fg: #1e2a17; --skin-btn-border: #1e2a17; --skin-radius: 0; --skin-link: #1e2a17;
+}
+.spt-player-phone.spt-skin-mobile .window-content { letter-spacing: 0.02em; box-shadow: inset 0 0 18px rgba(30,42,23,0.35); }
+/* LCD screen: a thin scrollbar in the screen's own ink, on a transparent track (Foundry's dark default looks out of place). */
+.spt-player-phone.spt-skin-mobile .window-content, .spt-player-phone.spt-skin-mobile .window-content * { scrollbar-width: thin; scrollbar-color: rgba(30,42,23,0.55) transparent; }
+.spt-player-phone.spt-skin-mobile .spt-bubble,
+.spt-player-phone.spt-skin-mobile .spt-bubble.in,
+.spt-player-phone.spt-skin-mobile .spt-bubble.out { border-radius: 0; background: transparent; color: #1e2a17; border: 1px dashed rgba(30,42,23,0.55); max-width: 95%; }
+.spt-player-phone.spt-skin-mobile .spt-bubble.out { border-style: solid; }
+.spt-player-phone.spt-skin-mobile .spt-badge { background: #1e2a17; color: #b7c79c; border-radius: 0; }
+.spt-player-phone.spt-skin-mobile .spt-bubble .spt-del { background: #1e2a17; color: #b7c79c; border-radius: 0; }
+.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode { color: #1e2a17; }
+/* LCD header: no red (Foundry's hover/focus/active glow), ink only */
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode,
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode:is(:hover, :focus, :focus-visible, :active, .active) { background: transparent; color: #1e2a17; border-color: rgba(30,42,23,0.5); outline: none; text-shadow: none; }
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode.active { box-shadow: 0 0 0 1px #1e2a17 inset; }
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode > i { color: inherit; }
+.application.spt-player-phone.spt-skin-mobile .spt-modes .spt-mode:not(.active):is(:hover, :focus, :focus-visible) { box-shadow: none; }
+/* Device switched off: its name in the header fades (LCD: pale ink; smartphone: low contrast) */
+.application.spt-player-phone:has(.spt-offscreen) .spt-dev-title { opacity: 0.45; }
+.application.spt-player-phone.spt-skin-mobile:has(.spt-offscreen) .spt-dev-title { opacity: 0.4; }
+/* Landline (player): the device name stays discreet */
+.application.spt-player-phone.spt-landline:not(.spt-gm-view) .spt-dev-title strong { font-weight: normal; opacity: 0.3; }
+/* LCD header: contacts book bigger, lighter ink, centered */
+.application.spt-player-phone.spt-skin-mobile .spt-phone-top a[data-action="contacts"] { display: inline-flex; align-items: center; align-self: center; font-size: 1.35em; line-height: 1; color: rgba(30,42,23,0.6); }
+.application.spt-player-phone.spt-skin-mobile .spt-phone-top a[data-action="contacts"]:hover { color: #1e2a17; text-shadow: none; }
+
+/* Laptop: plain mail client */
+.spt-player-phone.spt-skin-computer {
+  --skin-bg: #f3f4f6; --skin-fg: #1f2933; --skin-font: "Segoe UI", Helvetica, Arial, sans-serif; --skin-line: #dde1e6; --skin-line-soft: #dde1e6;
+  --skin-row: #fff; --skin-hover: #e8eef7; --skin-input-bg: #fff; --skin-input-border: #c5ccd5;
+  --skin-btn-bg: var(--spt-mail); --skin-btn-fg: #fff; --skin-btn-border: transparent; --skin-radius: 3px; --skin-link: var(--spt-mail);
+}
+.spt-player-phone.spt-skin-computer .spt-phone-top { background: var(--spt-mail); color: #fff; border: none; }
+.spt-player-phone.spt-skin-computer .spt-phone-top a, .spt-player-phone.spt-skin-computer .spt-phone-top .spt-mode { color: #fff; }
+.spt-player-phone.spt-skin-computer .spt-phone-top select { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); }
+.spt-player-phone.spt-skin-computer .spt-phone-top select option { color: #1f2933; }
+.spt-player-phone.spt-skin-computer .spt-thread.mail .spt-bubble { background: #fff; color: #1f2933; border: 1px solid #dde1e6; border-left: 3px solid var(--spt-mail); }
+.spt-player-phone.spt-skin-computer .spt-thread.mail .spt-bubble.out { background: #eef3fa; }
+
+/* Terminal: institutional workstation, cold grey, a bit dated */
+.spt-player-phone.spt-skin-desktop {
+  --skin-bg: #e4e6e3; --skin-fg: #23282c; --skin-font: Tahoma, Verdana, "DejaVu Sans", sans-serif; --skin-line: #b9bdb8; --skin-line-soft: #cfd2ce;
+  --skin-row: #f2f3f1; --skin-hover: #d9e1e6; --skin-input-bg: #fff; --skin-input-border: #8e948f;
+  --skin-btn-bg: #d3d6d2; --skin-btn-fg: #23282c; --skin-btn-border: #8e948f; --skin-radius: 0; --skin-link: #2f4f67;
+}
+.spt-player-phone.spt-skin-desktop .window-content { font-size: 0.95em; }
+.spt-player-phone.spt-skin-desktop .spt-phone-top { background: #4b5761; color: #eef1f2; border: none; }
+.spt-player-phone.spt-skin-desktop .spt-phone-top a, .spt-player-phone.spt-skin-desktop .spt-phone-top .spt-mode { color: #eef1f2; }
+.spt-player-phone.spt-skin-desktop .spt-phone-top select { background: #5d6a75; color: #eef1f2; border-color: #7d8a94; }
+.spt-player-phone.spt-skin-desktop .spt-phone-top select option { color: #23282c; }
+.spt-player-phone.spt-skin-desktop .window-content button { box-shadow: inset -1px -1px 0 #8e948f, inset 1px 1px 0 #fff; }
+.spt-player-phone.spt-skin-desktop .spt-thread.mail .spt-bubble { background: #fff; color: #23282c; border: 1px solid #b9bdb8; border-radius: 0; }
+.spt-player-phone.spt-skin-desktop .spt-thread.mail .spt-bubble.out { background: #eef0ec; }
+.spt-player-phone.spt-skin-desktop .spt-badge { border-radius: 0; background: #2f4f67; }
+
+/* Landline: black Bakelite and rotary dial (1920-1980) */
+.spt-player-phone.spt-skin-landline {
+  --skin-bg: #241e1a; --skin-fg: #ece3cc; --skin-font: Georgia, "Times New Roman", serif; --skin-line: rgba(236,227,204,0.2); --skin-line-soft: rgba(236,227,204,0.12);
+  --skin-hover: rgba(236,227,204,0.06); --skin-input-bg: #3a302a; --skin-input-border: #8b7b5c;
+  --skin-btn-bg: #3a302a; --skin-btn-fg: #ece3cc; --skin-btn-border: #8b7b5c; --skin-radius: 3px; --skin-link: #ece3cc;
+}
+.spt-player-phone.spt-skin-landline .window-content { background: radial-gradient(ellipse at 50% 35%, #3a2f28 0%, #241e1a 70%); }
+.spt-player-phone.spt-skin-landline .spt-bubble.in { background: #3a302a; color: #ece3cc; }
+.spt-player-phone.spt-skin-landline .spt-bubble.out { background: #5a4632; color: #f1e9d2; }
+.spt-player-phone.spt-skin-landline .spt-dialer { align-items: center; justify-content: center; gap: 0.8rem; }
+.spt-rotary { width: min(240px, 80%); height: auto; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); }
+.spt-rotary .spt-dial-plate { fill: #e9e0c7; stroke: #6d6048; stroke-width: 1.5; }
+.spt-rotary .spt-dial-digit { fill: #1b1917; font: bold 17px Georgia, serif; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.spt-rotary .spt-rotor { transform-origin: 0 0; }
+.spt-rotary .spt-dial-card { fill: #f4eedb; stroke: #8b7b5c; stroke-width: 1.5; }
+.spt-rotary .spt-dial-number { fill: #3a302a; font: 11px "Courier New", monospace; text-anchor: middle; pointer-events: none; }
+.spt-rotary .spt-dial-stop { stroke: #b8b3a6; stroke-width: 5; stroke-linecap: round; }
+.spt-rotary .spt-dial-hole { fill: transparent; cursor: pointer; }
+.spt-rotary .spt-dial-hole:hover { fill: rgba(255,255,255,0.12); }
+.spt-dial-strip { display: flex; gap: 4px; width: min(240px, 80%); }
+.spt-player-phone .spt-dial-strip input { min-width: 0; }
+.spt-player-phone[class*="spt-skin-"] .spt-dial-strip input { flex: 1; text-align: center; letter-spacing: 0.2em; font-family: "Courier New", monospace; color: #241e1a; background: #f1e9d2; }
+.spt-dial-strip button { flex: 0 0 auto; width: 2.2em; }
+.spt-player-phone.spt-skin-landline .spt-dialer .spt-phone-row { width: min(240px, 80%); }
+.spt-player-phone.spt-skin-landline .spt-dialer .spt-phone-row button { padding: 4px 0; font-size: 1.05em; }
+
+/* Modern landline (1980-2020): light grey plastic, small display, push-button keypad */
+.spt-player-phone.spt-skin-modern {
+  --skin-bg: #d9d7d2; --skin-fg: #2b2d30; --skin-font: "Helvetica Neue", Arial, sans-serif; --skin-line: #b7b4ad; --skin-line-soft: #c8c5bf;
+  --skin-hover: rgba(0,0,0,0.05); --skin-input-bg: #ecebe7; --skin-input-border: #a19d95;
+  --skin-btn-bg: #f1f0ec; --skin-btn-fg: #2b2d30; --skin-btn-border: #a19d95; --skin-radius: 6px; --skin-link: #2b2d30;
+}
+.spt-player-phone.spt-skin-modern .window-content { background: linear-gradient(180deg, #e4e2dd 0%, #cfccc6 100%); }
+.spt-player-phone.spt-skin-modern .spt-bubble.in { background: #ecebe7; color: #2b2d30; }
+.spt-player-phone.spt-skin-modern .spt-bubble.out { background: #5d6b78; color: #fff; }
+.spt-player-phone.spt-skin-modern .spt-dialer { align-items: center; justify-content: center; gap: 0.7rem; }
+.spt-player-phone.spt-skin-modern .spt-dial-strip { width: min(220px, 80%); }
+.spt-player-phone.spt-skin-modern .spt-dial-strip input {
+  background: #9fae8f; color: #1d2418; border: 2px solid #6f6c66; border-radius: 4px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
+  font-size: 1.3em; height: 2em; letter-spacing: 0.15em;
+}
+.spt-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: min(220px, 80%); }
+.spt-player-phone .window-content .spt-keypad button {
+  height: 44px; font-size: 1.35em; font-weight: 600; border-radius: 10px;
+  background: linear-gradient(180deg, #fbfaf7, #e3e1dc); border: 1px solid #a19d95; box-shadow: 0 2px 0 #9b978f;
+}
+.spt-player-phone .window-content .spt-keypad button:active { transform: translateY(2px); box-shadow: none; }
+.spt-player-phone.spt-skin-modern .spt-dialer .spt-phone-row { width: min(220px, 80%); }
+.spt-player-phone.spt-skin-modern .spt-dialer .spt-phone-row button { height: 40px; font-size: 1.05em; background: #4f8a5b; color: #fff; border-color: #3e6f48; }
+
+/* Federal (FBI) look: government workstation, emails as case files */
+.spt-player-phone.spt-skin-federal {
+  --skin-bg: #e9ebee; --skin-fg: #1c2533; --skin-font: Arial, Helvetica, sans-serif; --skin-line: #c3c9d2; --skin-line-soft: #d5dae1;
+  --skin-row: #fff; --skin-hover: #e3e9f2; --skin-input-bg: #fff; --skin-input-border: #9aa5b5;
+  --skin-btn-bg: #1f3358; --skin-btn-fg: #fff; --skin-btn-border: #b8964a; --skin-radius: 2px; --skin-link: #1f3358;
+}
+.spt-player-phone.spt-skin-federal .spt-banner { background: #f0e6c8; color: #5a4614; letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.66em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #b8964a; }
+.spt-player-phone.spt-skin-federal .spt-phone-top { background: #1f3358; color: #fff; border: none; border-bottom: 3px solid #b8964a; }
+.spt-player-phone.spt-skin-federal .spt-phone-top a, .spt-player-phone.spt-skin-federal .spt-phone-top .spt-mode { color: #fff; }
+.spt-player-phone.spt-skin-federal .spt-phone-top select { background: #2c4470; color: #fff; border-color: #4a6290; }
+.spt-player-phone.spt-skin-federal .spt-phone-top select option { color: #1c2533; }
+.spt-player-phone.spt-skin-federal .spt-thread.mail .spt-bubble,
+.spt-player-phone.spt-skin-federal .spt-bubble {
+  position: relative; background: #fffef8; color: #1c2533; border: 1px solid #c3c9d2; border-top: 4px solid #1f3358; border-radius: 0;
+  font-family: "Courier New", Courier, monospace; padding-top: 1.6em; box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+.spt-player-phone.spt-skin-federal .spt-bubble.out { background: #f3f5f8; border-top-color: #8a96a8; }
+.spt-player-phone.spt-skin-federal .spt-ref { position: absolute; top: 3px; left: 8px; font: bold 0.72em Arial, sans-serif; letter-spacing: 0.08em; color: #5b6676; }
+.spt-player-phone.spt-skin-federal .spt-stamp {
+  position: absolute; top: 4px; right: 8px; padding: 0 5px; font: bold 0.68em Arial, sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #a8322a; border: 2px solid #a8322a; border-radius: 2px; transform: rotate(-4deg); opacity: 0.75;
+}
+.spt-player-phone.spt-skin-federal .spt-badge { background: #a8322a; border-radius: 2px; }
+.spt-player-phone.spt-skin-federal .spt-lockscreen { gap: 0.5rem; }
+.spt-player-phone.spt-skin-federal .spt-lockscreen > i { color: #1f3358; opacity: 0.8; }
+.spt-player-phone .spt-fake-login { width: 70%; text-align: center; pointer-events: none; }
+
+/* Text console look: phosphor green on black, text only */
+.spt-player-phone.spt-skin-console {
+  --skin-bg: #050805; --skin-fg: #39ff6a; --skin-font: "Courier New", Courier, monospace; --skin-line: rgba(57,255,106,0.35); --skin-line-soft: rgba(57,255,106,0.15);
+  --skin-hover: rgba(57,255,106,0.08); --skin-input-bg: #050805; --skin-input-border: rgba(57,255,106,0.5);
+  --skin-btn-bg: transparent; --skin-btn-fg: #39ff6a; --skin-btn-border: rgba(57,255,106,0.6); --skin-radius: 0; --skin-link: #39ff6a;
+}
+.spt-player-phone.spt-skin-console .window-content {
+  text-shadow: 0 0 4px rgba(57,255,106,0.55);
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 3px);
+}
+.spt-player-phone.spt-skin-console .spt-bubble,
+.spt-player-phone.spt-skin-console .spt-thread.mail .spt-bubble { background: none; color: inherit; border: none; border-radius: 0; max-width: 100%; padding: 1px 0; align-self: stretch; }
+.spt-player-phone.spt-skin-console .spt-bubble::before { float: left; margin-right: 0.6em; }
+.spt-player-phone.spt-skin-console .spt-bubble.in::before { content: "<"; opacity: 0.7; }
+.spt-player-phone.spt-skin-console .spt-bubble.out::before { content: ">"; }
+.spt-player-phone.spt-skin-console .spt-bubble.out { opacity: 0.8; }
+.spt-player-phone.spt-skin-console .spt-badge { background: #39ff6a; color: #050805; border-radius: 0; text-shadow: none; }
+.spt-player-phone.spt-skin-console .spt-phone-top strong::after,
+.spt-player-phone.spt-skin-console .spt-phone-empty::after { content: "█"; margin-left: 4px; animation: spt-blink 1s steps(1) infinite; }
+.spt-player-phone.spt-skin-console .window-content button:hover { background: rgba(57,255,106,0.15); }
+.spt-player-phone.spt-skin-console img { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(3); }
+@keyframes spt-blink { 50% { opacity: 0; } }
+
+/* Secure (military) look: khaki and black, upper case, banner */
+.spt-player-phone.spt-skin-military {
+  --skin-bg: #1d2016; --skin-fg: #d8d4b6; --skin-font: "Courier New", Courier, monospace; --skin-line: #4f5338; --skin-line-soft: #383b28;
+  --skin-hover: rgba(216,212,182,0.06); --skin-input-bg: #12140d; --skin-input-border: #6b6f4a;
+  --skin-btn-bg: #3c4029; --skin-btn-fg: #e3dfc0; --skin-btn-border: #6b6f4a; --skin-radius: 0; --skin-link: #c9c48f;
+}
+.spt-player-phone.spt-skin-military .window-content { text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.92em; }
+.spt-player-phone.spt-skin-military textarea, .spt-player-phone.spt-skin-military input { text-transform: none; }
+.spt-player-phone.spt-skin-military .spt-bubble { border-radius: 0; border: 1px solid #4f5338; }
+.spt-player-phone.spt-skin-military .spt-bubble.in { background: #2a2e1e; color: #d8d4b6; }
+.spt-player-phone.spt-skin-military .spt-bubble.out { background: #3c4029; color: #ece8c8; }
+.spt-player-phone.spt-skin-military .spt-badge { background: #a8322a; border-radius: 0; }
+.spt-banner { flex: 0 0 auto; text-align: center; font-weight: bold; letter-spacing: 0.3em; font-size: 0.75em; padding: 2px 0; background: #a8322a; color: #f4eadc; }
+
+/* GM view (preparation): same look as the player, with a border */
+.spt-player-phone.spt-gm-view .window-content { box-shadow: inset 0 0 0 2px var(--spt-warn); }
+.spt-gm-ribbon { flex: 0 0 auto; text-align: center; font: 0.75em var(--font-primary, sans-serif); text-transform: none; letter-spacing: 0; padding: 2px 0; background: var(--spt-warn); color: #1b1b1b; text-shadow: none; }
+
+/* Incoming call: uses the look of the ringing device */
+.spt-phone-ring-dialog.spt-player-phone .window-content { padding: 0.5rem; }
+.spt-phone-ring-dialog.spt-player-phone .form-footer { gap: 6px; }

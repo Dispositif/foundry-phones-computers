@@ -1,0 +1,51 @@
+/* Phones & Computers — GM panel looks (setting "gmLook"). */
+
+/* ---------- GM panel looks (setting "gmLook", body[data-spt-gm-look]): ops room, orange haze; classic has none.
+   The module's dialogs (.spt-dialog) share the look. ---------- */
+body[data-spt-gm-look="ops"] :is(#spt-phone-panel, .spt-dialog) {
+  --g-bg: #1b1f24; --g-hd: #15181c; --g-fg: #e6e9ee; --g-dim: #8b95a3; --g-card: #222830; --g-input: #14171b;
+  --g-acc: #3fb6d8; --g-acc-soft: rgba(63,182,216,0.14); --g-on: #0d1418; --g-radius: 8px;
+  --spt-line: #2d343d; --spt-soft: rgba(255,255,255,0.04);
+}
+body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) {
+  --g-bg: #0b1214; --g-hd: #081012; --g-fg: #f4e3c8; --g-dim: #8d8a7a; --g-card: #0f1a1d; --g-input: #060c0d;
+  --g-acc: #ff8a2a; --g-acc-soft: rgba(255,138,42,0.12); --g-on: #1a0d00; --g-radius: 2px;
+  --spt-line: #24363a; --spt-soft: rgba(42,209,201,0.05);
+  --spt-uni: #ff8a2a; --spt-uni-glow: rgba(255,138,42,0.35);
+}
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) > .window-header { background: var(--g-hd); color: var(--g-fg); border-bottom: 1px solid var(--spt-line); }
+body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) > .window-header { border-bottom: 2px solid var(--g-acc); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) > .window-content { background: var(--g-bg); color: var(--g-fg); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-gm-status { background: var(--g-hd); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-tab.active { border-bottom-color: var(--g-acc); color: var(--g-acc); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) :is(.spt-agent-card, .spt-tile, .spt-gthread, .spt-chip) { background: var(--g-card); border-radius: var(--g-radius); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) :is(.spt-agent-card, .spt-tile, .spt-chip).active { border-color: var(--g-acc); background: var(--g-acc-soft); box-shadow: 0 0 0 1px var(--g-acc) inset; }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-segmented { border-radius: var(--g-radius); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-segmented a.active { background: var(--g-acc); color: var(--g-on); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) :is(input[type="text"], input[type="search"], input:not([type]), textarea, select) { background: var(--g-input); color: var(--g-fg); border: 1px solid var(--spt-line); border-radius: var(--g-radius); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) button:not(.spt-secure-btn) { background: var(--g-card); color: var(--g-fg); border: 1px solid var(--spt-line); border-radius: var(--g-radius); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) button.spt-primary { background: var(--g-acc); color: var(--g-on); border-color: var(--g-acc); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-gm-send .form-group > label { font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; color: var(--g-dim); }
+/* Ops room: a faint grid behind the content */
+body[data-spt-gm-look="ops"] :is(#spt-phone-panel, .spt-dialog) .spt-tab-body {
+  background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+/* Orange haze: sodium glow and teal mist, spaced condensed capitals */
+body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) .spt-tab-body {
+  background: radial-gradient(ellipse at 85% -10%, rgba(255,138,42,0.13), transparent 55%), radial-gradient(ellipse at 0% 110%, rgba(42,209,201,0.12), transparent 50%);
+}
+body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) :is(.spt-tab, .window-title, button.spt-primary) { font-family: "Modesto Condensed", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) .spt-gm-send .form-group > label { color: #2ad1c9; }
+body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) .spt-agent-card.active { box-shadow: 0 0 0 1px var(--g-acc) inset, 0 0 18px rgba(255,138,42,0.25); }
+/* These looks are always dark, even with Foundry's light theme */
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-gm-status .spt-pill { color: #7fd18f; }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-gm-status.down .spt-pill { color: #ff8a7a; }
+
+
+/* Device icons are white SVGs: shown dark wherever Foundry's light theme applies (sidebar, sheets, dialogs). */
+.theme-light img[src*="soren-phones-computers/icons/"] { filter: invert(1); }
+.theme-light .theme-dark img[src*="soren-phones-computers/icons/"] { filter: none; }
+.theme-dark .theme-light img[src*="soren-phones-computers/icons/"] { filter: invert(1); }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) img[src*="soren-phones-computers/icons/"],
+.spt-player-phone img[src*="soren-phones-computers/icons/"] { filter: none; }

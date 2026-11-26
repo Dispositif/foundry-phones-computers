@@ -1,0 +1,64 @@
+/* ============================================================
+   Phones & Computers — stylesheet
+   Organized by component. Shared colors as variables;
+   each look (spt-skin-*) redefines its own variables.
+   ============================================================ */
+
+:root {
+  --spt-accent: #2f6f3e;     /* "network" green, texts */
+  --spt-warn: #c9761c;       /* GM flags */
+  --spt-danger: #c0392b;     /* unread, cut */
+  --spt-mail: #3b5b8a;       /* emails */
+  --spt-secure: #4fb3a9;     /* secure devices (shield) */
+  --spt-secure-dark: #3f9f95;
+  --spt-line: rgba(128,128,128,0.35);
+  --spt-soft: rgba(128,128,128,0.12);
+}
+
+/* ---------- Common ---------- */
+.spt-phone-form { display: flex; flex-direction: column; gap: 0.4rem; }
+.spt-phone-empty { opacity: 0.7; font-style: italic; text-align: center; }
+.spt-badge { display: inline-block; min-width: 1.3em; padding: 0 0.35em; border-radius: 1em; background: var(--spt-danger); color: #fff; font-size: 0.75em; text-align: center; line-height: 1.4em; }
+.spt-check { display: block; margin: 4px 0; }
+.spt-icon-select { display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0; }
+.spt-icon-select > i { flex: 0 0 1.1em; text-align: center; opacity: 0.85; }
+.spt-icon-select select { flex: 1; min-width: 0; }
+.spt-icon-select strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.spt-phone-row { display: flex; gap: 0.4rem; }
+.spt-phone-row button { flex: 1; }
+.spt-phone-row button.spt-icon-btn { flex: 0 0 2.5em; }
+
+/* ---------- Attachments ---------- */
+.spt-drop { display: flex; flex-direction: column; gap: 0.35rem; border-radius: 6px; transition: box-shadow 0.15s; }
+.spt-drop.spt-drag { box-shadow: 0 0 0 2px var(--spt-warn); }
+.spt-att-chip { display: inline-flex; align-items: center; gap: 0.4rem; align-self: flex-start; padding: 2px 6px; border-radius: 6px; background: rgba(128,128,128,0.18); max-width: 100%; }
+.spt-att-chip img { max-height: 48px; max-width: 120px; border: none; border-radius: 4px; }
+.spt-att-img { display: block; max-width: 100%; max-height: 180px; border: none; border-radius: 8px; cursor: zoom-in; margin-bottom: 3px; }
+.spt-att-doc { display: inline-flex; gap: 0.3rem; align-items: center; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,0.25); cursor: pointer; margin-bottom: 3px; }
+
+/* ---------- Messages in the chat ---------- */
+.spt-sms { border-radius: 10px; overflow: hidden; border: 1px solid var(--spt-accent); }
+.spt-sms .spt-sms-header { background: var(--spt-accent); color: #fff; padding: 2px 8px; font-weight: bold; }
+.spt-sms .spt-sms-body { background: #e7f5ea; color: #111; padding: 6px 8px; font-family: monospace; }
+.spt-sms .spt-sms-to { float: right; font-weight: normal; opacity: 0.85; }
+.spt-sms .spt-att-img { max-height: 140px; }
+.spt-sms.spt-mail { border-color: var(--spt-mail); }
+.spt-sms.spt-mail .spt-sms-header { background: var(--spt-mail); }
+.spt-sms.spt-mail .spt-sms-body { background: #eef2f8; font-family: inherit; }
+.spt-sms.spt-mail .spt-sms-body::first-line { font-weight: bold; }
+.spt-gm-copy { margin: 0 0 4px; font-size: 0.9em; }
+
+/* @SMS / @Call links in journals (GM) */
+a.spt-link { display: inline-flex; align-items: baseline; gap: 0.3em; padding: 1px 8px; border-radius: 10px; background: rgba(47,111,62,0.18); border: 1px solid rgba(47,111,62,0.5); cursor: pointer; text-decoration: none; }
+a.spt-link.call { background: rgba(201,118,28,0.15); border-color: rgba(201,118,28,0.55); }
+a.spt-link:hover { filter: brightness(1.15); }
+
+/* ---------- Incoming / outgoing call ---------- */
+.spt-phone-ring { text-align: center; padding: 0.75rem 0; }
+.spt-phone-ring > i { font-size: 2.5rem; animation: spt-phone-shake 0.6s infinite; }
+.spt-phone-ring .spt-caller { font-size: 1.3rem; font-weight: bold; margin: 0.5rem 0 0; }
+.spt-phone-ring .spt-which { margin: 0 0 0.5rem; opacity: 0.85; }
+.spt-phone-ring.silent > i { animation: none; opacity: 0.6; }
+.spt-phone-ring.outgoing > i { animation: spt-phone-pulse 1.2s infinite; }
+@keyframes spt-phone-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+@keyframes spt-phone-pulse { 50% { opacity: 0.35; } }

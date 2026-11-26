@@ -1,0 +1,80 @@
+/* Phones & Computers — GM panel "Network": status bar, tabs, Send, Messages, Devices. */
+
+/* ---------- GM panel "Network" ---------- */
+.spt-phone-panel .window-content { padding: 0; overflow: hidden; }
+.spt-gm { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.spt-gm .spt-phone-status { margin: 0.5rem 0; font-style: italic; opacity: 0.75; text-align: center; }
+.spt-gm .spt-dim { opacity: 0.55; }
+.spt-gm .spt-warn, .spt-gm .spt-locked { color: var(--spt-warn); }
+.spt-gm .spt-nosignal { color: var(--spt-danger); }
+.spt-gm textarea { width: 100%; resize: none; }
+/* Status bar */
+.spt-gm-status { display: flex; align-items: center; gap: 0.5rem; padding: 6px 10px; border-bottom: 1px solid var(--spt-line); }
+.spt-gm-status .spt-pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 2px 10px; border-radius: 1em; font-weight: 600; font-size: 0.9em; background: rgba(47,111,62,0.22); color: #7fd18f; }
+.spt-gm-status.down .spt-pill { background: rgba(192,57,43,0.25); color: #ff8a7a; }
+.spt-gm-status .spt-gm-pending { font-size: 0.85em; opacity: 0.8; }
+.spt-gm-status .spt-gm-net { margin-left: auto; flex: 0 0 auto; width: auto; font-size: 0.85em; padding: 1px 10px; }
+.spt-gm-status .spt-gm-satsky { margin-left: auto; color: #4caf50; }
+.spt-gm-status .spt-gm-satsky + .spt-gm-net { margin-left: 0.5rem; }
+.spt-gm-status .spt-gm-help { flex: 0 0 2em; width: 2em; padding: 1px 0; font-size: 0.85em; }
+.spt-gm-ringing { display: flex; align-items: center; gap: 0.5rem; padding: 5px 10px; background: rgba(201,118,28,0.18); border-bottom: 1px solid rgba(201,118,28,0.4); }
+.spt-gm-ringing > i { animation: spt-phone-shake 0.6s infinite; color: var(--spt-warn); }
+.spt-gm-ringing button { margin-left: auto; flex: 0 0 2.4em; width: 2.4em; color: var(--spt-danger); }
+/* Tabs */
+.spt-tabs { display: flex; border-bottom: 1px solid var(--spt-line); }
+.spt-tab { flex: 1; text-align: center; padding: 7px 4px; cursor: pointer; opacity: 0.65; border-bottom: 2px solid transparent; white-space: nowrap; }
+.spt-tab:hover { opacity: 0.9; }
+.spt-tab.active { opacity: 1; border-bottom-color: var(--spt-warn); font-weight: 600; }
+.spt-tab .spt-count { font-size: 0.8em; opacity: 0.7; }
+.spt-tab-body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px; }
+.spt-tab-body > section { display: flex; flex-direction: column; gap: 0.6rem; }
+.spt-gm-foot { padding: 8px 10px; border-top: 1px solid var(--spt-line); }
+/* Send */
+.spt-gm-send .form-group { display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+.spt-gm-send .form-group > label { flex: 0 0 7.5em; }
+.spt-gm-send .spt-icon-select { flex: 1; }
+.spt-segmented { display: flex; border: 1px solid var(--spt-line); border-radius: 6px; overflow: hidden; }
+.spt-segmented a { flex: 1; text-align: center; padding: 5px; cursor: pointer; opacity: 0.7; }
+.spt-segmented a + a { border-left: 1px solid var(--spt-line); }
+.spt-segmented a.active { opacity: 1; background: rgba(201,118,28,0.2); font-weight: 600; }
+.spt-gm-send .spt-drop { display: flex; flex-direction: column; gap: 0.4rem; }
+.spt-gm .spt-primary { flex: 1; font-weight: 600; }
+.spt-gm .spt-icon-btn { flex: 0 0 2.6em; }
+/* Agents' messages */
+.spt-gthreads { display: flex; flex-direction: column; gap: 8px; }
+.spt-gthread { border: 1px solid var(--spt-line); border-radius: 8px; padding: 6px 8px; background: rgba(128,128,128,0.06); display: flex; flex-direction: column; }
+.spt-gthread.unread { border-left: 3px solid var(--spt-danger); }
+.spt-gthread-head { display: flex; align-items: center; gap: 0.35rem; font-size: 0.9em; margin-bottom: 4px; }
+.spt-gthread-head .fa-arrow-right { font-size: 0.7em; opacity: 0.6; }
+.spt-gthread-more { text-align: center; opacity: 0.5; font-size: 0.8em; }
+.spt-bb { max-width: 80%; padding: 5px 9px; border-radius: 12px; margin: 2px 0; font-size: 0.92em; line-height: 1.3; overflow-wrap: anywhere; }
+.spt-bb.out { align-self: flex-start; background: rgba(128,128,128,0.18); border-bottom-left-radius: 3px; }
+.spt-bb-ago { display: block; font-size: 0.75em; opacity: 0.6; margin-top: 1px; }
+.spt-bb.in { align-self: flex-end; background: #2f6fd0; color: #fff; border-bottom-right-radius: 3px; }
+.spt-bb.pending { opacity: 0.55; }
+.spt-bb-img { display: block; max-width: 140px; max-height: 90px; border-radius: 6px; border: none; margin-bottom: 3px; object-fit: cover; }
+.spt-bb-doc, .spt-bb-fwd { display: block; font-size: 0.85em; opacity: 0.8; }
+a.spt-bb-doc { cursor: pointer; text-decoration: underline dotted; }
+.spt-gthread-reply { display: flex; gap: 4px; margin-top: 6px; }
+.spt-gthread-reply input { flex: 1; height: 26px; }
+.spt-gthread-reply button { flex: 0 0 28px; width: 28px; height: 26px; padding: 0; line-height: 1; }
+.spt-gm .spt-mark-all { align-self: flex-end; opacity: 0.8; font-size: 0.85em; cursor: pointer; margin-top: 4px; }
+.spt-gm .spt-mark-all-top { display: block; text-align: right; margin: 0 0 4px; }
+/* Devices, grouped by holder or place */
+.spt-dev-group { border: 1px solid var(--spt-line); border-radius: 6px; overflow: hidden; }
+.spt-dev-group-head { display: flex; align-items: center; gap: 0.5rem; padding: 4px 8px; background: rgba(128,128,128,0.12); }
+.spt-dev-group-head img, .spt-dev-avatar { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; border: none; flex: 0 0 auto; }
+.spt-dev-avatar { display: inline-flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.2); }
+.spt-gm .spt-dev-list { list-style: none; margin: 0; padding: 0; display: block !important; }
+.spt-dev { display: flex; align-items: center; gap: 0.4rem; padding: 4px 8px; border-top: 1px solid rgba(128,128,128,0.15); }
+.spt-dev:hover { background: rgba(128,128,128,0.08); }
+.spt-dev-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+.spt-dev-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spt-dev-label small { opacity: 0.6; margin-left: 0.3em; }
+.spt-dev-actions { display: flex; gap: 0.55rem; white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
+.spt-dev:hover .spt-dev-actions, .spt-dev:focus-within .spt-dev-actions { opacity: 1; }
+/* On hover, the lock and signal actions show the state: hide the duplicate status icons. */
+.spt-dev:hover .spt-dev-state, .spt-dev:focus-within .spt-dev-state { display: none; }
+.spt-dev-actions a { cursor: pointer; opacity: 0.8; }
+.spt-dev-actions a:hover { opacity: 1; }
+.spt-row-unread { font-size: 0.8em; color: var(--spt-warn); white-space: nowrap; }
