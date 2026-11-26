@@ -1,6 +1,6 @@
 import { feature } from "./features.js";
 import { DialogV2, MODULE_ID, SOCKET } from "./constants.js";
-import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, modelImg, npcDirectory, npcLabel, phoneUsers, phonesByNumber, randomAddress, shownTheme, themeChoices } from "./devices.js";
+import { DEFAULT_THEME, MODELS, directoryText, saveNpc, createPhone, newTheme, getPhoneData, markPhone, modeOf, modelImg, npcDirectory, npcLabel, phoneUsers, phonesByNumber, randomAddress, shownTheme, themeChoices } from "./devices.js";
 import { modelAllowed, satellitePolicy } from "./universes.js";
 import { deviceName } from "./names.js";
 import { esc, isMailAddress, norm, shieldIcon } from "./util.js";
@@ -505,9 +505,11 @@ export async function playerGiveDialog(item) {
     .sort((a, b) => (here.has(b.id) - here.has(a.id)) || a.name.localeCompare(b.name));
   const options = pcs.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join("")
     + `<option value="">${t("Give.Nobody")}</option>`;
+  // Locked or switched off, the device does not show its number to the player: the Give window neither.
+  const hidden = MODELS[phone.model]?.jammer || phone.locked || modeOf(phone) === "off";
   const res = await DialogV2.wait({
     classes: ["spt-dialog", "spt-okcancel"],
-    window: { title: t("Give.Title", { label: phone.label, number: MODELS[phone.model]?.jammer ? "—" : phone.number }), icon: "fas fa-hand-holding-hand" },
+    window: { title: t("Give.Title", { label: phone.label, number: hidden ? "—" : phone.number }), icon: "fas fa-hand-holding-hand" },
     position: { width: 380 },
     content: `<div class="spt-phone-form"><div class="form-group"><label>${t("Give.To")}</label><select name="target">${options}</select></div></div>`,
     buttons: [
