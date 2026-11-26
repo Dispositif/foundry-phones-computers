@@ -1,9 +1,9 @@
 import { feature } from "./features.js";
 import { LOG_MAX, MASKED, MODULE_ID, SHEET_ID } from "./constants.js";
-import { esc, maskedLabel, norm, randomEmail, randomNumber, isMasked } from "./util.js";
+import { esc, maskedLabel, norm, randomNumber, isMasked } from "./util.js";
 import { t } from "./i18n.js";
 import { UNIVERSES, satellitePolicy, storedUniverseKey, universe } from "./universes.js";
-import { deviceName } from "./names.js";
+import { deviceName, randomEmail } from "./names.js";
 /* -------------------------------------------- */
 /*  Model: phones, contacts, history            */
 /* -------------------------------------------- */

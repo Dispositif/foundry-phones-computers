@@ -1,4 +1,5 @@
 import { MODULE_ID } from "./constants.js";
+import { onRerender } from "./util.js";
 import { t, tn } from "./i18n.js";
 import { allPhones, deadZoneScenes, getLog, getPhoneData, holders, isFixed, isJammer, isPager, jammedScenes, landlineUsers, modeOf, modelOf, playerUnread, iconOf } from "./devices.js";
 import { gmIncoming } from "./gm-actions.js";
@@ -453,3 +454,4 @@ export function createFab() {
   return fab;
 }
 
+onRerender(() => updateFab());

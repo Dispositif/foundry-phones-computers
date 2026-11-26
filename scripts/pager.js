@@ -1,6 +1,6 @@
 import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
 import { getLog, getPhoneData, hasSignal, isUnread, markEntryRead, modeOf, skinOf } from "./devices.js";
-import { esc, shieldIcon } from "./util.js";
+import { esc, onRerender, shieldIcon } from "./util.js";
 import { BOOT_MS, bootText } from "./names.js";
 import { t } from "./i18n.js";
 /* -------------------------------------------- */
@@ -150,3 +150,5 @@ export function openPager(uuid, { latest = false } = {}) {
 export function rerenderPagers() {
   for (const w of PagerWindow.windows.values()) if (w.rendered) w.render();
 }
+
+onRerender(rerenderPagers);

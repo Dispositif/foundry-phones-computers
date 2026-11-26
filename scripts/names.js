@@ -1,6 +1,6 @@
 import { hasSignal, isSatellite } from "./devices.js";
 import { t } from "./i18n.js";
-import { universeKey } from "./universes.js";
+import { universe, universeKey } from "./universes.js";
 /* -------------------------------------------- */
 /*  Random names that fit the world's universe   */
 /* -------------------------------------------- */
@@ -257,6 +257,13 @@ function nameWords(name) {
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean);
+}
+
+/** Random address for a laptop or a terminal, in the universe's style (made from the holder's name if given), or the universe's ID (NX-4217). */
+export function randomEmail(name) {
+  const prefix = universe().mailPrefix;
+  if (prefix) return `${prefix}${Math.floor(Math.random() * 9000) + 1000}`;
+  return mailAddress(name);
 }
 
 /** Random mail address in the universe's style, made from the holder's name when there is one. */

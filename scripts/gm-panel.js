@@ -8,7 +8,7 @@ import { openPhone } from "./main.js";
 import { sendSms } from "./messages.js";
 import { hangUpAll, pendingCalls, ring } from "./ring.js";
 import { clock, liveCalls, timerHtml } from "./live-call.js";
-import { esc, isMasked, nl2br, norm } from "./util.js";
+import { esc, isMasked, nl2br, norm, onRerender } from "./util.js";
 import { currentLang, t, tn } from "./i18n.js";
 import { OPERATORS, SAT_OPERATORS, deviceName } from "./names.js";
 import { satellitePolicy, universe, universeKey } from "./universes.js";
@@ -1415,3 +1415,6 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 }
 
+onRerender(() => {
+  if (PhonePanel.instance?.rendered) PhonePanel.instance.render();
+});

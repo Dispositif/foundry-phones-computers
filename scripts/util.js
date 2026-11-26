@@ -1,11 +1,6 @@
 import { AudioHelper, MASKED, MODULE_ID, SECURE_ICON } from "./constants.js";
-import { updateFab } from "./fab.js";
 import { t } from "./i18n.js";
-import { PhonePanel } from "./gm-panel.js";
-import { PlayerPhone } from "./player-phone.js";
-import { rerenderPagers } from "./pager.js";
 import { universe } from "./universes.js";
-import { mailAddress } from "./names.js";
 /* -------------------------------------------- */
 /*  Utilities                                   */
 /* -------------------------------------------- */
@@ -67,13 +62,6 @@ export function randomNumber() {
   return `${prefix}0${String(n).padStart(3, "0")}`;
 }
 
-/** Random address for a laptop or a terminal, in the universe's style (made from the holder's name if given), or the universe's ID (NX-4217). */
-export function randomEmail(name) {
-  const prefix = universe().mailPrefix;
-  if (prefix) return `${prefix}${Math.floor(Math.random() * 9000) + 1000}`;
-  return mailAddress(name);
-}
-
 /** Does this address look like a laptop's or terminal's (email, or the universe's ID)? */
 export function isMailAddress(address) {
   const s = String(address ?? "");
@@ -87,7 +75,7 @@ export function isMailAddress(address) {
  */
 export function deviceNotice(text, { warn = false, icon = null } = {}) {
   if (game.user.isGM) return void ui.notifications[warn ? "warn" : "info"](text);
-  const el = PlayerPhone.instance?.rendered ? PlayerPhone.instance.element : null;
+  const el = noticeHost();
   if (!el) return;
   el.querySelector(":scope > .spt-device-notice")?.remove();
   const div = document.createElement("div");
@@ -103,16 +91,30 @@ export function deviceNotice(text, { warn = false, icon = null } = {}) {
   setTimeout(() => div.remove(), 10000);
 }
 
+/*
+ * The windows register here (GM panel, player phone, pagers, floating button), so this file
+ * imports none of them: utilities stay at the bottom of the imports, with no cycle.
+ */
+const redrawers = [];
+let noticeHost = () => null;
+
+/** A window's redraw, run by rerenderAll. */
+export function onRerender(fn) {
+  redrawers.push(fn);
+}
+
+/** The element device notices go in (the player's phone window, when open). */
+export function setNoticeHost(fn) {
+  noticeHost = fn;
+}
+
 /** Redraws open windows: close requests (tokens, bursts of messages) are merged into one. */
 let rerenderTimer = null;
 export function rerenderAll() {
   if (rerenderTimer) return;
   rerenderTimer = setTimeout(() => {
     rerenderTimer = null;
-    if (PhonePanel.instance?.rendered) PhonePanel.instance.render();
-    if (PlayerPhone.instance?.rendered) PlayerPhone.instance.render();
-    rerenderPagers();
-    updateFab();
+    for (const fn of redrawers) fn();
   }, 50);
 }
 

@@ -8,7 +8,7 @@ import { bindDrop, bindIconSelects, deviceSelect } from "./gm-panel.js";
 import { activeCall, endCall, outgoing, playerCall, playerSendSms } from "./player-calls.js";
 import { dismissEnded, hangUpLive, liveOn, otherEnd, phoneClosed, statusHtml } from "./live-call.js";
 import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./share.js";
-import { deviceNotice, esc, isMasked, nl2br, shieldIcon } from "./util.js";
+import { deviceNotice, esc, isMasked, nl2br, onRerender, setNoticeHost, shieldIcon } from "./util.js";
 import { PagerWindow, openPager } from "./pager.js";
 import { skyOpenFor } from "./satellite.js";
 import { BOOT_MS, bootText, operatorName } from "./names.js";
@@ -1207,3 +1207,9 @@ export function cycleDevices(openDefault = null) {
   }
   cycle.cur = next;
 }
+
+onRerender(() => {
+  if (PlayerPhone.instance?.rendered) PlayerPhone.instance.render();
+});
+// Device notices show on the player's phone screen, when it is open.
+setNoticeHost(() => (PlayerPhone.instance?.rendered ? PlayerPhone.instance.element : null));
