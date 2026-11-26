@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0
+## 1.6.0 - Robustness, Quality of Life
 - **Give a device**: players give their own device to another PC, the GM any carried device.
 - **Dead zones** shown to the GM (Send tab, status bar, floating button, Scenes sidebar).
 - NPCs: add to the phone directory from the Actors list or the sheet menu.
