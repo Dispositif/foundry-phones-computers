@@ -82,6 +82,7 @@ Le panneau **Réseau** (Ctrl+Shift+P, ou le bouton télécom).
 - **Surveillance :** écoutes (les messages des agents entre eux, en lecture seule), tous les appels avec leur issue et leur durée, et traçage (expérimental : avec quelle précision le réseau peut localiser chaque agent).
 - Quand un agent appelle un PNJ, vous choisissez : décrocher, pas de réponse, injoignable, numéro non attribué.
 - **Couper le réseau** mobile pour tous, ou **couper la ligne** d'un appel en cours.
+- Un appareil sans réseau ou éteint ne reçoit rien : messages et appels manqués attendent, et arrivent quand le réseau revient ou que l'appareil est rallumé.
 - Le bouton **?** ouvre la fenêtre d'accueil MJ et une visite guidée du panneau. Le réglage **Thème du panel MJ** choisit son apparence (Salle d'opérations, Brume orange, Classique, ou Auto selon l'univers).
 
 **Annuaire PNJ (facultatif) :** vous pouvez écrire ou appeler sous n'importe quel nom, et tout numéro composé par un agent arrive chez vous : rien à préparer. L'onglet Annuaire sert seulement à vous retrouver dans les numéros de PNJ : nommer un numéro, le rendre public (pizzeria, taxi, hôpital : pages jaunes pour les joueurs), en faire un expéditeur favori (★) dans Envoyer et Messages, ou le mettre hors service (appels et messages tombent sur « numéro non attribué »). Import / export en texte, par exemple depuis vos notes.

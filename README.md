@@ -80,6 +80,7 @@ The **Network** panel (Ctrl+Shift+P, or the telecom button).
 - **Intel:** wiretaps (the agents' messages to each other, read only), every call with its outcome and duration, and tracking (experimental, how precisely the network can locate each agent).
 - When an agent calls an NPC, you choose: answer, no answer, unreachable, unassigned (not in service).
 - **Cut network** for the whole mobile network, or **cut the line** of any call in progress.
+- A device with no signal or switched off gets nothing: messages and missed calls wait, and arrive when the signal returns or the device is switched back on.
 - The **?** button opens the GM welcome window and a guided tour of the panel. The **GM panel theme** setting picks its look (Ops room, Orange haze, Classic, or Auto by universe).
 
 **NPC directory (optional):** you can text or call under any name, and any number an agent dials reaches you, so there is nothing to set up. The Directory tab only helps you keep track of NPC numbers: name a number, make it public (pizzeria, taxi, hospital: yellow pages for the players), make it a favorite (★) sender in Send and Messages, or put it out of service (calls and texts get "not in service"). Import / export as text, for instance from your notes.
