@@ -70,5 +70,10 @@ export async function freshSession(browser) {
   const bobDevice = await myDevice(bob);
   expect(aliceDevice?.number).toBe(NUMBERS.Alice);
   expect(bobDevice?.number).toBe(NUMBERS.Bob);
-  return { gm, alice, bob, aliceDevice, bobDevice, close: async () => { for (const page of [gm, alice, bob]) await page.context().close(); } };
+  const session = { gm, alice, bob, aliceDevice, bobDevice };
+  // The pages as they are at the end: a test may have replaced one (the GM leaving and coming back).
+  session.close = async () => {
+    for (const page of [session.gm, session.alice, session.bob]) if (!page.isClosed()) await page.context().close();
+  };
+  return session;
 }
