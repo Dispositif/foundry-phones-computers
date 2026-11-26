@@ -69,6 +69,13 @@ test.describe("Pager, computer, attachments, journal links", () => {
         await files.patchFile(item, ids.Hidden, { hidden: true });
       }, { laptop, report });
 
+      // Bob listens to the module's socket: what the GM sends Alice must never reach his browser.
+      await s.bob.evaluate(() => {
+        window.sptOverheard = [];
+        game.socket.on("module.soren-phones-computers", (data) => {
+          if (data?.type === "fileContent" && data.html) window.sptOverheard.push(data.html);
+        });
+      });
       const seen = await alice.evaluate(async (uuid) => {
         const { filesOf, getPhoneData } = await window.spt("devices.js");
         const { loadFile, findFile } = await window.spt("files.js");
@@ -86,6 +93,7 @@ test.describe("Pager, computer, attachments, journal links", () => {
         };
       }, laptop);
       expect(seen).toEqual({ listed: ["Visible", "Locked"], visible: true, locked: false, hidden: false, mailDoc: true });
+      expect(await s.bob.evaluate(() => window.sptOverheard.length)).toBe(0);
     } finally {
       await remove(laptop);
       await gm.evaluate(async (uuid) => fromUuidSync(uuid)?.delete(), report);

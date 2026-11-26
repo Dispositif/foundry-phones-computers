@@ -66,7 +66,8 @@ export async function showScreen(p, title, html) {
   });
   if (!ids?.length) return;
   const from = userName(game.user);
-  game.socket.emit(SOCKET, { type: "show", targetUserIds: ids, from, title, html, skin: skinOf(p.phone) });
+  // Sent to the chosen players only: the others never receive the content.
+  game.socket.emit(SOCKET, { type: "show", targetUserIds: ids, from, title, html, skin: skinOf(p.phone) }, { recipients: ids });
   const names = users.filter((u) => ids.includes(u.id)).map(userName).join(", ");
   deviceNotice(t("Share.YouShow", { names }));
 }

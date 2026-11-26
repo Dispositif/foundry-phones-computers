@@ -104,6 +104,11 @@ export function onFileContent({ reqId, html }) {
   pending.get(reqId)?.(html ?? null);
 }
 
+/** GM: the content goes to the asking player only (the server sends it to nobody else). */
+function sendContent(userId, reqId, html) {
+  game.socket.emit(SOCKET, { type: "fileContent", targetUserId: userId, reqId, html }, { recipients: [userId] });
+}
+
 /** GM: an agent opens a file on a device they hold. */
 export async function onFileRequest({ itemUuid, fileId, userId, reqId }) {
   if (!isActiveGM()) return;
@@ -111,7 +116,7 @@ export async function onFileRequest({ itemUuid, fileId, userId, reqId }) {
   const file = item && findFile(getPhoneData(item), fileId);
   const ok = file && !file.locked && !file.hidden && senderHolds(item, userId);
   const html = ok ? await fileHtml(file) : null;
-  game.socket.emit(SOCKET, { type: "fileContent", targetUserId: userId, reqId, html });
+  sendContent(userId, reqId, html);
 }
 
 /** GM: an agent opens a journal attached to a message on a device they hold. */
@@ -121,7 +126,7 @@ export async function onDocRequest({ itemUuid, entryId, userId, reqId }) {
   const phone = getPhoneData(item);
   const entry = phone ? getLog(phone).find((e) => (e.id ?? String(e.t)) === entryId) : null;
   const html = entry && senderHolds(item, userId) ? await entryDocHtml(entry) : null;
-  game.socket.emit(SOCKET, { type: "fileContent", targetUserId: userId, reqId, html });
+  sendContent(userId, reqId, html);
 }
 
 /* -------------------------------------------- */
