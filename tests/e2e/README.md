@@ -20,3 +20,9 @@ The tests start Foundry from `../Foundry-node/app/FoundryVTT-Node-14.370` with t
 license key and the EULA once, in a normal browser at http://localhost:30014.
 
 Overrides: `FOUNDRY_VERSION`, `FOUNDRY_MAIN`, `FOUNDRY_DATA`, `FOUNDRY_PORT`. `KEEP_FOUNDRY=1` leaves the server running.
+
+Visual references (`looks.spec.mjs`): every model in every look, and the GM's views, compared with the
+pictures in `looks.spec.mjs-snapshots/v14` and `v13`. After a deliberate change of look, accept the new pictures:
+
+    npx playwright test -c tests/e2e looks --update-snapshots
+    FOUNDRY_VERSION=13.351 npx playwright test -c tests/e2e looks --update-snapshots
