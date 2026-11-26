@@ -15,7 +15,7 @@ Un module Foundry VTT qui donne aux personnages des téléphones, des ordinateur
 
 <img src="docs/call-screen-en.webp" alt="Appel en cours : le smartphone du joueur, la fenêtre du reste de la table et le bouton flottant" width="760">
 
-> **Le MJ doit être connecté.** Son navigateur fait office de réseau. Sans MJ en ligne, les joueurs relisent leurs messages mais ne peuvent ni écrire ni appeler.
+> **Le MJ doit être connecté** (compatible plusieurs MJ, assistants compris). Son navigateur fait office de réseau. Sans MJ en ligne, les joueurs relisent leurs messages mais ne peuvent ni écrire ni appeler.
 
 ---
 

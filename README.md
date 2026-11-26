@@ -13,7 +13,7 @@ A <a href="https://foundryvtt.com" target="_blank">Foundry VTT</a> module that g
 
 <img src="docs/call-screen-en.webp" alt="Call in progress: the player's smartphone, the window for the rest of the table, and the floating button" width="760">
 
-> **The GM must be connected.** The GM's browser acts as the network. Without a GM online, players can read their messages but cannot write or call.
+> **The GM must be connected** (several GMs supported, assistant GMs too). The GM's browser acts as the network. Without a GM online, players can read their messages but cannot write or call.
 
 ---
 
