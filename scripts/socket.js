@@ -15,7 +15,12 @@ import { t } from "./i18n.js";
 /*  Socket                                      */
 /* -------------------------------------------- */
 
-export function onSocket(data) {
+/**
+ * senderId: the user who sent the message, set by the Foundry server (it cannot be forged).
+ * It replaces the userId the message claims, so a modified client cannot act as another player.
+ */
+export function onSocket(data, senderId) {
+  if (senderId && data?.userId !== undefined) data = { ...data, userId: senderId };
   const forMe = data.targetUserId === game.user.id;
   switch (data.type) {
     case "ring":
