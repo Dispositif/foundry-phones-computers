@@ -1,7 +1,7 @@
 import { MODULE_ID, PAGER_MAX, SMS_SRC, VIBRATE_SRC } from "./constants.js";
 import { markEntryRead, markRead } from "./devices.js";
 import { openPager } from "./pager.js";
-import { onPlayerCall, onPlayerHangup, onPlayerSms, senderHolds } from "./gm-actions.js";
+import { onPlayerCall, onPlayerDelete, onPlayerHangup, onPlayerSms, onPlayerWelcome, senderHolds } from "./gm-actions.js";
 import { activeCall, endCall, onCallResult, onSatLink, receiveNearbyCall, receiveNearbyRing, receiveNearbySat, receiveRing, stopNearbyRing, stopNearbySat } from "./player-calls.js";
 import { onResponse } from "./ring.js";
 import { closeDial, endLive, openDial, openLive, openRinging } from "./live-call.js";
@@ -108,6 +108,12 @@ export function onSocket(data, senderId) {
         const item = fromUuidSync(data.itemUuid);
         if (item && senderHolds(item, data.userId)) data.entryId ? markEntryRead(item, data.entryId) : markRead(item, data.key);
       }
+      break;
+    case "playerWelcome":
+      if (isActiveGM()) onPlayerWelcome(data);
+      break;
+    case "playerDelete":
+      if (isActiveGM()) onPlayerDelete(data);
       break;
     case "fileRequest":
       if (isActiveGM()) onFileRequest(data);

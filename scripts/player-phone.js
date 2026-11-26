@@ -72,6 +72,16 @@ function frameKind(phone) {
   return FRAMES[model] ? model : null;
 }
 
+/**
+ * Player: deletes an entry of their device (never the operator's guide). The GM's browser writes it,
+ * like every history change; without a GM connected, it is written here.
+ */
+function removeEntry(item, { id = null, t: ts = null }) {
+  if (game.users.activeGM) return game.socket.emit(SOCKET, { type: "playerDelete", itemUuid: item.uuid, entryId: id || null, ts: id ? null : ts, userId: game.user.id });
+  const match = (e) => (id ? e.id === id : String(e.t) === ts);
+  return mutateLog(item, (log) => log.filter((e) => !match(e) || e.help));
+}
+
 export class PlayerPhone extends ApplicationV2 {
   static instance = null;
 
@@ -132,7 +142,7 @@ export class PlayerPhone extends ApplicationV2 {
         const e = p && getLog(p.phone).find((x) => x.id === target.dataset.id && x.nosat);
         if (!e || !p.item.isOwner) return;
         if (!playerSendSms(p.item, e.with, e.text ?? "", { att: e.att ?? null })) return;
-        await mutateLog(p.item, (log) => log.filter((x) => x.id !== e.id));
+        await removeEntry(p.item, { id: e.id });
       },
       liveDismiss: function () {
         const live = liveOn(this._current()?.item.uuid);
@@ -243,8 +253,9 @@ export class PlayerPhone extends ApplicationV2 {
           const ok = await foundry.applications.api.DialogV2.confirm({ classes: ["spt-dialog"], window: { title: t("Delete"), icon: "fas fa-trash" }, content: `<p>${t("DeleteEntryConfirm")}</p>`, rejectClose: false });
           if (!ok) return;
         }
+        if (!this.gm) return removeEntry(p.item, { id, t: ts });
         const match = (e) => (e.id ? e.id === id : String(e.t) === ts);
-        await mutateLog(p.item, (log) => log.filter((e) => !match(e) || (!this.gm && e.help)));
+        await mutateLog(p.item, (log) => log.filter((e) => !match(e)));
       }
     }
   };

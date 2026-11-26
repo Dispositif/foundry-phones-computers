@@ -1,5 +1,5 @@
 import { MODULE_ID, PAGER_MAX, RING_SRC, SECURE_ICON, SMS_SRC, SOCKET } from "./constants.js";
-import { addLog, isComputer, isNpcHeld, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
+import { addLog, isComputer, isFixed, mutateLog, isNpcHeld, isSecure, secureWith, setSecureWith, displayName, getPhoneData, holderName, holders, isLandline, keyFor, modelOf, phonesByNumber, gmName, isUnknownNumber, isOffNumber, nameUnknown } from "./devices.js";
 import { deliverToPhone } from "./messages.js";
 import { RingDialog } from "./player-calls.js";
 import { finishOrigin, hangUp, networkBusy, pendingCalls, ring } from "./ring.js";
@@ -220,3 +220,28 @@ export function finishOriginLogOnly(origin, result) {
   if (item) addLog(item, { kind: "call", call: origin.callId, dir: "out", with: origin.key, result, ...(origin.sat ? { sat: true } : {}) });
 }
 
+/* -------------------------------------------- */
+/*  GM: history writes asked by players         */
+/* -------------------------------------------- */
+// One writer per history (the GM's browser, in each device's queue): a player's write and
+// the GM's at the same moment would otherwise overwrite each other.
+
+/** GM: the operator's welcome message on a new device a player holds. */
+export function onPlayerWelcome({ itemUuid, with: key, text, userId }) {
+  const item = fromUuidSync(itemUuid);
+  if (!getPhoneData(item) || !senderHolds(item, userId) || typeof key !== "string" || typeof text !== "string") return;
+  return addLog(item, { kind: "sms", dir: "in", with: key, text, read: false, net: true, help: true });
+}
+
+/**
+ * GM: a player deletes an entry of a device they hold (by id, or by time for old entries).
+ * The operator's guide stays; on a computer or an installed device, only an unsent copy goes.
+ */
+export function onPlayerDelete({ itemUuid, entryId = null, ts = null, userId }) {
+  const item = fromUuidSync(itemUuid);
+  const phone = getPhoneData(item);
+  if (!phone || !senderHolds(item, userId) || (!entryId && ts == null)) return;
+  const match = (e) => (entryId ? e.id === entryId : String(e.t) === String(ts));
+  const keepAll = isComputer(phone) || isFixed(phone);
+  return mutateLog(item, (log) => log.filter((e) => !match(e) || e.help || (keepAll && !e.nosat)));
+}

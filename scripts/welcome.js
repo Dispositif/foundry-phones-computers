@@ -1,5 +1,5 @@
-import { ApplicationV2, MODULE_ID } from "./constants.js";
-import { addLog, allPhones, getLog, hasSignal, isComputer, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
+import { ApplicationV2, MODULE_ID, SOCKET } from "./constants.js";
+import { allPhones, getLog, hasSignal, isComputer, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
 import { operatorName } from "./names.js";
 import { openPanel } from "./main.js";
 import { startTour, tourAvailable } from "./tour.js";
@@ -154,7 +154,8 @@ export async function welcomeDevice(p) {
   const text = t(MODELS[phone.model]?.mail ? "Welcome.Mail" : "Welcome.Sms", { operator, number: phone.number });
   await p.item.update({ [`flags.${MODULE_ID}.phone.welcomed`]: true });
   // help: the bubble ends with a link to the player guide (titled in the fiction: subscriber's guide, user manual...).
-  await addLog(p.item, { kind: "sms", dir: "in", with: keyFor(phone, operator), text, read: false, net: true, help: true });
+  // Written by the GM's browser, like every history change (a message arriving at the same moment is not lost).
+  game.socket.emit(SOCKET, { type: "playerWelcome", itemUuid: p.item.uuid, with: keyFor(phone, operator), text, userId: game.user.id });
 }
 
 /** Player: welcomes each of their devices as soon as it exists (not only when opened), so the floating button shows the unread badge. */
