@@ -115,6 +115,11 @@ Chaque appareil est un objet Foundry ordinaire qui porte un seul flag, `flags["s
 
 **Le navigateur du MJ est le réseau.** Les joueurs n'écrivent jamais directement dans les appareils : chaque message, appel ou accusé de lecture passe par le socket du module vers le MJ actif, qui vérifie et écrit. Le contenu d'un journal affiché sur un appareil est rendu par le MJ et envoyé en HTML : les joueurs n'ont besoin d'aucun droit sur le journal.
 
+**Tests** (développement seulement, absents de la release) : Node.js 24 au maximum (testé avec 24.22.3).
+
+- Tests unitaires : `npm test`.
+- Tests de bout en bout avec [Playwright](https://playwright.dev) (un MJ et deux joueurs connectés en même temps, sur un monde jetable) : `npm install`, `npx playwright install chromium`, puis `npm run test:e2e` (Foundry v14) ou `npm run test:e2e:v13`. Installation et options : [tests/e2e/README.md](tests/e2e/README.md).
+
 ---
 
 © 2026 Soren, tous droits réservés. Icônes et sons : auteurs et licences dans [CREDITS.md](CREDITS.md).

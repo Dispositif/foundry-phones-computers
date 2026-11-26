@@ -12,6 +12,9 @@
 - Fix: no extra "Cancelled" line after the GM's answer to a call to an NPC.
 - Fix: messages waiting in a dead zone arrive when the PC leaves it.
 - Fix: random numbers never reuse a number already in use.
+- Fix: a player can no longer act as another player (requests checked by the server).
+- Fix: a message no longer gets lost when a player and the GM change a device's history at the same moment.
+- Fix: calls no longer stay stuck when the GM disconnects while they ring.
 
 ## 1.5.0
 - **Satellite** (advanced feature): satellite phone, smartphone and pager; the GM approves each satellite connection.

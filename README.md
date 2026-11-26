@@ -113,6 +113,11 @@ Each device is an ordinary Foundry item carrying one flag, `flags["soren-phones-
 
 **The GM's browser is the network.** Players never write to devices directly: every message, call and read receipt goes through the module socket to the active GM, who checks and writes. Journal content shown on a device is rendered by the GM and sent as HTML, so players need no journal permission.
 
+**Tests** (not part of the release): Node.js 24 at most (tested with 24.22.3).
+
+- Unit tests: `npm test`.
+- End-to-end tests with [Playwright](https://playwright.dev) (a GM and two players connected at once, on a throwaway world): `npm install`, `npx playwright install chromium`, then `npm run test:e2e` (Foundry v14) or `npm run test:e2e:v13`. Setup and options: [tests/e2e/README.md](tests/e2e/README.md).
+
 ---
 
 © 2026 Soren, all rights reserved. Icons and sounds: authors and licenses in [CREDITS.md](CREDITS.md).
