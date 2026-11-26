@@ -61,10 +61,11 @@ export async function receiveRing({ callId, caller, callerNumber, callerImg, tim
   }
 
   // Silent mode: the agent still feels the phone buzz (only them).
+  // The ring time starts now: the sound may wait for Foundry's audio unlock (no click in the page yet) and never start.
+  if (timeout > 0) call.timer = setTimeout(() => endCall("missed", call), timeout * 1000);
   const src = silent ? VIBRATE_SRC : ringSrc ? `modules/${MODULE_ID}/sounds/${ringSrc}` : RING_SRC;
   call.sound = await playLocal(src, { loop: true });
   if (call.done) call.sound?.stop(); // call ended while the sound was loading
-  if (timeout > 0 && !call.done) call.timer = setTimeout(() => endCall("missed", call), timeout * 1000);
 }
 
 /** Ends the incoming call on the player side. result = answer|decline|missed|cancelled */
