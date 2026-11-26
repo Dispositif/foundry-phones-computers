@@ -24,7 +24,7 @@ export async function resetWorld(gm) {
     async ({ id, players, numbers }) => {
       const { createPhone } = await window.spt("devices.js");
       // Empty world: no leftovers from an earlier run.
-      for (const cls of [ChatMessage, Item, Actor]) {
+      for (const cls of [ChatMessage, Item, Actor, Scene]) {
         const ids = game.collections.get(cls.documentName).map((d) => d.id);
         if (ids.length) await cls.deleteDocuments(ids);
       }
@@ -39,6 +39,8 @@ export async function resetWorld(gm) {
       // Settings some tests change: back to their defaults if a run stopped halfway.
       await set("networkDown", false);
       await set("ringTimeout", 60);
+      await set("satSky", []);
+      await set("feature-satellite", false);
       await game.user.setFlag(id, "newsSeen", "999.0.0");
 
       await Actor.create({ name: "Mr Smith", type: "npc" });
