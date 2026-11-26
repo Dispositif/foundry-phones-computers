@@ -3,7 +3,7 @@
   "title": "Phones & Computers tests",
   "description": "Reset by the end-to-end tests at each run: do not keep anything here.",
   "system": "spt-test",
-  "coreVersion": "14.370",
+  "coreVersion": "13.351",
   "compatibility": {
     "minimum": "13",
     "verified": "14"

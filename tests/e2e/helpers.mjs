@@ -12,7 +12,8 @@ export async function join(browser, userName) {
   const page = await context.newPage();
   page.on("pageerror", (err) => console.log(`[${userName}] page error: ${err.message}`));
   await page.goto("/join");
-  await page.locator('select[name="userId"]').selectOption({ label: userName });
+  // The user list: "userId" in Foundry v14, "userid" in v13.
+  await page.locator('select[name="userId"], select[name="userid"]').selectOption({ label: userName });
   await page.locator('input[name="password"]').fill("");
   await page.locator('button[name="join"]').click();
   await page.waitForURL(/\/game/);
