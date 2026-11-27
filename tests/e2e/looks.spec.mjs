@@ -4,8 +4,8 @@ import { NUMBERS, freshSession } from "./world.mjs";
 
 /**
  * Visual references: each model in each of its looks, as Alice sees it, then the GM's views
- * (device window, panel tabs). Run with --update-snapshots once to accept a deliberate change.
- * The pictures differ between Foundry versions: one set per major version.
+ * (device window, panel tabs). Disposable, for a refactoring that must not change the looks:
+ * run only with LOOKS=1, and the pictures stay out of git (see README). One set per major version.
  */
 const MODULE_ID = "soren-phones-computers";
 const MAJOR = (process.env.FOUNDRY_VERSION ?? "14").split(".")[0];
@@ -24,6 +24,7 @@ const LOOKS = [
 ];
 
 test.describe.serial("Looks", () => {
+  test.skip(!process.env.LOOKS, "Visual references: run on demand with LOOKS=1");
   let s;
   let devices = {};
   let scene;

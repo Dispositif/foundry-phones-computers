@@ -5,3 +5,4 @@ node_modules/
 tests/e2e/results/
 tests/e2e/.foundry/
 tests/e2e/.foundry-v*/
+tests/e2e/looks.spec.mjs-snapshots/
