@@ -605,7 +605,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Changes the state (tab, mode, recipient…) while keeping the current input. */
   /** Settings view: the module's own settings (read from their registration) and the advanced features. */
   _settingsContext() {
-    const keys = ["universe", "gmLook", "numberPrefix", "ringTimeout", "volume", "team", "floatingButton", "gmFloatingButton"];
+    const keys = ["universe", "gmLook", "numberPrefix", "ringTimeout", "volume", "team", "gmFloatingButton"];
     // Icons beside some settings and every advanced feature (same icons as the GM tab or the device).
     const ICONS = { team: "fa-user-group", intel: "fa-eye", secure: "fa-shield-halved", jammer: "fa-tower-broadcast", satellite: "fa-satellite" };
     const L = (s) => (s ? game.i18n.localize(s) : "");

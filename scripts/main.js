@@ -151,15 +151,6 @@ Hooks.once("init", () => {
     range: { min: 0, max: 120, step: 5 },
     default: 60
   });
-  game.settings.register(MODULE_ID, "floatingButton", {
-    name: "SPT.Settings.floatingButton.name",
-    hint: "SPT.Settings.floatingButton.hint",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: true,
-    onChange: () => updateFab()
-  });
   game.settings.register(MODULE_ID, "gmFloatingButton", {
     name: "SPT.Settings.gmFloatingButton.name",
     hint: "SPT.Settings.gmFloatingButton.hint",
@@ -311,6 +302,16 @@ async function migrateUniverse() {
   }
 }
 
+/** Active GM: removes the stored values of settings that no longer exist (the player floating button is always on now). */
+async function dropRemovedSettings() {
+  try {
+    const world = game.settings.storage.get("world");
+    for (const key of ["floatingButton"]) await world.find((s) => s.key === `${MODULE_ID}.${key}`)?.delete();
+  } catch (err) {
+    console.warn(`${MODULE_ID} | could not remove old settings`, err);
+  }
+}
+
 /** Tells the GM the module was renamed, what was recovered, and what to do with the old one. */
 function renamedNotice(n, oldActive) {
   const lines = [t("Renamed.Body"), n ? t("Migrated", { n }) : "", oldActive ? `<strong>${t("Renamed.Disable")}</strong>` : t("Renamed.Uninstall")];
@@ -341,6 +342,7 @@ Hooks.once("ready", async () => {
     ensureDeviceItems();
     await migrateUniverse();
     await dropOldDirectoryTip();
+    await dropRemovedSettings();
     resetOpenSky();
   }
   updateFab();
@@ -585,6 +587,13 @@ Hooks.on("renderSceneConfig", (app, html) => {
 });
 Hooks.on("updateUser", (user, changes) => {
   if (user.isSelf && "character" in changes) updateFab();
+});
+// A character with devices given to or taken from a player, or deleted: the floating button follows.
+Hooks.on("updateActor", (actor, changes) => {
+  if (changes?.ownership && actor.items.some((i) => getPhoneData(i))) updateFab();
+});
+Hooks.on("deleteActor", (actor) => {
+  if (actor.items.some((i) => getPhoneData(i))) updateFab();
 });
 /**
  * A carried device exists only once. Dragged onto another character (Foundry copies it),

@@ -73,7 +73,8 @@ export function updateFab() {
   const rooms = mine.filter((p) => isFixed(p.phone) && (!game.scenes.get(p.phone.sceneId) || landlineUsers(p.phone).some((u) => u.id === game.user.id)));
   // A jammer switched on gets its own red satellite (click = its window, to switch it off).
   const jammers = myActiveJammers();
-  const wanted = !game.user.isGM && game.settings.get(MODULE_ID, "floatingButton") && personal.length + rooms.length + jammers.length > 0;
+  // Always shown to a player who has a device to use (no setting), hidden otherwise.
+  const wanted = personal.length + rooms.length + jammers.length > 0;
   if (!wanted) return fab?.remove();
   if (!fab) fab = createFab();
   const before = fabPositions(fab);

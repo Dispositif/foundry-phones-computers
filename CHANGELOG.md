@@ -12,6 +12,7 @@
 - General menu on phones.
 - Images app on the smartphone.
 - Network tones before "number not in service".
+- Player floating button always shown when the player has a device (setting removed).
 - QoL: New device button and Items context menu, device marks in the Items and Scenes sidebars, light theme, GM panel.
 - Fix: a call no longer rings forever when the player has not clicked in Foundry yet.
 - Fix: no extra "Cancelled" line after the GM's answer to a call to an NPC.

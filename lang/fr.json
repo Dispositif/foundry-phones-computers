@@ -424,10 +424,6 @@
         "name": "Bouton flottant pour le MJ",
         "hint": "Une icône télécom avec le nombre de messages de PJ non lus. Un clic ouvre le panneau Réseau ; elle se déplace par glisser."
       },
-      "floatingButton": {
-        "name": "Bouton flottant pour les joueurs",
-        "hint": "Une icône de téléphone toujours visible, avec le nombre de messages non lus. Un clic ouvre le téléphone ; elle se déplace par glisser."
-      },
       "keybinding": "Téléphone : panneau MJ / Mon téléphone (joueur)",
       "numberPrefix": {
         "name": "Préfixe des numéros",

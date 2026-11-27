@@ -424,10 +424,6 @@
         "name": "Floating button for the GM",
         "hint": "A telecom icon showing the number of PCs' messages you have not read. Click to open the Network panel; drag to move it."
       },
-      "floatingButton": {
-        "name": "Floating button for players",
-        "hint": "An always visible phone icon showing the number of unread messages. Click to open the phone; drag to move it."
-      },
       "keybinding": "Phone: GM panel / My phone (player)",
       "numberPrefix": {
         "name": "Phone number prefix",
