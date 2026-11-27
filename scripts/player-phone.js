@@ -486,6 +486,8 @@ export class PlayerPhone extends ApplicationV2 {
     const key = ev.target.closest?.("[data-spt-key]")?.dataset.sptKey;
     if (!PHONE_KEYS[key]) return;
     const content = this.element.querySelector(".window-content");
+    // Switched off: the green key switches the phone on (the screen shows no power button).
+    if (key === "green" && content?.querySelector(".spt-offscreen")) return void content.querySelector('[data-mode="on"]')?.click();
     for (const action of PHONE_KEYS[key]) {
       const btn = content?.querySelector(`[data-action="${action}"]`);
       if (btn) return void btn.click();
@@ -526,7 +528,7 @@ export class PlayerPhone extends ApplicationV2 {
     this.element.classList.toggle("spt-antenna-up", !!cur && !this.gm && modeOf(cur.phone) !== "off");
     this.element.classList.toggle("spt-gm-view", this.gm);
     this._applyFrame(cur);
-    for (const k of this.element.querySelectorAll("[data-spt-key]")) k.title = t(k.dataset.sptKey === "green" ? "KeyGreen" : "KeyRed");
+    for (const k of this.element.querySelectorAll("[data-spt-key]")) k.title = k.dataset.sptKey === "green" ? t(this.element.querySelector(".spt-offscreen") ? "PowerOn" : "KeyGreen") : t("KeyRed");
     // Mobile: the light blinks while a message or missed call is unread.
     this.element.classList.toggle("spt-unread", !!cur && playerUnread(cur.phone) > 0);
     // LCD screens: the backlight comes on when the device's screen changes.
@@ -622,13 +624,13 @@ function pagerUuid(uuid) {
   return isPager(getPhoneData(fromUuidSync(uuid)));
 }
 
-function shownDevice(uuid) {
+export function shownDevice(uuid) {
   if (pagerUuid(uuid)) return !!PagerWindow.windows.get(uuid)?.rendered;
   const app = PlayerPhone.instance;
   return !!app?.rendered && !app.minimized && app._current()?.item.uuid === uuid;
 }
 
-function hideDevice(uuid) {
+export function hideDevice(uuid) {
   if (pagerUuid(uuid)) PagerWindow.windows.get(uuid)?.close();
   else PlayerPhone.instance?.close();
 }

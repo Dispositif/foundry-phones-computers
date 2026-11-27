@@ -85,7 +85,10 @@ export class PagerWindow extends ApplicationV2 {
     const e = list[this.idx];
     const off = mode === "off";
     const unread = list.some(isUnread);
-    const net = hasSignal(phone) && game.users.activeGM ? "" : `<i class="fas fa-signal spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
+    // Network: bars, or a "no entry" sign without network (nothing while switched off).
+    const net = off ? "" : hasSignal(phone) && game.users.activeGM
+      ? `<i class="fas fa-signal spt-signal" title="${t("Net.Signal")}"></i>`
+      : `<i class="fas fa-ban spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
     const boot = !off && Date.now() < (this._bootUntil ?? 0);
     const line = off ? "" : boot ? bootText(phone) : e ? e.text : t("Pager.Empty");
     return `<div class="spt-pager-lcd ${off ? "off" : ""}">

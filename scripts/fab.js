@@ -6,6 +6,7 @@ import { gmIncoming } from "./gm-actions.js";
 import { elapsed, liveCalls, liveOn } from "./live-call.js";
 import { openPanel, openPhone } from "./main.js";
 import { activeCall } from "./player-calls.js";
+import { hideDevice, shownDevice } from "./player-phone.js";
 import { myActiveJammers } from "./jammer.js";
 /* -------------------------------------------- */
 /*  Floating button (players, and GM network)   */
@@ -441,6 +442,11 @@ export function createFab() {
         // Main phone: the last personal device chosen.
         const personal = myPhones().filter((p) => !isFixed(p.phone));
         uuid = mainDevice(personal)?.item.uuid;
+      }
+      // Player: a click on the button of the device on screen hides it (not while it rings, the call screen stays).
+      if (uuid && !game.user.isGM && shownDevice(uuid) && activeCall?.itemUuid !== uuid) {
+        hideDevice(uuid);
+        uuid = null;
       }
       if (uuid) {
         const ph = getPhoneData(fromUuidSync(uuid));

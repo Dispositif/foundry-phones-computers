@@ -20,10 +20,14 @@
   font-family: "Courier New", Courier, monospace; user-select: none;
 }
 .spt-pager-lcd.off { background: linear-gradient(#5f6a52, #525c47); }
-.spt-pager-status { display: flex; align-items: center; gap: 8px; height: 13px; font-size: 10px; opacity: 0.8; }
+/* Status icons pinned to the top of the screen; the page line stays centred. */
+.spt-pager-lcd { position: relative; }
+.spt-pager-status { position: absolute; top: 3px; left: 8px; right: 8px; display: flex; align-items: center; gap: 8px; height: 13px; font-size: 10px; }
+.spt-pager-status > :not(.spt-signal) { opacity: 0.8; }
 .spt-pager-status a { color: inherit; cursor: pointer; }
 .spt-pager-status .spt-pager-pos { margin-left: auto; font-weight: bold; }
-.spt-pager-status .spt-signal.off { color: #7a1d16; }
+/* The pager window also carries spt-player-phone: beat its coloured signal (green / red). */
+.spt-pager-window .spt-pager-status :is(.spt-signal, .spt-signal.off) { color: inherit; opacity: 1; }
 .spt-pager-line { font: bold 22px/1.25 "Courier New", Courier, monospace; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-shadow: 1px 1px 0 rgba(27,37,18,0.2); cursor: default; }
 .spt-pager-line.empty { font-size: 14px; opacity: 0.6; }
 .spt-frame-deco.spt-pager-keys { left: 22px; right: 22px; bottom: 14px; display: flex; align-items: center; gap: 10px; pointer-events: auto; }

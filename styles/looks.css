@@ -52,6 +52,7 @@
 /* Device switched off: its name in the header fades (LCD: pale ink; smartphone: low contrast) */
 .application.spt-player-phone:has(.spt-offscreen) .spt-dev-title { opacity: 0.45; }
 .application.spt-player-phone.spt-skin-mobile:has(.spt-offscreen) .spt-dev-title { opacity: 0.4; }
+.application.spt-player-phone:has(.spt-offscreen) .spt-phone-top { border-bottom-color: transparent; }
 /* Landline (player): the device name stays discreet */
 .application.spt-player-phone.spt-landline:not(.spt-gm-view) .spt-dev-title strong { font-weight: normal; opacity: 0.3; }
 /* LCD header: contacts book bigger, lighter ink, centered */
@@ -212,5 +213,8 @@
 /* Monochrome screens (LCD, phosphor): the network icon takes the screen's ink, a "no entry" sign without network. */
 .spt-player-phone:is(.spt-skin-mobile, .spt-skin-console, .spt-skin-military) .spt-signal { color: var(--skin-fg); opacity: 1; }
 .spt-player-phone:is(.spt-skin-mobile, .spt-skin-console, .spt-skin-military) :is(i.spt-signal.off, .spt-signal.off > i)::before { content: "\f05e"; }
-/* Mobile LCD: the device name stays discreet (the screen's content comes first). */
-.application.spt-player-phone.spt-skin-mobile .spt-dev-title strong { font-weight: normal; font-size: 0.9em; opacity: 0.8; }
+/* Mobile and smartphone: the device name stays discreet (the screen's content comes first). */
+.application.spt-player-phone:is(.spt-skin-mobile, .spt-frame-smartphone) .spt-dev-title strong { font-weight: normal; font-size: 0.9em; opacity: 0.8; }
+/* LCD screens (mobile, brick, satellite phone, pager): no colour at all, every mark takes the screen's ink. */
+.spt-player-phone:is(.spt-skin-mobile, .spt-skin-pager) .window-content :is(.spt-secure, .spt-secure-badge, .spt-secure-tag, .spt-ring-secure, .spt-live-secure, .spt-live-status, .spt-live-state, .spt-live-timer, .spt-sat-signal, .spt-signal) { color: var(--skin-fg); }
+.spt-player-phone:is(.spt-skin-mobile, .spt-skin-pager) .window-content .spt-sat-signal:not(.linked) { opacity: 0.35; }

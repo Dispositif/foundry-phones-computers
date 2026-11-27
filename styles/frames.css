@@ -204,3 +204,5 @@
 .spt-frame-rotary .spt-frame-handset::before { left: 60px; }
 .spt-frame-rotary .spt-frame-handset::after { right: 60px; }
 .spt-frame-rotary .spt-frame-cord { background: repeating-linear-gradient(#2a2623 0 3px, #0d0c0b 3px 6px); }
+/* Keypad phones switched off: no power button on the screen, the green key switches them on. */
+.spt-player-phone:is(.spt-frame-mobile, .spt-frame-brick, .spt-frame-bricksat):has(.spt-offscreen) .spt-phone-top .spt-modes { visibility: hidden; }
