@@ -872,13 +872,13 @@
       "Title": "Getting started",
       "Link": "Getting started",
       "Ok": "Got it",
-      "Open": "<strong>Ctrl+Shift+P</strong> or the floating button opens your device. Press again: your next device.",
+      "Open": "<strong>Ctrl+Shift+P</strong> or the floating button opens your device.",
+      "Menu": "<strong>Menu</strong>: the ☰ button. Contacts, about this phone, switch off. Switch on: side button or green key.",
       "Call": "<strong>Call</strong>: type a number or a name, then the phone button. Any number works, even a made-up one.",
       "Text": "<strong>Text</strong>: open a conversation, or start a new one with any number.",
-      "Contacts": "<strong>Contacts</strong>: the address book in the top bar. In a conversation, add the sender to your contacts.",
       "Show": "<strong>Show</strong> your screen to the other PCs in the same scene, or <strong>forward</strong> a message.",
       "Next": "Nothing ever goes to the chat: everything stays on your devices.",
-      "Credit": "Phones & Computers, a Foundry VTT module by Soren"
+      "Credit": "Phones & Computers {version} by Soren"
     },
     "DeleteEntryConfirm": "Delete it permanently? It cannot be undone.",
     "News": {
@@ -903,6 +903,20 @@
       "Signal": "Satellite",
       "NotSent": "Not sent",
       "Retry": "Try again"
+    },
+    "Menu": {
+      "Title": "Menu",
+      "Messages": "Messages",
+      "Info": "About this phone",
+      "Type": "Type",
+      "Name": "Device",
+      "Number": "Number",
+      "Operator": "Operator",
+      "Network": "Network",
+      "Security": "Security",
+      "Yes": "Yes",
+      "MessagesCalls": "Messages / Calls",
+      "Calls": "Calls"
     }
   }
 }

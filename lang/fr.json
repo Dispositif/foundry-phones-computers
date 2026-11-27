@@ -872,13 +872,13 @@
       "Title": "Bien démarrer",
       "Link": "Bien démarrer",
       "Ok": "Compris",
-      "Open": "<strong>Ctrl+Shift+P</strong> ou le bouton flottant ouvre votre appareil. Appuyez encore : appareil suivant.",
+      "Open": "<strong>Ctrl+Shift+P</strong> ou le bouton flottant ouvre votre appareil.",
+      "Menu": "<strong>Menu</strong> : le bouton ☰. Contacts, à propos du téléphone, éteindre. Allumer : bouton latéral ou touche verte.",
       "Call": "<strong>Appeler</strong> : tapez un numéro ou un nom, puis le bouton téléphone. Tout numéro marche, même inventé.",
       "Text": "<strong>Écrire</strong> : ouvrez une conversation, ou commencez-en une avec n'importe quel numéro.",
-      "Contacts": "<strong>Contacts</strong> : le carnet d'adresses dans la barre du haut. Dans une conversation, ajoutez l'expéditeur à vos contacts.",
       "Show": "<strong>Montrez</strong> votre écran aux autres PJ de la même scène, ou <strong>transférez</strong> un message.",
       "Next": "Rien ne passe jamais par le chat : tout reste sur vos appareils.",
-      "Credit": "Phones & Computers, un module Foundry VTT par Soren"
+      "Credit": "Phones & Computers {version} par Soren"
     },
     "DeleteEntryConfirm": "Supprimer définitivement ? Impossible d'annuler.",
     "News": {
@@ -903,6 +903,20 @@
       "Signal": "Satellite",
       "NotSent": "Non envoyé",
       "Retry": "Réessayer"
+    },
+    "Menu": {
+      "Title": "Menu",
+      "Messages": "Messages",
+      "Info": "À propos du téléphone",
+      "Type": "Type",
+      "Name": "Appareil",
+      "Number": "Numéro",
+      "Operator": "Opérateur",
+      "Network": "Réseau",
+      "Security": "Sécurité",
+      "Yes": "Oui",
+      "MessagesCalls": "Messages / Appels",
+      "Calls": "Appels"
     }
   }
 }

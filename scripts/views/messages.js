@@ -55,7 +55,7 @@ export const messageViews = {
   },
 
   _renderList(p, mine) {
-    const convs = conversations(p.phone);
+    const convs = conversations(p.phone, { team: false });
     const rows = convs
       .map((c) => {
         const last = c.entries[0];

@@ -17,6 +17,7 @@ import { deviceNotice, esc, nl2br, onRerender, setNoticeHost } from "./util.js";
 import { fileViews } from "./views/files.js";
 import { headerViews } from "./views/header.js";
 import { contactViews } from "./views/contacts.js";
+import { menuViews } from "./views/menu.js";
 import { callLabel, GM_ENTRY_TYPES, messageViews } from "./views/messages.js";
 import { screenViews } from "./views/screens.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
@@ -37,7 +38,7 @@ function removeEntry(item, { id = null, t: ts = null }) {
 /** Phone keypads: the screen buttons the green and red keys press, first one found. */
 const PHONE_KEYS = {
   green: ["answer", "call", "dialBack"],
-  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack", "contactBack"]
+  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack", "contactBack", "openMenu"]
 };
 /** LCD backlight: how long it stays on after the last change or touch. */
 const LIT_MS = 8000;
@@ -93,6 +94,10 @@ export class PlayerPhone extends ApplicationV2 {
         const key = this._state.key;
         if (p && this._canEditContacts(p)) this._openContact(p, { name: findContact(p.phone, key)?.name ?? "", number: key, from: key });
       },
+      menu: function () { this._toggleMenu(); },
+      openMenu: function () { this._go("menu"); },
+      info: function () { this._go("info"); },
+      menuPowerOff: function () { const p = this._current(); if (p) this._setMode(p, "off"); },
       contactNew: function () { const p = this._current(); if (p && this._canEditContacts(p)) this._openContact(p); },
       contactEdit: function (event, target) { const p = this._current(); if (p && this._canEditContacts(p)) this._openContact(p, { idx: Number(target.dataset.idx) }); },
       contactBack: function () { this._contactBack(); },
@@ -269,6 +274,13 @@ export class PlayerPhone extends ApplicationV2 {
     return this.gm || (!isFixed(p.phone) && p.item.parent instanceof Actor && p.item.isOwner);
   }
 
+  /** Menu: opens on a usable screen (not off, locked, ringing or on the line), closes back to the list. */
+  _toggleMenu() {
+    const p = this._current();
+    if (!this._hasMenu(p) || this.element?.querySelector(".window-content .spt-lockscreen")) return;
+    this._go(this._state.view === "menu" ? "list" : "menu");
+  }
+
   _readForm() {
     const el = this.element;
     if (!el?.querySelector) return;
@@ -391,6 +403,10 @@ export class PlayerPhone extends ApplicationV2 {
     if (this._state.view === "doc") return this._renderDoc(p);
     if (this._state.view === "conv") return this._renderConv(p);
     if (this._state.view === "new") return this._renderNew(p);
+    if (["menu", "info"].includes(this._state.view)) {
+      if (this._hasMenu(p)) return this._state.view === "menu" ? this._renderMenu(p) : this._renderInfo(p);
+      this._state.view = "list";
+    }
     if (["contacts", "contact"].includes(this._state.view)) {
       if (this._canEditContacts(p)) return this._state.view === "contacts" ? this._renderContacts(p) : this._renderContact(p);
       this._state.view = "list";
@@ -484,6 +500,13 @@ export class PlayerPhone extends ApplicationV2 {
       return;
     }
     const key = ev.target.closest?.("[data-spt-key]")?.dataset.sptKey;
+    // Smartphone side button: power on / off.
+    // Mobile: the keypad's middle key opens the menu (and closes it).
+    if (key === "menu") return void this._toggleMenu();
+    if (key === "power") {
+      const p = this._current();
+      return void (p && this._setMode(p, modeOf(p.phone) === "off" ? "on" : "off"));
+    }
     if (!PHONE_KEYS[key]) return;
     const content = this.element.querySelector(".window-content");
     // Switched off: the green key switches the phone on (the screen shows no power button).
@@ -528,7 +551,7 @@ export class PlayerPhone extends ApplicationV2 {
     this.element.classList.toggle("spt-antenna-up", !!cur && !this.gm && modeOf(cur.phone) !== "off");
     this.element.classList.toggle("spt-gm-view", this.gm);
     this._applyFrame(cur);
-    for (const k of this.element.querySelectorAll("[data-spt-key]")) k.title = k.dataset.sptKey === "green" ? t(this.element.querySelector(".spt-offscreen") ? "PowerOn" : "KeyGreen") : t("KeyRed");
+    for (const k of this.element.querySelectorAll("[data-spt-key]")) k.title = k.dataset.sptKey === "power" ? t(modeOf(this._current()?.phone) === "off" ? "PowerOn" : "PowerOff") : k.dataset.sptKey === "menu" ? t("Menu.Title") : k.dataset.sptKey === "green" ? t(this.element.querySelector(".spt-offscreen") ? "PowerOn" : "KeyGreen") : t("KeyRed");
     // Mobile: the light blinks while a message or missed call is unread.
     this.element.classList.toggle("spt-unread", !!cur && playerUnread(cur.phone) > 0);
     // LCD screens: the backlight comes on when the device's screen changes.
@@ -597,7 +620,7 @@ export class PlayerPhone extends ApplicationV2 {
     if (thread) thread.scrollTop = thread.scrollHeight;
     if (this._state.view === "new" && !this._state.to) el.querySelector("[name=to]")?.focus();
     else if (this._state.view === "contact" && !this._state.contact?.name) el.querySelector("[name=cname]")?.focus();
-    else if (!["list", "contacts", "contact"].includes(this._state.view)) el.querySelector("[name=draft]")?.focus();
+    else if (!["list", "contacts", "contact", "menu", "info"].includes(this._state.view)) el.querySelector("[name=draft]")?.focus();
     this._bindContactSearch(el);
 
     // Opening a conversation marks it as read.
@@ -614,7 +637,7 @@ export class PlayerPhone extends ApplicationV2 {
 }
 
 // The window's views live in views/*.js: their methods join the class, `this` stays the window.
-Object.assign(PlayerPhone.prototype, headerViews, messageViews, contactViews, fileViews, screenViews);
+Object.assign(PlayerPhone.prototype, headerViews, messageViews, contactViews, menuViews, fileViews, screenViews);
 
 /* Repeated Ctrl+Shift+P: each device in turn (phones, then pagers in their own window), */
 /* then everything closes once all were shown; the next press starts again.              */

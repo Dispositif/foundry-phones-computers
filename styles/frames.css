@@ -104,7 +104,7 @@
 }
 .spt-frame-mobile .spt-mobile-keys span small { font-size: 7px; font-weight: 600; color: #555; letter-spacing: 0.08em; }
 .spt-frame-mobile .spt-mobile-keys span.nav { grid-column: auto; height: 26px; border-radius: 13px; }
-.spt-frame-mobile .spt-mobile-keys span.nav i { width: 30px; height: 15px; border-radius: 8px; background: linear-gradient(#f4f6f8, #c4cad1); box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.spt-frame-mobile .spt-mobile-keys span.nav i { font-size: 11px; color: #2b2f35; }
 .spt-frame-mobile .spt-mobile-keys span.call { background: linear-gradient(#7fc58f, #3f8a52); color: #fff; }
 .spt-frame-mobile .spt-mobile-keys span.end { background: linear-gradient(#e08a80, #a8443a); color: #fff; }
 /* Working keys (mobile, brick, satellite phone): green, red and digits. */
@@ -206,3 +206,26 @@
 .spt-frame-rotary .spt-frame-cord { background: repeating-linear-gradient(#2a2623 0 3px, #0d0c0b 3px 6px); }
 /* Keypad phones switched off: no power button on the screen, the green key switches them on. */
 .spt-player-phone:is(.spt-frame-mobile, .spt-frame-brick, .spt-frame-bricksat):has(.spt-offscreen) .spt-phone-top .spt-modes { visibility: hidden; }
+/* Smartphone right side button = power (a wider invisible hit area around the thin button). */
+.spt-player-phone.spt-framed .spt-frame-side[data-spt-key] { pointer-events: auto; cursor: pointer; }
+.spt-player-phone.spt-framed .spt-frame-side[data-spt-key]::after { content: ""; position: absolute; inset: -4px -6px -4px -3px; }
+.spt-player-phone.spt-framed .spt-frame-side[data-spt-key]:active { transform: translateX(-1px); }
+/* Smartphone switched off: the side button is the power key; the screen's power button stays a discreet fallback. */
+.application.spt-player-phone.spt-frame-smartphone:has(.spt-offscreen) .spt-modes .spt-mode.active { opacity: 0.45; }
+.application.spt-player-phone.spt-frame-smartphone:has(.spt-offscreen) .spt-modes .spt-mode.active:is(:hover, :focus, :focus-visible) { opacity: 0.8; }
+.application.spt-player-phone.spt-frame-smartphone:has(.spt-offscreen) .spt-modes .spt-mode.active:is(*, :hover, :focus, :focus-visible, :active) { box-shadow: none; outline: none; border-color: var(--skin-btn-border, transparent); }
+/* Mobile: the keypad's middle key is the menu, so the screen shows no contacts button. */
+.spt-player-phone:is(.spt-frame-mobile, .spt-frame-bricksat):not(.minimized) > .window-content .spt-phone-foot [data-action="contacts"] { display: none; }
+.spt-player-phone.spt-framed .spt-mobile-keys .nav[data-spt-key] { pointer-events: auto; cursor: pointer; }
+/* Smartphone menu: each app icon on its own colour. */
+.spt-player-phone.spt-frame-smartphone .spt-menu li i { color: #fff; }
+.spt-player-phone.spt-frame-smartphone .spt-menu li[data-action="back"] i { background: #2e9e4f; }
+.spt-player-phone.spt-frame-smartphone .spt-menu li[data-action="contacts"] i { background: #e08a2e; }
+.spt-player-phone.spt-frame-smartphone .spt-menu li[data-action="info"] i { background: #3a7bd5; }
+.spt-player-phone.spt-frame-smartphone .spt-menu li[data-action="menuPowerOff"] i { background: #c0392b; }
+.spt-player-phone.spt-frame-smartphone .spt-menu li[data-action="playerGuide"] i { background: #7d5bbe; }
+/* Smartphone header: a discreet bell (no frame, whatever the state), a clearly visible Menu button. */
+.application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-mode:is(*, :hover, :focus, :focus-visible, :active, .active) { border-color: transparent; box-shadow: none; outline: none; background: transparent; }
+.application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-mode:not(.spt-menu-btn) { opacity: 0.45; font-size: 0.9em; }
+.application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-mode:not(.spt-menu-btn):hover { opacity: 0.8; }
+.application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-menu-btn { opacity: 1; font-size: 1.2em; }

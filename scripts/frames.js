@@ -12,7 +12,7 @@ const LANDLINE_DECO = `<span class="spt-frame-deco spt-frame-handset"></span><sp
 export const FRAMES = {
   smartphone: {
     width: 340, height: 640,
-    before: `<span class="spt-frame-deco spt-frame-side r"></span><span class="spt-frame-deco spt-frame-side l"></span><span class="spt-frame-deco spt-frame-side l2"></span><span class="spt-frame-deco spt-frame-camera"></span>`,
+    before: `<span class="spt-frame-deco spt-frame-side r" data-spt-key="power"></span><span class="spt-frame-deco spt-frame-side l"></span><span class="spt-frame-deco spt-frame-side l2"></span><span class="spt-frame-deco spt-frame-camera"></span>`,
     after: `<span class="spt-frame-deco spt-frame-homebar"></span>`
   },
   mobile: {
@@ -20,7 +20,7 @@ export const FRAMES = {
     // Antenna behind the shell, unread light, speaker.
     before: `<span class="spt-frame-deco spt-mobile-antenna"></span><span class="spt-frame-deco spt-mobile-led"></span><div class="spt-frame-deco spt-frame-speaker"></div>`,
     // Green and red keys press the screen's own buttons, digits type the number (see PlayerPhone._pressKey).
-    after: `<div class="spt-frame-deco spt-frame-keys spt-mobile-keys" aria-hidden="true"><span class="call" data-spt-key="green"><i class="fas fa-phone"></i></span><span class="nav"><i></i></span><span class="end" data-spt-key="red"><i class="fas fa-phone-slash"></i></span>${KEYPAD_LETTERS.map(([k, l]) => `<span data-spt-digit="${k}">${k}<small>${l}</small></span>`).join("")}</div>`
+    after: `<div class="spt-frame-deco spt-frame-keys spt-mobile-keys" aria-hidden="true"><span class="call" data-spt-key="green"><i class="fas fa-phone"></i></span><span class="nav" data-spt-key="menu"><i class="fas fa-bars"></i><small>MENU</small></span><span class="end" data-spt-key="red"><i class="fas fa-phone-slash"></i></span>${KEYPAD_LETTERS.map(([k, l]) => `<span data-spt-digit="${k}">${k}<small>${l}</small></span>`).join("")}</div>`
   },
   // 1980s brick: huge tall shell, tiny screen, tiny keys, antenna pulled out during a call.
   brick: {
@@ -32,7 +32,7 @@ export const FRAMES = {
   bricksat: {
     width: 270, height: 570, gm: { width: 320, height: 610 },
     before: `<span class="spt-frame-deco spt-frame-antenna"></span><span class="spt-frame-deco spt-frame-sat">SAT</span><div class="spt-frame-deco spt-frame-speaker"></div>`,
-    after: `<div class="spt-frame-deco spt-frame-keys spt-brick-keys" aria-hidden="true"><span class="snd" data-spt-key="green">SND</span><span class="clr" data-spt-digit="clr">CLR</span><span class="end" data-spt-key="red">END</span>${DIGIT_KEYS}</div>`
+    after: `<div class="spt-frame-deco spt-frame-keys spt-brick-keys" aria-hidden="true"><span class="snd" data-spt-key="green">SND</span><span class="clr" data-spt-key="menu">MENU</span><span class="end" data-spt-key="red">END</span>${DIGIT_KEYS}</div>`
   },
   computer: {
     width: 640, height: 460,

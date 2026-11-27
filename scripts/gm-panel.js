@@ -1,5 +1,5 @@
 import { attChipHtml, attFromDrop, pickImage } from "./attachments.js";
-import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID } from "./constants.js";
+import { ApplicationV2, DialogV2, HandlebarsApplicationMixin, MASKED, MODES, MODULE_ID, moduleVersion } from "./constants.js";
 import { filesOverview, previewDoc, previewEntry, previewFile, setFileStates } from "./files.js";
 import { allJammers, isJammer, isNpcHeld, jammedScenes, allPhones, phonesByNumber, holders, sharedUsers, displayName, getLog, getPhoneData, hasSignal, holderName, inDeadZone, isFixed, keyFor, modelOf, msgOn, patchLog, phoneLabel, sameConv, unmarkPhone, unreadCount, modeOf, gmName, isUnknownNumber, npcDirectory, findNpc, isComputer, isSecure, secureWith, setSecureWith, carriedPhone, directoryRows, npcLabel, npcId, saveNpc, patchNpc, deleteNpc, nameUnknown, freeNpcNumber, publicName, landlineUsers, isOffNumber, createPhone, randomAddress, isSatellite, modelLabel, viaSatellite, iconOf, newTheme, deadZoneScenes, userDeadZone } from "./devices.js";
 import { directoryDialog, editPhoneDialog, giveDialog, newPhoneDialog, quickKinds } from "./dialogs.js";
@@ -632,7 +632,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   get title() {
-    return t("Gm.PanelTitle");
+    return [t("Gm.PanelTitle"), moduleVersion()].filter(Boolean).join(" - ");
   }
 
   /** Window icon by universe: switchboard (vintage), the Net (cyberpunk), otherwise a cell tower. */

@@ -113,3 +113,22 @@
 .spt-contact-sheet label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.85em; }
 .spt-contact-sheet label input { font-size: 1.1em; }
 .spt-contact-foot { text-align: center; font-size: 0.85em; }
+
+/* General menu (smartphone: tiles; mobile LCD: a plain list) */
+.spt-menu { list-style: none; margin: 0; padding: 0.8rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; align-content: start; flex: 1; overflow-y: auto; }
+.spt-menu li { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.7rem 0.2rem; border-radius: 14px; cursor: pointer; font-size: 0.85em; text-align: center; }
+.spt-menu li i { font-size: 1.5em; width: 2.2em; height: 2.2em; line-height: 2.2em; border-radius: 12px; background: var(--skin-btn-bg, rgba(128,128,128,0.15)); }
+.spt-menu li:hover { background: var(--skin-hover, rgba(128,128,128,0.1)); }
+.spt-player-phone.spt-skin-mobile .spt-menu { display: block; padding: 0; }
+.spt-player-phone.spt-skin-mobile .spt-menu li { flex-direction: row; gap: 0.6rem; padding: 0.45rem 0.7rem; border-radius: 0; border-bottom: 1px solid var(--skin-line-soft); font-size: 1em; text-align: left; }
+.spt-player-phone.spt-skin-mobile .spt-menu li i { font-size: 1em; width: 1.2em; height: auto; line-height: inherit; background: none; }
+.spt-player-phone.spt-skin-mobile .spt-menu li:hover { background: var(--skin-fg); color: var(--skin-bg); }
+/* About this phone */
+.spt-info { margin: 0; padding: 0.6rem 0.9rem; display: grid; grid-template-columns: auto 1fr; gap: 0.45rem 0.9rem; align-content: start; flex: 1; overflow-y: auto; }
+.spt-info dt { opacity: 0.6; font-size: 0.85em; align-self: center; }
+.spt-info dd { margin: 0; user-select: text; word-break: break-word; }
+/* Foundry's theme colours dl/dt/dd and list items: keep the screen's ink. */
+.application.spt-player-phone .window-content :is(.spt-info dt, .spt-info dd, .spt-menu li) { color: var(--skin-fg, inherit); }
+.spt-bootscreen .spt-boot-version { margin: 0; font-size: 0.75em; opacity: 0.5; letter-spacing: 0.08em; }
+/* Smartphone: the team mark (contacts added automatically) in green. */
+.spt-player-phone.spt-frame-smartphone .spt-contact-team { color: #4caf50; opacity: 1; }

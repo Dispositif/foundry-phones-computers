@@ -1,3 +1,4 @@
+import { moduleVersion } from "../constants.js";
 import { hasSignal, isComputer, skinOf, unreadCount } from "../devices.js";
 import { keypad, rotaryDial } from "../dialer.js";
 import { t, tn } from "../i18n.js";
@@ -89,6 +90,7 @@ export const screenViews = {
       <div class="spt-lockscreen spt-bootscreen">
         <i class="fas fa-signal ${signal ? "" : "spt-signal off"}"></i>
         <p class="spt-operator">${esc(bootText(p.phone))}</p>
+        ${moduleVersion() ? `<p class="spt-boot-version">${esc(moduleVersion())}</p>` : ""}
       </div>`;
   },
 

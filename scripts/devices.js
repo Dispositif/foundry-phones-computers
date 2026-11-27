@@ -835,8 +835,11 @@ export function patchLog(item, predicate, patch) {
   });
 }
 
-/** A device's conversations, sorted by activity (+ contacts without messages). */
-export function conversations(phone) {
+/**
+ * A device's conversations, sorted by activity (+ contacts without messages).
+ * team: false leaves out the team contacts nobody has written to yet (they are in the address book).
+ */
+export function conversations(phone, { team = true } = {}) {
   const map = new Map();
   for (const e of getLog(phone)) {
     const key = keyFor(phone, e.with);
@@ -847,6 +850,7 @@ export function conversations(phone) {
     if (isUnread(e)) conv.unread++;
   }
   for (const c of contactsOf(phone)) {
+    if (c.team && !team) continue;
     const key = c.number || c.name;
     if (!map.has(norm(key))) map.set(norm(key), { key, entries: [], unread: 0 });
   }

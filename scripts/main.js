@@ -448,7 +448,7 @@ function captionDevices(root) {
     const name = li.querySelector(".entry-name");
     if (!phone || !name || name.querySelector(".spt-item-sub")) continue;
     const where = isFixed(phone)
-      ? `<i class="fas fa-location-dot"></i> ${esc(game.scenes.get(phone.sceneId)?.name ?? t("NoPlace"))}`
+      ? esc(game.scenes.get(phone.sceneId)?.name ?? t("NoPlace"))
       : esc(sharedUsers(item).length ? t("Gm.Shared") : t("Gm.Nobody"));
     const address = isJammer(phone) ? "" : String(phone.number ?? "");
     const lock = phone.locked ? ` <i class="fas fa-lock spt-item-lock" title="${esc(t("Lock.Locked"))}"></i>` : "";

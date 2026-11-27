@@ -1,4 +1,4 @@
-import { ApplicationV2, MODULE_ID, SOCKET } from "./constants.js";
+import { ApplicationV2, MODULE_ID, moduleVersion, SOCKET } from "./constants.js";
 import { allPhones, getLog, hasSignal, isComputer, isFixed, isPager, keyFor, modeOf, MODELS, msgOn } from "./devices.js";
 import { operatorName } from "./names.js";
 import { openPanel } from "./main.js";
@@ -173,9 +173,9 @@ export function openPlayerGuide() {
   // The icons the player will meet on the device, next to each line.
   const icons = {
     Open: ["fa-mobile-screen"],
+    Menu: ["fa-bars"],
     Call: ["fa-phone"],
     Text: ["fa-pen-to-square", "fa-paper-plane"],
-    Contacts: ["fa-address-book", "fa-user-plus"],
     Show: ["fa-eye", "fa-share"],
     Next: ["fa-comment-slash"]
   };
@@ -186,7 +186,7 @@ export function openPlayerGuide() {
     window: { title: t("Guide.Title"), icon: "fas fa-circle-question" },
     classes: ["spt-dialog", "spt-guide"],
     position: { width: 440 },
-    content: `<ul class="spt-guide-list">${items}</ul><p class="spt-guide-credit"><i class="fas fa-tower-cell"></i> ${t("Guide.Credit")}</p>`,
+    content: `<ul class="spt-guide-list">${items}</ul><p class="spt-guide-credit"><i class="fas fa-tower-cell"></i> ${t("Guide.Credit", { version: moduleVersion() })}</p>`,
     buttons: [{ action: "ok", label: t("Guide.Ok"), icon: "fas fa-check", default: true }]
   }).render({ force: true });
 }

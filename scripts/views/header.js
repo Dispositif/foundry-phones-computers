@@ -49,7 +49,9 @@ export const headerViews = {
     const mode = modeOf(p.phone);
     // GM and player: the same title (the GM changes device from the panel).
     const phoneSel = this._deviceTitle(p);
-    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode, modelOf(p.phone).noSilent);
+    // Smartphone (player, switched on): the Menu button takes the power button's place (power: side button or menu).
+    const menu = !this.gm && mode !== "off" && p.phone.model === "smartphone" && this._hasMenu(p);
+    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode, modelOf(p.phone).noSilent, menu);
     // Player, mobile device switched off: only the power button, which switches it on.
     if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {
       return `<header class="spt-phone-top">${phoneSel}<div class="spt-modes">${modeBtns}</div></header>`;
@@ -77,14 +79,16 @@ export const headerViews = {
    * Two buttons: ring/silent (one toggle showing the current state) and power.
    * Switched off, the toggle keeps its space (hidden) so the power button stays in place.
    */
-  _modeButtons(mode, noSilent = false) {
+  _modeButtons(mode, noSilent = false, menu = false) {
     const off = mode === "off";
     const ring = mode === "silent" ? MODES.silent : MODES.on;
     const toggle = off && !this.gm
       ? `<button type="button" class="spt-mode" style="visibility:hidden" tabindex="-1" aria-hidden="true"><i class="fas ${ring.icon}"></i></button>`
       : `<button type="button" class="spt-mode ${off ? "" : "active"}" data-mode="${mode === "on" ? "silent" : "on"}" title="${ring.label}" aria-label="${ring.label}"><i class="fas ${ring.icon}"></i></button>`;
     const powerTitle = t(off ? "PowerOn" : "PowerOff");
-    const power = `<button type="button" class="spt-mode ${off ? "active" : ""}" data-mode="${off ? "on" : "off"}" title="${powerTitle}" aria-label="${powerTitle}"><i class="fas ${MODES.off.icon}"></i></button>`;
+    const power = menu
+      ? `<button type="button" class="spt-mode spt-menu-btn" data-action="menu" title="${t("Menu.Title")}" aria-label="${t("Menu.Title")}"><i class="fas fa-bars"></i></button>`
+      : `<button type="button" class="spt-mode ${off ? "active" : ""}" data-mode="${off ? "on" : "off"}" title="${powerTitle}" aria-label="${powerTitle}"><i class="fas ${MODES.off.icon}"></i></button>`;
     // Brick: rings or is off, no silent mode.
     return noSilent ? power : toggle + power;
   },
