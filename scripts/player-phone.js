@@ -38,7 +38,7 @@ function removeEntry(item, { id = null, t: ts = null }) {
 /** Phone keypads: the screen buttons the green and red keys press, first one found. */
 const PHONE_KEYS = {
   green: ["answer", "call", "dialBack"],
-  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack", "contactBack", "openMenu"]
+  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack", "contactBack", "photoBack", "openMenu"]
 };
 /** LCD backlight: how long it stays on after the last change or touch. */
 const LIT_MS = 8000;
@@ -97,6 +97,9 @@ export class PlayerPhone extends ApplicationV2 {
       menu: function () { this._toggleMenu(); },
       openMenu: function () { this._go("menu"); },
       info: function () { this._go("info"); },
+      images: function () { this._go("images"); },
+      photo: function (event, target) { this._go("photo", target.dataset.id); },
+      photoBack: function () { this._go("images"); },
       menuPowerOff: function () { const p = this._current(); if (p) this._setMode(p, "off"); },
       contactNew: function () { const p = this._current(); if (p && this._canEditContacts(p)) this._openContact(p); },
       contactEdit: function (event, target) { const p = this._current(); if (p && this._canEditContacts(p)) this._openContact(p, { idx: Number(target.dataset.idx) }); },
@@ -403,8 +406,9 @@ export class PlayerPhone extends ApplicationV2 {
     if (this._state.view === "doc") return this._renderDoc(p);
     if (this._state.view === "conv") return this._renderConv(p);
     if (this._state.view === "new") return this._renderNew(p);
-    if (["menu", "info"].includes(this._state.view)) {
-      if (this._hasMenu(p)) return this._state.view === "menu" ? this._renderMenu(p) : this._renderInfo(p);
+    if (["menu", "info", "images", "photo"].includes(this._state.view)) {
+      const v = this._state.view;
+      if (this._hasMenu(p)) return v === "menu" ? this._renderMenu(p) : v === "info" ? this._renderInfo(p) : v === "photo" ? this._renderPhoto(p) : this._renderImages(p);
       this._state.view = "list";
     }
     if (["contacts", "contact"].includes(this._state.view)) {
@@ -620,7 +624,7 @@ export class PlayerPhone extends ApplicationV2 {
     if (thread) thread.scrollTop = thread.scrollHeight;
     if (this._state.view === "new" && !this._state.to) el.querySelector("[name=to]")?.focus();
     else if (this._state.view === "contact" && !this._state.contact?.name) el.querySelector("[name=cname]")?.focus();
-    else if (!["list", "contacts", "contact", "menu", "info"].includes(this._state.view)) el.querySelector("[name=draft]")?.focus();
+    else if (!["list", "contacts", "contact", "menu", "info", "images", "photo"].includes(this._state.view)) el.querySelector("[name=draft]")?.focus();
     this._bindContactSearch(el);
 
     // Opening a conversation marks it as read.

@@ -132,3 +132,8 @@
 .spt-bootscreen .spt-boot-version { margin: 0; font-size: 0.75em; opacity: 0.5; letter-spacing: 0.08em; }
 /* Smartphone: the team mark (contacts added automatically) in green. */
 .spt-player-phone.spt-frame-smartphone .spt-contact-team { color: #4caf50; opacity: 1; }
+/* Images app: square thumbnails, newest first. */
+.spt-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; overflow-y: auto; flex: 1; align-content: start; }
+.spt-gallery-img { width: 100%; aspect-ratio: 1; object-fit: cover; border: none; border-radius: 4px; cursor: zoom-in; }
+.spt-photo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 6px; }
+.spt-photo img { max-width: 100%; max-height: 100%; object-fit: contain; border: none; border-radius: 6px; cursor: zoom-in; }

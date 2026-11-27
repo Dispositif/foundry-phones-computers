@@ -59,8 +59,8 @@
 .spt-player-phone.spt-frame-smartphone:not(.minimized) > .window-content::after {
   content: ""; position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit;
   background-image:
-    linear-gradient(118deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.035) 30%, transparent 30.5%),
-    linear-gradient(118deg, transparent 58%, rgba(255,255,255,0.04) 58.5%, rgba(255,255,255,0.015) 70%, transparent 70.5%);
+    linear-gradient(118deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.042) 30%, transparent 30.5%),
+    linear-gradient(118deg, transparent 58%, rgba(255,255,255,0.05) 58.5%, rgba(255,255,255,0.018) 70%, transparent 70.5%);
   background-repeat: no-repeat; background-size: 140% 100%;
   background-position: calc(30% + var(--spt-glare, 0px)) 0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 18px rgba(0,0,0,0.4);
@@ -85,14 +85,14 @@
 .spt-player-phone.spt-frame-mobile:not(.minimized) > .window-content::after {
   content: ""; position: absolute; inset: 0; z-index: 20; pointer-events: none;
   background-image:
-    linear-gradient(125deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 24%, transparent 24.5%),
-    linear-gradient(125deg, transparent 66%, rgba(255,255,255,0.06) 66.5%, transparent 74%);
+    linear-gradient(125deg, rgba(255,255,255,0.19) 0%, rgba(255,255,255,0.06) 24%, transparent 24.5%),
+    linear-gradient(125deg, transparent 66%, rgba(255,255,255,0.072) 66.5%, transparent 74%);
   box-shadow: inset 0 3px 6px rgba(0,0,0,0.3);
 }
 .spt-player-phone.spt-frame-mobile.spt-skin-mobile:not(.minimized) > .window-content::after {
   background-image:
-    linear-gradient(125deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 24%, transparent 24.5%),
-    linear-gradient(125deg, transparent 66%, rgba(255,255,255,0.06) 66.5%, transparent 74%),
+    linear-gradient(125deg, rgba(255,255,255,0.19) 0%, rgba(255,255,255,0.06) 24%, transparent 24.5%),
+    linear-gradient(125deg, transparent 66%, rgba(255,255,255,0.072) 66.5%, transparent 74%),
     repeating-linear-gradient(0deg, rgba(30,42,23,0.025) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg, rgba(30,42,23,0.025) 0 1px, transparent 1px 3px);
 }
@@ -229,3 +229,4 @@
 .application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-mode:not(.spt-menu-btn) { opacity: 0.45; font-size: 0.9em; }
 .application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-mode:not(.spt-menu-btn):hover { opacity: 0.8; }
 .application.spt-player-phone.spt-frame-smartphone .spt-phone-top .spt-modes .spt-menu-btn { opacity: 1; font-size: 1.2em; }
+.spt-player-phone.spt-frame-smartphone .spt-menu li[data-action="images"] i { background: #d6457a; }

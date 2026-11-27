@@ -916,7 +916,9 @@
       "Security": "Security",
       "Yes": "Yes",
       "MessagesCalls": "Messages / Calls",
-      "Calls": "Calls"
+      "Calls": "Calls",
+      "Images": "Images",
+      "NoImage": "No image yet."
     }
   }
 }

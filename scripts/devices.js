@@ -765,6 +765,12 @@ export function normalizeEntry(e) {
   return { ...e, dir: e.dir ?? "in", with: e.with ?? e.from ?? MASKED };
 }
 
+/** Images app: the images sent or received by message, newest first, each image once (nothing stored). */
+export function phoneImages(phone, { includePending = false } = {}) {
+  const seen = new Set();
+  return getLog(phone, { includePending }).filter((e) => e.att?.type === "image" && e.att.src && !seen.has(e.att.src) && seen.add(e.att.src));
+}
+
 export function getLog(phone, { includePending = false } = {}) {
   return (phone?.log ?? []).map(normalizeEntry).filter((e) => includePending || !e.pending);
 }

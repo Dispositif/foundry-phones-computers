@@ -10,6 +10,7 @@
 - Polished smartphone and mobile phone looks, working keys on the older phones.
 - Address book inside the device.
 - General menu on phones.
+- Images app on the smartphone.
 - QoL: New device button and Items context menu, device marks in the Items and Scenes sidebars, light theme, GM panel.
 - Fix: a call no longer rings forever when the player has not clicked in Foundry yet.
 - Fix: no extra "Cancelled" line after the GM's answer to a call to an NPC.

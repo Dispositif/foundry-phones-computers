@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FakeActor, carry, load, setWorld } from "./shim.mjs";
 
-const { keyFor, senderKey, modeOf, isUnread, trimLog, getLog, unreadCount, isOffNumber, isUnknownName } = await load("devices.js");
+const { phoneImages, keyFor, senderKey, modeOf, isUnread, trimLog, getLog, unreadCount, isOffNumber, isUnknownName } = await load("devices.js");
 const { LOG_MAX, MASKED } = await load("constants.js");
 
 const DIRECTORY = "Mr Smith | 555-0199 | public\nThe Fixer | 555-0222\n| 555-0300 | off";
@@ -87,4 +87,11 @@ test("isOffNumber and isUnknownName: out-of-service numbers, and names the devic
   assert.equal(isUnknownName(phone, "Zorglub"), true);
   assert.equal(isUnknownName(phone, "Paul"), false);
   assert.equal(isUnknownName(phone, "555-0444"), false);
+});
+
+test("phoneImages: images of the history, newest first, each once, pending ones only for the GM", () => {
+  const img = (id, src, extra = {}) => ({ id, kind: "sms", dir: "in", with: "555-1234", t: 0, att: { type: "image", src }, ...extra });
+  const phone = { log: [img("c", "c.png"), { id: "t", kind: "sms", dir: "in", with: "x", t: 0, text: "hi" }, img("b", "b.png"), img("b2", "b.png"), img("p", "p.png", { pending: true }), { id: "d", kind: "sms", dir: "in", with: "x", t: 0, att: { type: "doc", uuid: "J.1", name: "File" } }] };
+  assert.deepEqual(phoneImages(phone).map((e) => e.att.src), ["c.png", "b.png"]);
+  assert.deepEqual(phoneImages(phone, { includePending: true }).map((e) => e.att.src), ["c.png", "b.png", "p.png"]);
 });
