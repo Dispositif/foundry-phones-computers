@@ -73,7 +73,7 @@ export const messageViews = {
       .join("");
     return `${this._renderHeader(p, mine)}${this._tabsHtml(p)}
       <ul class="spt-conv-list">${rows || `<li class="spt-phone-empty">${t("NoConversation")}</li>`}</ul>
-      <footer class="spt-phone-foot"><button type="button" data-action="compose">${composeLabel(p.phone, this.gm)}</button></footer>`;
+      <footer class="spt-phone-foot spt-phone-row">${this._canEditContacts(p) ? `<button type="button" class="spt-icon-btn" data-action="contacts" title="${t("Contacts.Title")}" aria-label="${t("Contacts.Title")}"><i class="fas fa-address-book"></i></button>` : ""}<button type="button" data-action="compose">${composeLabel(p.phone, this.gm)}</button></footer>`;
   },
 
   _renderConv(p) {

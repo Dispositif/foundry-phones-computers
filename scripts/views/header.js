@@ -1,5 +1,5 @@
 import { MODES } from "../constants.js";
-import { allPhones, hasSignal, isComputer, isFixed, isLandline, isSatellite, isSecure, mobileSignal, modelOf, modeOf, phoneLabel, viaSatellite } from "../devices.js";
+import { allPhones, hasSignal, isComputer, isFixed, isSatellite, isSecure, mobileSignal, modelOf, modeOf, phoneLabel, viaSatellite } from "../devices.js";
 import { t } from "../i18n.js";
 import { liveOn } from "../live-call.js";
 import { operatorName } from "../names.js";
@@ -66,12 +66,8 @@ export const headerViews = {
         : hasSignal(p.phone)
         ? `<i class="fas ${netIcon} spt-signal" title="${esc(isComputer(p.phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(p.phone)}`)}"></i>`
         : `<i class="fas ${netIcon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
-    const contactsBtn = !isLandline(p.phone) && this._canEditContacts(p)
-      ? `<a data-action="contacts" title="${t("Contacts.Title")}" aria-label="${t("Contacts.Title")}"><i class="fas fa-address-book"></i></a>`
-      : "";
-    const gmTools = this.gm
-      ? `${contactsBtn}<a data-action="gmEditDevice" title="${t("EditDevice")}" aria-label="${t("EditDevice")}"><i class="fas fa-gear"></i></a>`
-      : contactsBtn;
+    // The address book opens from the list's footer, next to the compose button.
+    const gmTools = this.gm ? `<a data-action="gmEditDevice" title="${t("EditDevice")}" aria-label="${t("EditDevice")}"><i class="fas fa-gear"></i></a>` : "";
     // Secure device: a shield next to the signal.
     const secure = isSecure(p.phone) ? shieldIcon({ title: t("Secure.Device"), cls: "spt-secure-badge" }) : "";
     return `<header class="spt-phone-top">${phoneSel}${secure}${signal}${gmTools}<div class="spt-modes">${modeBtns}</div></header>`;

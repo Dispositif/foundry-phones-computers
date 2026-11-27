@@ -331,7 +331,14 @@
       "Add": "Add to contacts",
       "Name": "Name",
       "Hint": "One contact per line: <code>Name | number</code>. The number is optional for an NPC.",
-      "Placeholder": "Marlin Hunt | 555-0142&#10;The Program"
+      "Placeholder": "Marlin Hunt | 555-0142&#10;The Program",
+      "New": "New contact",
+      "Number": "Number or address",
+      "Search": "Search",
+      "None": "No contacts yet.",
+      "Message": "Message",
+      "Team": "Team (automatic)",
+      "AsText": "Import / export as text"
     },
     "Save": "Save",
     "Link": {

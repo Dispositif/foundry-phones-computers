@@ -331,7 +331,14 @@
       "Add": "Ajouter aux contacts",
       "Name": "Nom",
       "Hint": "Un contact par ligne : <code>Nom | numéro</code>. Le numéro est facultatif pour un PNJ.",
-      "Placeholder": "Marlin Hunt | 555-0142&#10;Le Programme"
+      "Placeholder": "Marlin Hunt | 555-0142&#10;Le Programme",
+      "New": "Nouveau contact",
+      "Number": "Numéro ou adresse",
+      "Search": "Rechercher",
+      "None": "Aucun contact.",
+      "Message": "Message",
+      "Team": "Équipe (automatique)",
+      "AsText": "Importer / exporter en texte"
     },
     "Save": "Enregistrer",
     "Link": {

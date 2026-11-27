@@ -208,3 +208,9 @@
 /* Incoming call: uses the look of the ringing device */
 .spt-phone-ring-dialog.spt-player-phone .window-content { padding: 0.5rem; }
 .spt-phone-ring-dialog.spt-player-phone .form-footer { gap: 6px; }
+
+/* Monochrome screens (LCD, phosphor): the network icon takes the screen's ink, a "no entry" sign without network. */
+.spt-player-phone:is(.spt-skin-mobile, .spt-skin-console, .spt-skin-military) .spt-signal { color: var(--skin-fg); opacity: 1; }
+.spt-player-phone:is(.spt-skin-mobile, .spt-skin-console, .spt-skin-military) :is(i.spt-signal.off, .spt-signal.off > i)::before { content: "\f05e"; }
+/* Mobile LCD: the device name stays discreet (the screen's content comes first). */
+.application.spt-player-phone.spt-skin-mobile .spt-dev-title strong { font-weight: normal; font-size: 0.9em; opacity: 0.8; }

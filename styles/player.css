@@ -24,6 +24,7 @@
 .spt-player-phone .spt-signal.off small { font-size: 0.75em; opacity: 0.8; }
 .spt-phone-foot { padding: 0.5rem; border-top: 1px solid var(--spt-line); }
 .spt-phone-foot button { width: 100%; }
+.spt-phone-foot.spt-phone-row button.spt-icon-btn { width: auto; }
 
 /* Conversation list */
 .spt-conv-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
@@ -95,3 +96,20 @@
 .spt-show-reading .window-content { overflow-y: auto; }
 .spt-show-reading .spt-doc { font-size: 16px; line-height: 1.55; }
 .spt-show-reading .spt-doc h1, .spt-show-reading .spt-doc h2, .spt-show-reading .spt-doc h3 { font-size: 1.25em; }
+
+/* Address book inside the device */
+.spt-contact-search { display: flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.6rem; }
+.spt-contact-search i { opacity: 0.6; }
+.spt-contact-search input { flex: 1; }
+.spt-contact { display: flex; align-items: center; gap: 0.5rem; padding: 0; }
+.spt-contact-main { flex: 1; min-width: 0; padding: 0.45rem 0.7rem; }
+.spt-contact-main strong, .spt-contact-main small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spt-contact-main small { opacity: 0.65; font-size: 0.85em; }
+.spt-contact-team { font-size: 0.75em; opacity: 0.55; }
+.spt-contact-acts { display: flex; gap: 0.2rem; padding-right: 0.5rem; }
+.spt-contact-acts a { padding: 0.3rem 0.45rem; opacity: 0.8; }
+.spt-contact-acts a:hover { opacity: 1; }
+.spt-contact-sheet { flex: 0 0 auto; }
+.spt-contact-sheet label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.85em; }
+.spt-contact-sheet label input { font-size: 1.1em; }
+.spt-contact-foot { text-align: center; font-size: 0.85em; }

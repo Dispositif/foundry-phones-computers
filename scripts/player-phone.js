@@ -2,7 +2,7 @@ import { openAttachment, pickImage } from "./attachments.js";
 import { ApplicationV2, MODULE_ID, SOCKET } from "./constants.js";
 import { addLog, allPhones, displayName, findContact, getLog, getPhoneData, inboxOf, isComputer, isFixed, isLandline, isPager, isSatellite, isUnread, keyFor, markRead, modeOf, mutateLog, phoneLabel, playerUnread, sameConv, skinOf, SKINS } from "./devices.js";
 import { DIAL_ANGLE, DIAL_DIGITS, DIAL_STOP } from "./dialer.js";
-import { addContactDialog, contactsDialog, editPhoneDialog, giveDialog, playerCanGive, playerGiveDialog } from "./dialogs.js";
+import { contactsDialog, editPhoneDialog, giveDialog, playerCanGive, playerGiveDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
 import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
 import { frameKind, FRAMES } from "./frames.js";
@@ -16,6 +16,7 @@ import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./
 import { deviceNotice, esc, nl2br, onRerender, setNoticeHost } from "./util.js";
 import { fileViews } from "./views/files.js";
 import { headerViews } from "./views/header.js";
+import { contactViews } from "./views/contacts.js";
 import { callLabel, GM_ENTRY_TYPES, messageViews } from "./views/messages.js";
 import { screenViews } from "./views/screens.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
@@ -36,7 +37,7 @@ function removeEntry(item, { id = null, t: ts = null }) {
 /** Phone keypads: the screen buttons the green and red keys press, first one found. */
 const PHONE_KEYS = {
   green: ["answer", "call", "dialBack"],
-  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack"]
+  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack", "contactBack"]
 };
 /** LCD backlight: how long it stays on after the last change or touch. */
 const LIT_MS = 8000;
@@ -86,11 +87,19 @@ export class PlayerPhone extends ApplicationV2 {
         this._state.att = null;
         this._rerender();
       },
-      contacts: function () { const p = this._current(); if (p && this._canEditContacts(p)) contactsDialog(p.item); },
+      contacts: function () { const p = this._current(); if (p && this._canEditContacts(p)) { this._state.q = ""; this._state.contact = null; this._go("contacts"); } },
       addContact: function () {
         const p = this._current();
-        if (p && this._canEditContacts(p)) addContactDialog(p.item, this._state.key, findContact(p.phone, this._state.key)?.name ?? "");
+        const key = this._state.key;
+        if (p && this._canEditContacts(p)) this._openContact(p, { name: findContact(p.phone, key)?.name ?? "", number: key, from: key });
       },
+      contactNew: function () { const p = this._current(); if (p && this._canEditContacts(p)) this._openContact(p); },
+      contactEdit: function (event, target) { const p = this._current(); if (p && this._canEditContacts(p)) this._openContact(p, { idx: Number(target.dataset.idx) }); },
+      contactBack: function () { this._contactBack(); },
+      contactSave: function () { const p = this._current(); if (p && this._canEditContacts(p)) this._saveContact(p); },
+      contactDelete: function () { const p = this._current(); if (p && this._canEditContacts(p)) this._deleteContact(p); },
+      contactCall: function (event, target) { const p = this._current(); if (p && target.dataset.key) playerCall(p.item, target.dataset.key); },
+      contactsText: function () { const p = this._current(); if (p && this.gm) contactsDialog(p.item); },
       answer: function () { if (activeCall?.screen) endCall("answer", activeCall); },
       decline: function () { if (activeCall?.screen) endCall("decline", activeCall); },
       outHangup: function () { if (outgoing?.screen) outgoing.hangup(); },
@@ -266,6 +275,11 @@ export class PlayerPhone extends ApplicationV2 {
     this._state.draft = el.querySelector("[name=draft]")?.value ?? this._state.draft;
     this._state.to = el.querySelector("[name=to]")?.value ?? this._state.to;
     this._state.entryType = el.querySelector("[name=entryType]")?.value ?? this._state.entryType;
+    const c = this._state.contact;
+    if (c && this._state.view === "contact") {
+      c.name = el.querySelector("[name=cname]")?.value ?? c.name;
+      c.number = el.querySelector("[name=cnum]")?.value ?? c.number;
+    }
   }
 
   async render(...args) {
@@ -377,6 +391,10 @@ export class PlayerPhone extends ApplicationV2 {
     if (this._state.view === "doc") return this._renderDoc(p);
     if (this._state.view === "conv") return this._renderConv(p);
     if (this._state.view === "new") return this._renderNew(p);
+    if (["contacts", "contact"].includes(this._state.view)) {
+      if (this._canEditContacts(p)) return this._state.view === "contacts" ? this._renderContacts(p) : this._renderContact(p);
+      this._state.view = "list";
+    }
     if (computer && this._tab(p) === "files") return this._renderFiles(p, mine);
     if (computer && !this.gm && inboxOf(p.phone) === "locked") return this._renderInboxLocked(p, mine);
     return this._renderList(p, mine);
@@ -576,7 +594,9 @@ export class PlayerPhone extends ApplicationV2 {
     const thread = el.querySelector(".spt-thread");
     if (thread) thread.scrollTop = thread.scrollHeight;
     if (this._state.view === "new" && !this._state.to) el.querySelector("[name=to]")?.focus();
-    else if (this._state.view !== "list") el.querySelector("[name=draft]")?.focus();
+    else if (this._state.view === "contact" && !this._state.contact?.name) el.querySelector("[name=cname]")?.focus();
+    else if (!["list", "contacts", "contact"].includes(this._state.view)) el.querySelector("[name=draft]")?.focus();
+    this._bindContactSearch(el);
 
     // Opening a conversation marks it as read.
     if (p && !this.gm && this._state.view === "conv") {
@@ -592,7 +612,7 @@ export class PlayerPhone extends ApplicationV2 {
 }
 
 // The window's views live in views/*.js: their methods join the class, `this` stays the window.
-Object.assign(PlayerPhone.prototype, headerViews, messageViews, fileViews, screenViews);
+Object.assign(PlayerPhone.prototype, headerViews, messageViews, contactViews, fileViews, screenViews);
 
 /* Repeated Ctrl+Shift+P: each device in turn (phones, then pagers in their own window), */
 /* then everything closes once all were shown; the next press starts again.              */
