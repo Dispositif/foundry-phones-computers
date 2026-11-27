@@ -262,18 +262,6 @@ function lastUsedDevice(user, devices) {
   return best ?? devices.find((p) => p.item === carried?.item) ?? devices[0] ?? null;
 }
 
-/** Device selector (player phone header). */
-export function deviceSelect(mine, p, labelFn) {
-  // No model icon: the screen already shows what kind of device it is.
-  if (mine.length <= 1) {
-    return `<div class="spt-icon-select"><strong>${esc(labelFn(p))}</strong></div>`;
-  }
-  const opts = mine
-    .map((q) => `<option value="${q.item.uuid}" ${q.item.uuid === p.item.uuid ? "selected" : ""}>${esc(labelFn(q))}</option>`)
-    .join("");
-  return `<div class="spt-icon-select spt-phone-select"><select data-phone-select>${opts}</select></div>`;
-}
-
 /** Syncs the icon placed before each <select data-icon-select>. */
 export function bindIconSelects(root) {
   for (const select of root.querySelectorAll("select[data-icon-select]")) {

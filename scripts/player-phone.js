@@ -1,6 +1,6 @@
 import { openAttachment, pickImage } from "./attachments.js";
 import { ApplicationV2, MODULE_ID, SOCKET } from "./constants.js";
-import { addLog, allPhones, displayName, findContact, getLog, getPhoneData, inboxOf, isComputer, isFixed, isLandline, isPager, isSatellite, isUnread, keyFor, markRead, modeOf, mutateLog, phoneLabel, sameConv, skinOf, SKINS } from "./devices.js";
+import { addLog, allPhones, displayName, findContact, getLog, getPhoneData, inboxOf, isComputer, isFixed, isLandline, isPager, isSatellite, isUnread, keyFor, markRead, modeOf, mutateLog, phoneLabel, playerUnread, sameConv, skinOf, SKINS } from "./devices.js";
 import { DIAL_ANGLE, DIAL_DIGITS, DIAL_STOP } from "./dialer.js";
 import { addContactDialog, contactsDialog, editPhoneDialog, giveDialog, playerCanGive, playerGiveDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
@@ -33,6 +33,14 @@ function removeEntry(item, { id = null, t: ts = null }) {
   return mutateLog(item, (log) => log.filter((e) => !match(e) || e.help));
 }
 
+/** Phone keypads: the screen buttons the green and red keys press, first one found. */
+const PHONE_KEYS = {
+  green: ["answer", "call", "dialBack"],
+  red: ["decline", "liveHangup", "outHangup", "liveDismiss", "back", "docBack"]
+};
+/** LCD backlight: how long it stays on after the last change or touch. */
+const LIT_MS = 8000;
+
 export class PlayerPhone extends ApplicationV2 {
   static instance = null;
 
@@ -44,7 +52,6 @@ export class PlayerPhone extends ApplicationV2 {
     actions: {
       open: function (event, target) { this._go("conv", target.dataset.key); },
       back: function () { this._go("list"); },
-      nextDevice: function () { this.nextDevice(); },
       playerGuide: function () { openPlayerGuide(); },
       copyAddress: async function (event, target) {
         const text = target.dataset.address;
@@ -104,6 +111,14 @@ export class PlayerPhone extends ApplicationV2 {
         if (live) hangUpLive(live.callId);
       },
       gmEditDevice: function () { const p = this._current(); if (p) editPhoneDialog(p.item); },
+      gmNextDevice: function () {
+        const p = this._current();
+        const list = p && this.gm ? this._siblings(p)?.list : null;
+        if (!list) return;
+        const i = list.findIndex((q) => q.item.uuid === p.item.uuid);
+        this._state.phoneUuid = list[(i + 1) % list.length].item.uuid;
+        this._go("list");
+      },
       gmGive: function () { const p = this._current(); if (p && this.gm && !isFixed(p.phone)) giveDialog(p.item); },
       playerGive: async function () {
         const p = this._current();
@@ -266,23 +281,6 @@ export class PlayerPhone extends ApplicationV2 {
     return this.render();
   }
 
-  /** Devices a player can show in this window (a pager has its own window). */
-  _usable() {
-    return this._mine().filter((p) => !isPager(p.phone));
-  }
-
-  /** Switches to the player's next device (header button, repeated Ctrl+Shift+P). */
-  nextDevice() {
-    const usable = this._usable();
-    if (usable.length < 2) return;
-    const i = usable.findIndex((p) => p.item.uuid === this._current()?.item.uuid);
-    const next = usable[(i + 1) % usable.length];
-    this._state.phoneUuid = next.item.uuid;
-    // A fixed device is only passed through: the shortcut and the main button keep the carried one.
-    if (!isFixed(next.phone)) saveLastDevice(next.item.uuid);
-    this._go("list");
-  }
-
   _go(view, key = null) {
     this._state.view = view;
     if (view !== "file") this._state.file = null;
@@ -422,6 +420,60 @@ export class PlayerPhone extends ApplicationV2 {
     this.setPosition({ width: size.width, height: size.height });
   }
 
+  /** Smartphone: the glass reflection moves a little with the window across the screen (CSS --spt-glare). */
+  setPosition(position) {
+    const pos = super.setPosition(position);
+    const el = this.element;
+    if (el && Number.isFinite(pos?.left) && Number.isFinite(pos?.width) && window.innerWidth) {
+      const shift = ((pos.left + pos.width / 2) / window.innerWidth - 0.5) * 80;
+      el.style.setProperty("--spt-glare", `${Math.round(shift)}px`);
+    }
+    return pos;
+  }
+
+  /** LCD screens: the backlight comes on, then goes off LIT_MS later (purely visual). */
+  _wake() {
+    const el = this.element;
+    if (!el?.classList.contains("spt-skin-mobile")) return;
+    el.classList.add("spt-lit");
+    clearTimeout(this._litTimer);
+    this._litTimer = setTimeout(() => el.classList.remove("spt-lit"), LIT_MS);
+  }
+
+  /** Lights the LCD when the device's screen changes (new entry, other view, incoming call), not on every redraw. */
+  _wakeOnChange(cur) {
+    const sig = cur
+      ? [cur.item.uuid, getLog(cur.phone, { includePending: true }).length, this._state.view, this._state.key, !!this.element.querySelector(".spt-incoming")].join("|")
+      : "";
+    if (sig === this._litSig) return;
+    this._litSig = sig;
+    this._wake();
+  }
+
+  /**
+   * Keypad of the mobile, brick and satellite phone. Green (SND) answers or calls, red (END) declines,
+   * hangs up or goes back, by pressing the screen's own button. A digit types the number on a "new" screen, CLR erases.
+   */
+  _pressKey(ev) {
+    const digit = ev.target.closest?.("[data-spt-digit]")?.dataset.sptDigit;
+    if (digit) {
+      const input = this.element.querySelector('.window-content input[name="to"]');
+      if (!input) return;
+      // CLR erases the last character.
+      input.value = digit === "clr" ? input.value.slice(0, -1) : input.value + digit;
+      this._state.to = input.value;
+      input.focus();
+      return;
+    }
+    const key = ev.target.closest?.("[data-spt-key]")?.dataset.sptKey;
+    if (!PHONE_KEYS[key]) return;
+    const content = this.element.querySelector(".window-content");
+    for (const action of PHONE_KEYS[key]) {
+      const btn = content?.querySelector(`[data-action="${action}"]`);
+      if (btn) return void btn.click();
+    }
+  }
+
   /** "Give…" in the window's menu (⋮): GM, any carried device; player, a personal device they hold. */
   _getHeaderControls() {
     const controls = super._getHeaderControls();
@@ -456,6 +508,11 @@ export class PlayerPhone extends ApplicationV2 {
     this.element.classList.toggle("spt-antenna-up", !!cur && !this.gm && modeOf(cur.phone) !== "off");
     this.element.classList.toggle("spt-gm-view", this.gm);
     this._applyFrame(cur);
+    for (const k of this.element.querySelectorAll("[data-spt-key]")) k.title = t(k.dataset.sptKey === "green" ? "KeyGreen" : "KeyRed");
+    // Mobile: the light blinks while a message or missed call is unread.
+    this.element.classList.toggle("spt-unread", !!cur && playerUnread(cur.phone) > 0);
+    // LCD screens: the backlight comes on when the device's screen changes.
+    this._wakeOnChange(cur);
     // The menu (⋮) follows the shown device: "Give…" only for a carried one.
     const giveKey = this._canGive();
     if (this._giveKey !== giveKey) {
@@ -463,6 +520,12 @@ export class PlayerPhone extends ApplicationV2 {
       this._updateFrame({ window: {} });
     }
     const el = this.element;
+    // Mobile keypad and LCD backlight. Bound once, on the window.
+    if (!el.dataset.sptKeys) {
+      el.dataset.sptKeys = "1";
+      el.addEventListener("click", (ev) => this._pressKey(ev));
+      for (const type of ["pointerdown", "keydown", "wheel"]) el.addEventListener(type, () => this._wake(), { passive: true });
+    }
     // Banners: GM preparation, secure device.
     const content = el.querySelector(".window-content");
     // Military look: a banner on computers only (phones show none).
@@ -498,16 +561,6 @@ export class PlayerPhone extends ApplicationV2 {
     }
 
     bindIconSelects(el);
-    el.querySelector("[data-phone-select]")?.addEventListener("change", (ev) => {
-      const uuid = ev.currentTarget.value;
-      if (!this.gm && isPager(getPhoneData(fromUuidSync(uuid)))) {
-        openPager(uuid, { latest: true });
-        return this.render();
-      }
-      this._state.phoneUuid = ev.currentTarget.value;
-      saveLastDevice(ev.currentTarget.value);
-      this._go("list");
-    });
     for (const btn of el.querySelectorAll("[data-mode]")) {
       btn.addEventListener("click", () => this._setMode(p, btn.dataset.mode));
     }
@@ -605,5 +658,34 @@ export function cycleDevices(openDefault = null) {
 onRerender(() => {
   if (PlayerPhone.instance?.rendered) PlayerPhone.instance.render();
 });
+/**
+ * Smartphone: a banner at the top of the screen for a new message, when the player is looking
+ * at another screen of the same device. Click: opens the conversation. Locked or off: nothing.
+ */
+export function smsBanner(uuid) {
+  const app = PlayerPhone.instance;
+  if (!app?.rendered || app.gm) return;
+  const p = app._current();
+  if (!p || p.item.uuid !== uuid || frameKind(p.phone) !== "smartphone") return;
+  if (p.phone.locked || modeOf(p.phone) === "off") return;
+  const el = app.element;
+  if (el.querySelector(".spt-incoming")) return;
+  const e = getLog(p.phone).find((x) => x.kind === "sms" && isUnread(x));
+  if (!e) return;
+  const key = keyFor(p.phone, e.with);
+  if (app._state.view === "conv" && sameConv(p.phone, app._state.key, key)) return;
+  el.querySelector(":scope > .spt-sms-banner")?.remove();
+  const div = document.createElement("div");
+  div.className = "spt-sms-banner";
+  const text = e.text ? esc(e.text) : `<i class="fas fa-paperclip"></i> ${t("Attachment")}`;
+  div.innerHTML = `<i class="fas fa-comment"></i><span><strong>${esc(displayName(p.phone, key))}</strong><small>${text}</small></span>`;
+  div.addEventListener("click", () => {
+    div.remove();
+    app._go("conv", key);
+  });
+  el.append(div);
+  setTimeout(() => div.remove(), 6000);
+}
+
 // Device notices show on the player's phone screen, when it is open.
 setNoticeHost(() => (PlayerPhone.instance?.rendered ? PlayerPhone.instance.element : null));

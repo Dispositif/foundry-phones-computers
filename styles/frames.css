@@ -32,23 +32,39 @@
 /* Smartphone */
 .application.spt-player-phone.spt-frame-smartphone:not(.minimized) {
   padding: 14px; border-radius: 46px;
-  background: linear-gradient(145deg, #2b2e33, #0d0e10 60%, #1c1e22);
-  box-shadow: 0 0 0 2px #4a4e55, 0 0 0 4px #15171a, 0 24px 50px rgba(0,0,0,0.55), inset 0 0 6px rgba(255,255,255,0.08);
+  /* Metal edge: light rim, darker band, faint outer line. */
+  background: linear-gradient(145deg, #3a3e45 0%, #16181b 18%, #0d0e10 50%, #16181b 82%, #34383e 100%);
+  box-shadow: 0 0 0 1.5px #5a5f67, 0 0 0 3.5px #15171a, 0 0 0 4.5px rgba(255,255,255,0.06), 0 24px 50px rgba(0,0,0,0.55),
+    inset 0 1px 1px rgba(255,255,255,0.14), inset 0 0 6px rgba(255,255,255,0.08);
 }
 .spt-player-phone.spt-frame-smartphone:not(.minimized) > .window-header { top: 16px; padding: 0 30px; }
 .spt-player-phone.spt-frame-smartphone:not(.minimized) > .window-content { border-radius: 34px; padding-top: 34px; padding-bottom: 20px; }
 .spt-frame-camera { top: 22px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: #000; box-shadow: 0 0 0 2px #1a1c1f; }
 .spt-frame-homebar { bottom: 22px; left: 50%; transform: translateX(-50%); width: 110px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.55); }
-.spt-frame-side { right: -5px; top: 150px; width: 4px; height: 70px; border-radius: 0 3px 3px 0; background: #3a3d43; }
+.spt-frame-side { right: -5px; top: 150px; width: 4px; height: 70px; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #2c2f34, #5a5f66); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); }
 .spt-frame-side.l, .spt-frame-side.l2 { right: auto; left: -5px; height: 40px; border-radius: 3px 0 0 3px; }
 .spt-frame-side.l { top: 120px; }
 .spt-frame-side.l2 { top: 175px; }
+.spt-frame-side.l, .spt-frame-side.l2 { background: linear-gradient(90deg, #5a5f66, #2c2f34); }
+/* Glass over the screen: two faint diagonal reflections and a shadow along the edges. Never catches a click.
+   --spt-glare (set when the window moves) slides the reflections a little. */
+.spt-player-phone.spt-frame-smartphone:not(.minimized) > .window-content::after {
+  content: ""; position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit;
+  background-image:
+    linear-gradient(118deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.035) 30%, transparent 30.5%),
+    linear-gradient(118deg, transparent 58%, rgba(255,255,255,0.04) 58.5%, rgba(255,255,255,0.015) 70%, transparent 70.5%);
+  background-repeat: no-repeat; background-size: 140% 100%;
+  background-position: calc(30% + var(--spt-glare, 0px)) 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 18px rgba(0,0,0,0.4);
+}
+/* A document read in full scrolls the screen itself: no glass there. */
+.spt-show-reading.spt-framed > .window-content::after { display: none; }
 
 /* Old mobile (candybar): LCD screen, decorative keypad */
 .application.spt-player-phone.spt-frame-mobile:not(.minimized) {
   padding: 22px 20px 0; border-radius: 40px 40px 34px 34px;
-  background: linear-gradient(160deg, #5d6672, #2e333a 55%, #22262b);
-  box-shadow: 0 0 0 2px #1a1d21, 0 22px 44px rgba(0,0,0,0.55), inset 0 2px 3px rgba(255,255,255,0.18);
+  background: linear-gradient(160deg, #6a7480 0%, #3a4048 22%, #2a2f35 78%, #3c434c 100%);
+  box-shadow: 0 0 0 1.5px #1a1d21, 0 22px 44px rgba(0,0,0,0.55), inset 0 2px 2px rgba(255,255,255,0.22), inset 0 -3px 6px rgba(0,0,0,0.45);
 }
 .spt-player-phone.spt-frame-mobile:not(.minimized) > .window-header { top: 0; height: 22px; padding: 0 30px; color: #e6e9ee; }
 .spt-player-phone.spt-frame-mobile:not(.minimized) > .window-content { border-radius: 8px; border: 6px solid #15181b; }
@@ -57,6 +73,47 @@
 .spt-frame-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 16px 8px 22px; }
 .spt-frame-keys span { height: 24px; border-radius: 12px; background: linear-gradient(#cfd4da, #9aa1aa); color: #222; font: bold 12px sans-serif; display: grid; place-items: center; box-shadow: 0 2px 0 #555; }
 .spt-frame-keys span.nav { grid-column: span 3; height: 30px; border-radius: 15px; display: flex; justify-content: space-around; background: linear-gradient(#e8ebee, #aab1ba); }
+/* Mobile: screen recessed under a plastic window (reflections), LCD pixel grid on the LCD look. */
+.spt-player-phone.spt-frame-mobile:not(.minimized) > .window-content::after {
+  content: ""; position: absolute; inset: 0; z-index: 20; pointer-events: none;
+  background-image:
+    linear-gradient(125deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 24%, transparent 24.5%),
+    linear-gradient(125deg, transparent 66%, rgba(255,255,255,0.06) 66.5%, transparent 74%);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.3);
+}
+.spt-player-phone.spt-frame-mobile.spt-skin-mobile:not(.minimized) > .window-content::after {
+  background-image:
+    linear-gradient(125deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 24%, transparent 24.5%),
+    linear-gradient(125deg, transparent 66%, rgba(255,255,255,0.06) 66.5%, transparent 74%),
+    repeating-linear-gradient(0deg, rgba(30,42,23,0.06) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(30,42,23,0.06) 0 1px, transparent 1px 3px);
+}
+/* Mobile keypad: letters under the digits, green and red keys (they press the screen's buttons). */
+.spt-frame-mobile .spt-mobile-keys { gap: 6px 7px; padding: 14px 8px 20px; }
+.spt-frame-mobile .spt-mobile-keys span {
+  height: 26px; border-radius: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; line-height: 1;
+  background: linear-gradient(#e3e7eb, #a9b0b8); box-shadow: 0 2px 0 #4b5056, inset 0 1px 0 rgba(255,255,255,0.8);
+}
+.spt-frame-mobile .spt-mobile-keys span small { font-size: 7px; font-weight: 600; color: #555; letter-spacing: 0.08em; }
+.spt-frame-mobile .spt-mobile-keys span.nav { grid-column: auto; height: 26px; border-radius: 13px; }
+.spt-frame-mobile .spt-mobile-keys span.nav i { width: 30px; height: 15px; border-radius: 8px; background: linear-gradient(#f4f6f8, #c4cad1); box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.spt-frame-mobile .spt-mobile-keys span.call { background: linear-gradient(#7fc58f, #3f8a52); color: #fff; }
+.spt-frame-mobile .spt-mobile-keys span.end { background: linear-gradient(#e08a80, #a8443a); color: #fff; }
+/* Working keys (mobile, brick, satellite phone): green, red and digits. */
+.spt-player-phone.spt-framed .spt-frame-deco :is([data-spt-key], [data-spt-digit]) { pointer-events: auto; cursor: pointer; }
+.spt-player-phone.spt-framed .spt-frame-deco :is([data-spt-key], [data-spt-digit]):active { transform: translateY(1px); }
+/* The green and red keys (SND / END) call, answer, decline and hang up: no call buttons on the screen
+   (they stay in the page, hidden, for the keys to press them). */
+.spt-player-phone:is(.spt-frame-mobile, .spt-frame-brick, .spt-frame-bricksat):not(.minimized) > .window-content :is([data-action="call"], .spt-incoming-keys) { display: none; }
+.spt-frame-mobile .spt-mobile-keys [data-spt-key]:hover { filter: brightness(1.08); }
+.spt-frame-mobile .spt-mobile-keys [data-spt-key]:active { transform: translateY(1px); box-shadow: 0 1px 0 #4b5056; }
+/* Short antenna behind the shell (it starts at the shell's top edge). */
+.spt-mobile-antenna { top: -22px; right: 40px; width: 14px; height: 20.5px; border-radius: 6px 6px 0 0; background: linear-gradient(90deg, #16191c, #3b424a, #16191c); }
+/* Unread light, next to the speaker. */
+.spt-mobile-led { top: 21px; left: 30px; width: 7px; height: 7px; border-radius: 50%; background: #2b3a2f; box-shadow: inset 0 1px 1px rgba(0,0,0,0.6); }
+.spt-unread .spt-mobile-led { background: #6dff8f; box-shadow: 0 0 6px #59e07a, 0 0 12px rgba(89,224,122,0.6); animation: spt-unread-led 1.6s ease-in-out infinite; }
+@keyframes spt-unread-led { 50% { opacity: 0.25; } }
+@media (prefers-reduced-motion: reduce) { .spt-unread .spt-mobile-led { animation: none; } }
 
 /* Laptop: the window is the lid, the base sticks out below */
 .application.spt-player-phone.spt-frame-computer:not(.minimized) {

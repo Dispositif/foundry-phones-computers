@@ -5,13 +5,13 @@
 .spt-phone-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--spt-line); }
 .spt-phone-top.conv strong { flex: 1; text-align: center; }
 .spt-phone-top a { padding: 0 0.3rem; font-size: 1.1em; }
-.spt-phone-top .spt-phone-select { flex: 1; }
 /* Player header: name over address, both cut with an ellipsis on narrow devices. */
 .spt-dev-title { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15; }
 .spt-dev-title strong, .spt-dev-title .spt-dev-addr { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .spt-dev-title .spt-dev-addr { align-self: flex-start; max-width: 100%; font-size: 0.8em; opacity: 0.75; cursor: copy; transition: color 0.2s, opacity 0.2s; }
 .spt-dev-title .spt-dev-addr:hover { opacity: 1; }
 .spt-dev-title .spt-dev-addr.copied { opacity: 1; color: #4caf50; }
+/* GM view: next device of the same holder or place. */
 .spt-phone-top .spt-next-device { flex: none; cursor: pointer; opacity: 0.75; }
 .spt-phone-top .spt-next-device:hover { opacity: 1; }
 .spt-top-actions { display: flex; gap: 10px; justify-content: flex-end; }

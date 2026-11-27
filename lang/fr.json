@@ -20,7 +20,10 @@
       "other": "{n} messages non lus"
     },
     "MyPhone": "Mon téléphone",
-    "NextDevice": "Appareil suivant (Ctrl+Shift+P)",
+    "KeyGreen": "Appeler · Décrocher",
+    "KeyRed": "Raccrocher · Refuser · Retour",
+    "NextDeviceHolder": "Appareil suivant de {name}",
+    "NextDevicePlace": "Appareil suivant à {name}",
     "CopyAddress": "Copier",
     "Model": {
       "landline": "Téléphone fixe",

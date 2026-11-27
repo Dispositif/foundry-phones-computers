@@ -1,6 +1,5 @@
 import { MODES } from "../constants.js";
-import { hasSignal, isComputer, isFixed, isLandline, isSatellite, isSecure, mobileSignal, modelOf, modeOf, phoneLabel, viaSatellite } from "../devices.js";
-import { deviceSelect } from "../gm-panel.js";
+import { allPhones, hasSignal, isComputer, isFixed, isLandline, isSatellite, isSecure, mobileSignal, modelOf, modeOf, phoneLabel, viaSatellite } from "../devices.js";
 import { t } from "../i18n.js";
 import { liveOn } from "../live-call.js";
 import { operatorName } from "../names.js";
@@ -13,23 +12,43 @@ import { esc, shieldIcon } from "../util.js";
 export const headerViews = {
   /**
    * Player header: the device's label and address, as plain text.
-   * Click on the address = copy. With several devices, a "next" button.
+   * Click on the address = copy. Other devices: floating button, Ctrl+Shift+P or the character sheet.
    */
   _deviceTitle(p) {
     const name = p.phone.label;
     // Switched off or locked: only the model shows, not the number (or email, ID…).
     const hidden = !this.gm && (p.phone.locked || modeOf(p.phone) === "off");
     const addr = hidden ? "" : p.phone.number ?? "";
-    const full = addr ? `${name} · ${addr}` : name;
-    const next = this._usable().length > 1
-      ? `<a class="spt-next-device" data-action="nextDevice" title="${t("NextDevice")}" aria-label="${t("NextDevice")}"><i class="fas fa-chevron-right"></i></a>`
+    // Hover: the GM also sees who carries the device, or where it is installed.
+    const full = this.gm ? phoneLabel(p) : addr ? `${name} · ${addr}` : name;
+    // GM: "next" through the other devices of the same holder, or the other fixed devices of the same scene.
+    const group = this.gm ? this._siblings(p) : null;
+    const next = group
+      ? `<a class="spt-next-device" data-action="gmNextDevice" title="${esc(group.title)}" aria-label="${esc(group.title)}"><i class="fas fa-chevron-right"></i></a>`
       : "";
     return `<div class="spt-dev-title" title="${esc(full)}"><strong>${esc(name)}</strong>${addr ? `<small class="spt-dev-addr" data-action="copyAddress" data-address="${esc(addr)}" title="${t("CopyAddress")}">${esc(addr)}</small>` : ""}</div>${next}`;
   },
 
-  _renderHeader(p, mine) {
+  /**
+   * GM view: the devices this one can step through, by label, or null when it is alone.
+   * Carried: every device of the same actor (PC or NPC). Fixed: the fixed devices of the same scene.
+   */
+  _siblings(p) {
+    const actor = p.item.parent instanceof Actor ? p.item.parent : null;
+    const sceneId = isFixed(p.phone) ? p.phone.sceneId : null;
+    if (!actor && !sceneId) return null;
+    const list = allPhones()
+      .filter((q) => (actor ? q.item.parent === actor : isFixed(q.phone) && q.phone.sceneId === sceneId))
+      .sort((a, b) => (a.phone.label ?? "").localeCompare(b.phone.label ?? ""));
+    if (list.length < 2) return null;
+    const title = actor ? t("NextDeviceHolder", { name: actor.name }) : t("NextDevicePlace", { name: game.scenes.get(sceneId)?.name ?? "" });
+    return { list, title };
+  },
+
+  _renderHeader(p) {
     const mode = modeOf(p.phone);
-    const phoneSel = this.gm ? deviceSelect(mine, p, phoneLabel) : this._deviceTitle(p);
+    // GM and player: the same title (the GM changes device from the panel).
+    const phoneSel = this._deviceTitle(p);
     const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode, modelOf(p.phone).noSilent);
     // Player, mobile device switched off: only the power button, which switches it on.
     if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {

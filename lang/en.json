@@ -20,8 +20,11 @@
       "other": "{n} unread messages"
     },
     "MyPhone": "My phone",
-    "NextDevice": "Next device (Ctrl+Shift+P)",
     "CopyAddress": "Copy",
+    "KeyGreen": "Call · Answer",
+    "KeyRed": "Hang up · Decline · Back",
+    "NextDeviceHolder": "Next device of {name}",
+    "NextDevicePlace": "Next device in {name}",
     "Model": {
       "landline": "Landline",
       "mobile": "Mobile phone",

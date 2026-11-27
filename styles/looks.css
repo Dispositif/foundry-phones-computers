@@ -30,7 +30,10 @@
   --skin-hover: rgba(30,42,23,0.1); --skin-input-bg: rgba(255,255,255,0.15); --skin-input-border: #1e2a17;
   --skin-btn-bg: rgba(255,255,255,0.15); --skin-btn-fg: #1e2a17; --skin-btn-border: #1e2a17; --skin-radius: 0; --skin-link: #1e2a17;
 }
-.spt-player-phone.spt-skin-mobile .window-content { letter-spacing: 0.02em; box-shadow: inset 0 0 18px rgba(30,42,23,0.35); }
+.spt-player-phone.spt-skin-mobile .window-content { letter-spacing: 0.02em; box-shadow: inset 0 0 18px rgba(30,42,23,0.35); transition: background-color 0.5s, box-shadow 0.5s; }
+/* LCD backlight (class set for a few seconds when the screen changes or is touched): purely visual. */
+.spt-player-phone.spt-skin-mobile.spt-lit { --skin-bg: #c6dca4; }
+.spt-player-phone.spt-skin-mobile.spt-lit .window-content { box-shadow: inset 0 0 18px rgba(30,42,23,0.25), 0 0 14px rgba(190,230,130,0.25); }
 /* LCD screen: a thin scrollbar in the screen's own ink, on a transparent track (Foundry's dark default looks out of place). */
 .spt-player-phone.spt-skin-mobile .window-content, .spt-player-phone.spt-skin-mobile .window-content * { scrollbar-width: thin; scrollbar-color: rgba(30,42,23,0.55) transparent; }
 .spt-player-phone.spt-skin-mobile .spt-bubble,

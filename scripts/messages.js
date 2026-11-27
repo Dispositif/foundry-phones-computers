@@ -51,7 +51,7 @@ export async function deliverToPhone(p, senderKeyOrName, text, att = null, { fwd
   // A pager also buzzes in silent mode, and opens by itself on the player's screen.
   if (mode === "on" || (model.pager && mode === "silent")) {
     const extraSock = model.pager ? { open: p.item.uuid, silent: mode === "silent" } : {};
-    for (const u of users) game.socket.emit(SOCKET, { type: "sms", targetUserId: u.id, notif: model.notif, ...extraSock });
+    for (const u of users) game.socket.emit(SOCKET, { type: "sms", targetUserId: u.id, notif: model.notif, item: p.item.uuid, ...extraSock });
   }
   return true;
 }
