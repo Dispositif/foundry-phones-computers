@@ -10,6 +10,9 @@ export const SMS_SRC = `modules/${MODULE_ID}/sounds/sms.ogg`;
 export const PICKUP_SRC = `modules/${MODULE_ID}/sounds/pickup.ogg`;
 export const HANGUP_SRC = `modules/${MODULE_ID}/sounds/hangup.ogg`;
 export const RINGBACK_SRC = `modules/${MODULE_ID}/sounds/ringback.ogg`;
+// Three rising tones of a number not in service, heard before the device says so.
+export const SIT_SRC = `modules/${MODULE_ID}/sounds/sit.ogg`;
+export const SIT_MS = 3100;
 // Searching for the satellite: short regular beeps (the pager beeps for now).
 export const SAT_SEARCH_SRC = `modules/${MODULE_ID}/sounds/pager.ogg`;
 // Icon of secure (encrypted) devices, lines and messages: a shield, never a padlock (locked device).

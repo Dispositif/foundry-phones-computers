@@ -1,4 +1,4 @@
-import { DialogV2, HANGUP_SRC, MODULE_ID, PICKUP_SRC, RINGBACK_SRC, RING_SRC, SAT_SEARCH_SRC, SOCKET, VIBRATE_SRC } from "./constants.js";
+import { DialogV2, HANGUP_SRC, MODULE_ID, PICKUP_SRC, RINGBACK_SRC, RING_SRC, SAT_SEARCH_SRC, SIT_MS, SIT_SRC, SOCKET, VIBRATE_SRC } from "./constants.js";
 import { displayName, findContact, getPhoneData, knownNpcFace, hasSignal, isUnknownName, keyFor, modelOf, msgOn, phonesByNumber, skinOf, modeOf, viaSatellite } from "./devices.js";
 import { updateFab } from "./fab.js";
 import { deviceNotice, esc, isMasked, maskedLabel, playLocal, rerenderAll, shieldIcon } from "./util.js";
@@ -259,7 +259,11 @@ export function onCallResult({ callId, result, name }) {
   // Answered: the device shows the call, no notice. Otherwise, a notice on the device.
   if (result === "answer") return playLocal(PICKUP_SRC);
   const msg = (CALLER_RESULTS[result] ?? CALLER_RESULTS.noanswer)(name);
-  deviceNotice(msg, { warn: true, icon: ["busy", "neterror"].includes(result) ? "fa-signal spt-busy" : result === "nosat" ? "fa-satellite" : null });
+  const notice = () => deviceNotice(msg, { warn: true, icon: ["busy", "neterror"].includes(result) ? "fa-signal spt-busy" : result === "nosat" ? "fa-satellite" : null });
+  // Not in service: the network's tones come first, then the device says it.
+  if (result !== "unassigned") return notice();
+  playLocal(SIT_SRC);
+  setTimeout(notice, SIT_MS);
 }
 
 
