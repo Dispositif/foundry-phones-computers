@@ -1,21 +1,24 @@
-import { attChipHtml, attHtml, openAttachment, pickImage } from "./attachments.js";
-import { ApplicationV2, MODES, MODULE_ID, SOCKET } from "./constants.js";
-import { SKINS, addLog, allPhones, conversations, displayName, findContact, getLog, getPhoneData, hasSignal, isComputer, isSecure, isFixed, isLandline, isPager, isSatellite, keyFor, markRead, modelOf, msgOn, mutateLog, phoneLabel, sameConv, isUnread, skinOf, unreadCount, modeOf, npcDirectory, publicDevices, inboxOf, filesOf, playerUnread, viaSatellite, mobileSignal } from "./devices.js";
-import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
+import { openAttachment, pickImage } from "./attachments.js";
+import { ApplicationV2, MODULE_ID, SOCKET } from "./constants.js";
+import { addLog, allPhones, displayName, findContact, getLog, getPhoneData, inboxOf, isComputer, isFixed, isLandline, isPager, isSatellite, isUnread, keyFor, markRead, modeOf, mutateLog, phoneLabel, sameConv, skinOf, SKINS } from "./devices.js";
+import { DIAL_ANGLE, DIAL_DIGITS, DIAL_STOP } from "./dialer.js";
 import { addContactDialog, contactsDialog, editPhoneDialog, giveDialog, playerCanGive, playerGiveDialog } from "./dialogs.js";
 import { loadLastDevice, myPhones, saveLastDevice } from "./fab.js";
-import { bindDrop, bindIconSelects, deviceSelect } from "./gm-panel.js";
+import { addFile, findFile, loadEntryDoc, loadFile, patchFile, removeFile, renameFile } from "./files.js";
+import { frameKind, FRAMES } from "./frames.js";
+import { bindDrop, bindIconSelects } from "./gm-panel.js";
+import { t } from "./i18n.js";
+import { dismissEnded, hangUpLive, liveOn, phoneClosed } from "./live-call.js";
+import { BOOT_MS } from "./names.js";
+import { openPager, PagerWindow } from "./pager.js";
 import { activeCall, endCall, outgoing, playerCall, playerSendSms } from "./player-calls.js";
-import { dismissEnded, hangUpLive, liveOn, otherEnd, phoneClosed, statusHtml } from "./live-call.js";
 import { attShowHtml, findEntry, forwardEntry, openReader, showScreen } from "./share.js";
-import { deviceNotice, esc, isMasked, nl2br, onRerender, setNoticeHost, shieldIcon } from "./util.js";
-import { PagerWindow, openPager } from "./pager.js";
-import { skyOpenFor } from "./satellite.js";
-import { BOOT_MS, bootText, operatorName } from "./names.js";
+import { deviceNotice, esc, nl2br, onRerender, setNoticeHost } from "./util.js";
+import { fileViews } from "./views/files.js";
+import { headerViews } from "./views/header.js";
+import { callLabel, GM_ENTRY_TYPES, messageViews } from "./views/messages.js";
+import { screenViews } from "./views/screens.js";
 import { openPlayerGuide, welcomeDevice } from "./welcome.js";
-import { t, tn } from "./i18n.js";
-import { FRAMES, frameKind } from "./frames.js";
-import { DIAL_ANGLE, DIAL_DIGITS, DIAL_STOP, keypad, rotaryDial } from "./dialer.js";
 /* -------------------------------------------- */
 /*  Player window: My phone                      */
 /* -------------------------------------------- */
@@ -280,22 +283,6 @@ export class PlayerPhone extends ApplicationV2 {
     this._go("list");
   }
 
-  /**
-   * Player header: the device's label and address, as plain text.
-   * Click on the address = copy. With several devices, a "next" button.
-   */
-  _deviceTitle(p) {
-    const name = p.phone.label;
-    // Switched off or locked: only the model shows, not the number (or email, ID…).
-    const hidden = !this.gm && (p.phone.locked || modeOf(p.phone) === "off");
-    const addr = hidden ? "" : p.phone.number ?? "";
-    const full = addr ? `${name} · ${addr}` : name;
-    const next = this._usable().length > 1
-      ? `<a class="spt-next-device" data-action="nextDevice" title="${t("NextDevice")}" aria-label="${t("NextDevice")}"><i class="fas fa-chevron-right"></i></a>`
-      : "";
-    return `<div class="spt-dev-title" title="${esc(full)}"><strong>${esc(name)}</strong>${addr ? `<small class="spt-dev-addr" data-action="copyAddress" data-address="${esc(addr)}" title="${t("CopyAddress")}">${esc(addr)}</small>` : ""}</div>${next}`;
-  }
-
   _go(view, key = null) {
     this._state.view = view;
     if (view !== "file") this._state.file = null;
@@ -397,222 +384,6 @@ export class PlayerPhone extends ApplicationV2 {
     return this._renderList(p, mine);
   }
 
-  /** Computer tab: mailbox or files. Without a mailbox, a player only has the files. */
-  _tab(p) {
-    const inbox = inboxOf(p.phone);
-    if (!this.gm && inbox === "none") return "files";
-    return this._state.tab ?? (this.gm || inbox === "on" ? "inbox" : "files");
-  }
-
-  _tabsHtml(p) {
-    if (!isComputer(p.phone)) return "";
-    const inbox = inboxOf(p.phone);
-    if (!this.gm && inbox === "none") return "";
-    const tab = this._tab(p);
-    const unread = this.gm ? 0 : playerUnread(p.phone);
-    const icon = { on: "fa-envelope", locked: "fa-lock", none: "fa-ban" }[inbox] ?? "fa-envelope";
-    const hint = inbox === "on" ? "" : ` title="${t(`Form.Inbox_${inbox}`)}"`;
-    const n = filesOf(p.phone, { gm: this.gm }).length;
-    return `<nav class="spt-dtabs">
-        <a class="${tab === "inbox" ? "active" : ""}" data-action="dtab" data-tab="inbox"${hint}><i class="fas ${icon}"></i> ${t("Files.Inbox")}${unread ? ` <span class="spt-badge">${unread}</span>` : ""}</a>
-        <a class="${tab === "files" ? "active" : ""}" data-action="dtab" data-tab="files"><i class="fas fa-folder"></i> ${t("Files.Tab")} <small>${n}</small></a>
-      </nav>`;
-  }
-
-  _renderFiles(p, mine) {
-    const canFwd = inboxOf(p.phone) === "on";
-    const rows = filesOf(p.phone, { gm: this.gm })
-      .map((f) => {
-        const id = esc(f.id);
-        const icon = f.type === "image" ? "fa-file-image" : "fa-file-lines";
-        const kind = f.type === "image" ? t("Files.Image") : t("Document");
-        const acts = this.gm
-          ? `<span class="spt-file-acts gm">
-              <a data-action="gmFileLock" data-id="${id}" class="${f.locked ? "on" : ""}" title="${f.locked ? t("Files.Unlock") : t("Files.Lock")}"><i class="fas ${f.locked ? "fa-lock" : "fa-lock-open"}"></i></a>
-              <a data-action="gmFileHide" data-id="${id}" class="${f.hidden ? "on" : ""}" title="${f.hidden ? t("Files.Reveal") : t("Files.Hide")}"><i class="fas ${f.hidden ? "fa-eye-slash" : "fa-eye"}"></i></a>
-              <a data-action="gmFileRename" data-id="${id}" title="${t("Files.Rename")}"><i class="fas fa-pen"></i></a>
-              <a data-action="gmFileDelete" data-id="${id}" title="${t("Delete")}"><i class="fas fa-trash"></i></a>
-            </span>`
-          : f.locked
-          ? `<i class="fas fa-lock spt-file-lock" title="${t("Files.Denied")}"></i>`
-          : `<span class="spt-file-acts">
-              <a data-action="fileShow" data-id="${id}" title="${t("Share.ShowScreen")}"><i class="fas fa-eye"></i></a>
-              ${canFwd ? `<a data-action="fileFwd" data-id="${id}" title="${t("Fwd.Forward")}"><i class="fas fa-share"></i></a>` : ""}
-            </span>`;
-        return `<li class="spt-file ${f.locked ? "locked" : ""} ${f.hidden ? "spt-file-hidden" : ""}" data-action="openFile" data-id="${id}">
-            <i class="fas ${icon} spt-file-icon"></i>
-            <span class="spt-file-name"><strong>${esc(f.name)}</strong><small>${kind}</small></span>
-            ${acts}
-          </li>`;
-      })
-      .join("");
-    const foot = this.gm
-      ? `<footer class="spt-phone-foot spt-file-foot">
-          <div class="spt-filedrop"><i class="fas fa-file-import"></i> ${t("Files.Drop")} · <a data-action="gmFileImage"><i class="fas fa-image"></i> ${t("Files.PickImage")}</a></div>
-        </footer>`
-      : "";
-    return `${this._renderHeader(p, mine)}${this._tabsHtml(p)}
-      <ul class="spt-files">${rows || `<li class="spt-phone-empty">${t("Files.Empty")}</li>`}</ul>
-      ${foot}`;
-  }
-
-  async _openFile(id) {
-    const p = this._current();
-    const f = p && findFile(p.phone, id);
-    if (!f || (!this.gm && f.hidden)) return;
-    if (!this.gm && f.locked) return deviceNotice(t("Files.Denied"), { warn: true });
-    this._state.view = "file";
-    this._state.file = { id };
-    this._rerender();
-    const html = await loadFile(p.item, f);
-    if (this._state.file?.id !== id) return;
-    this._state.file = { id, html };
-    this._rerender();
-  }
-
-  /** A file opened inside the screen: the journal's content or the image, never the Foundry sheet. */
-  _renderFile(p, mine) {
-    const f = findFile(p.phone, this._state.file?.id);
-    if (!f || (!this.gm && (f.locked || f.hidden))) {
-      this._state.view = "list";
-      this._state.file = null;
-      return this._renderFiles(p, mine);
-    }
-    const html = this._state.file.html;
-    const body = html === undefined
-      ? `<p class="spt-phone-empty"><i class="fas fa-spinner fa-spin"></i> ${t("Files.Loading")}</p>`
-      : html === null
-      ? `<p class="spt-phone-empty">${t("Files.Unavailable")}</p>`
-      : html;
-    const id = esc(f.id);
-    const enlarge = html ? `<a data-action="enlarge" title="${t("Files.Enlarge")}"><i class="fas fa-expand"></i></a>` : "";
-    const acts = this.gm || !html ? enlarge : `${enlarge}<a data-action="fileShow" data-id="${id}" title="${t("Share.ShowScreen")}"><i class="fas fa-eye"></i></a>${inboxOf(p.phone) === "on" ? `<a data-action="fileFwd" data-id="${id}" title="${t("Fwd.Forward")}"><i class="fas fa-share"></i></a>` : ""}`;
-    return `<header class="spt-phone-top conv">
-        <a data-action="back" title="${t("Back")}"><i class="fas fa-chevron-left"></i></a>
-        <strong>${esc(f.name)}</strong>
-        <span class="spt-top-actions">${acts}</span>
-      </header>
-      <div class="spt-fileview">${body}</div>`;
-  }
-
-  async _openDoc(entryId) {
-    const p = this._current();
-    const e = p && findEntry(p.phone, entryId);
-    if (e?.att?.type !== "doc") return;
-    this._state.view = "doc";
-    this._state.file = { entryId };
-    this._rerender();
-    const html = await loadEntryDoc(p.item, e);
-    if (this._state.file?.entryId !== entryId) return;
-    this._state.file = { entryId, html };
-    this._rerender();
-  }
-
-  /** A journal attached to a message, read inside the screen. Back returns to the conversation. */
-  _renderDoc(p) {
-    const st = this._state.file;
-    const e = st?.entryId ? findEntry(p.phone, st.entryId) : null;
-    if (!e) {
-      this._state.view = this._state.key ? "conv" : "list";
-      this._state.file = null;
-      return this._state.key ? this._renderConv(p) : this._renderList(p, this._mine());
-    }
-    const html = st.html;
-    const body = html === undefined
-      ? `<p class="spt-phone-empty"><i class="fas fa-spinner fa-spin"></i> ${t("Files.Loading")}</p>`
-      : html === null
-      ? `<p class="spt-phone-empty">${t("Files.Unavailable")}</p>`
-      : html;
-    const id = esc(st.entryId);
-    const acts = !html ? "" : `<a data-action="enlarge" title="${t("Files.Enlarge")}"><i class="fas fa-expand"></i></a>${this.gm ? "" : `<a data-action="showEntry" data-id="${id}" title="${t("Share.ShowScreen")}"><i class="fas fa-eye"></i></a><a data-action="fwdEntry" data-id="${id}" title="${t("Fwd.Forward")}"><i class="fas fa-share"></i></a>`}`;
-    return `<header class="spt-phone-top conv">
-        <a data-action="docBack" title="${t("Back")}"><i class="fas fa-chevron-left"></i></a>
-        <strong>${esc(e.att.name ?? t("Document"))}</strong>
-        <span class="spt-top-actions">${acts}</span>
-      </header>
-      <div class="spt-fileview">${body}</div>`;
-  }
-
-  /** Attachment inside a bubble: an image, or a document card that opens on the device. */
-  _attHtml(e) {
-    if (e.att?.type !== "doc") return attHtml(e.att);
-    return `<a class="spt-att-card" data-action="openDoc" data-id="${esc(e.id ?? String(e.t))}"><i class="fas fa-file-lines"></i><span><strong>${esc(e.att.name ?? t("Document"))}</strong><small>${t("Files.Open")}</small></span></a>`;
-  }
-
-  /** Mailbox locked by the GM: the tab is there, the content is not. */
-  _renderInboxLocked(p, mine) {
-    return `${this._renderHeader(p, mine)}${this._tabsHtml(p)}
-      <div class="spt-lockscreen spt-inbox-locked"><i class="fas fa-lock"></i><p>${t("Files.Restricted")}</p><small>${t("Files.RestrictedHint")}</small></div>`;
-  }
-
-  /** Incoming call on a smartphone or mobile: shown on its own screen, even when locked. */
-  _renderIncoming(p, mine, { caller, known, silent, img, secure }) {
-    return `${this._renderHeader(p, mine)}
-      <div class="spt-lockscreen spt-incoming">
-        <div class="spt-phone-ring ${silent ? "silent" : ""}">
-          ${img ? `<div class="spt-live-face spt-ring-face" style="background-image:url('${esc(img)}')"></div>` : `<i class="fas fa-phone-volume"></i>`}
-          <p class="spt-caller">${caller ? esc(caller) : t("Call.Ringing")}</p>
-          ${known ? `<p>${t("Call.IsCalling")}</p>` : ""}
-          ${secure ? `<p class="spt-ring-secure">${shieldIcon()} ${t("Secure.Line")}</p>` : ""}
-        </div>
-        <div class="spt-incoming-keys">
-          <button type="button" class="spt-decline" data-action="decline" title="${t("Call.Decline")}"><i class="fas fa-phone-slash"></i><span class="spt-key-label">${t("Call.Decline")}</span></button>
-          <button type="button" class="spt-answer" data-action="answer" title="${t("Call.Answer")}"><i class="fas fa-phone"></i><span class="spt-key-label">${t("Call.Answer")}</span></button>
-        </div>
-      </div>`;
-  }
-
-  /** Call in progress on a smartphone or mobile: the other end (face on a smartphone), the time on the line. */
-  _renderLive(p, mine, live) {
-    const o = otherEnd(live, p.item.uuid);
-    const face = p.phone.model !== "smartphone" ? `<i class="fas fa-phone"></i>`
-      : o.img ? `<div class="spt-live-face" style="background-image:url('${esc(o.img)}')"></div>`
-      : `<div class="spt-live-face unknown"><i class="fas fa-user"></i></div>`;
-    return `${this._renderHeader(p, mine)}
-      <div class="spt-lockscreen spt-incoming spt-live-screen">
-        <div class="spt-phone-ring">
-          <p class="spt-live-status">${statusHtml(live)}</p>
-          ${face}
-          <p class="spt-caller">${esc(o.name)}</p>
-          ${o.sub ? `<p class="spt-live-sub">${esc(o.sub)}</p>` : ""}
-        </div>
-        <div class="spt-incoming-keys">
-          ${live.ended
-            ? `<button type="button" class="spt-dismiss" data-action="liveDismiss" title="${t("Close")}"><i class="fas fa-xmark"></i><span class="spt-key-label">${t("Close")}</span></button>`
-            : `<button type="button" class="spt-decline" data-action="liveHangup" title="${t("Call.HangUp")}"><i class="fas fa-phone-slash"></i><span class="spt-key-label">${t("Call.HangUp")}</span></button>`}
-        </div>
-      </div>`;
-  }
-
-  /** Outgoing call on a smartphone or mobile: who is called, and a hang-up key. */
-  _renderOutgoing(p, mine, { name, img, face, searching }) {
-    // The dialed number does not stay on the screen once the call is over.
-    this._state.to = "";
-    // Smartphone: the face of who is called if the agent knows them, otherwise an empty portrait.
-    const pic = !face ? `<i class="fas fa-phone"></i>`
-      : img ? `<div class="spt-live-face" style="background-image:url('${esc(img)}')"></div>`
-      : `<div class="spt-live-face unknown"><i class="fas fa-user"></i></div>`;
-    return `${this._renderHeader(p, mine)}
-      <div class="spt-lockscreen spt-incoming spt-live-screen">
-        <div class="spt-phone-ring outgoing">
-          <p class="spt-live-status">${searching
-            ? `<span class="spt-live-state dialing spt-sat-search"><i class="fas fa-satellite"></i> ${t("Satellite.Searching")}</span>`
-            : `<span class="spt-live-state dialing"><i class="fas fa-circle"></i> ${t("Call.Calling")}</span>`}</p>
-          ${pic}
-          <p class="spt-caller">${esc(name)}</p>
-        </div>
-        <div class="spt-incoming-keys">
-          <button type="button" class="spt-decline" data-action="outHangup" title="${t("Call.HangUp")}"><i class="fas fa-phone-slash"></i><span class="spt-key-label">${t("Call.HangUp")}</span></button>
-        </div>
-      </div>`;
-  }
-
-  /** Device switched off: a dark screen, nothing from its history or contacts. */
-  _renderOff(p, mine) {
-    // A blank screen, switched on again with the header's power button only.
-    return `${this._renderHeader(p, mine)}<div class="spt-lockscreen spt-offscreen"></div>`;
-  }
-
   /** Switching a device on (player): from off, the network operator shows for a moment. */
   _setMode(p, mode) {
     if (!p) return;
@@ -621,241 +392,6 @@ export class PlayerPhone extends ApplicationV2 {
       setTimeout(() => this.rendered && this._rerender(), BOOT_MS + 100);
     }
     p.item.update({ [`flags.${MODULE_ID}.phone.mode`]: mode });
-  }
-
-  /** Just switched on: the operator's name (or "No signal"). */
-  _renderBoot(p, mine) {
-    const signal = hasSignal(p.phone) && !!game.users.activeGM;
-    return `${this._renderHeader(p, mine)}
-      <div class="spt-lockscreen spt-bootscreen">
-        <i class="fas fa-signal ${signal ? "" : "spt-signal off"}"></i>
-        <p class="spt-operator">${esc(bootText(p.phone))}</p>
-      </div>`;
-  }
-
-  _renderLocked(p, mine) {
-    const phoneSel = this._deviceTitle(p);
-    const unread = unreadCount(p.phone);
-    const federal = skinOf(p.phone) === "federal";
-    // Terminals (any look) and the federal look show an inactive login form.
-    const login = federal || p.phone.model === "desktop";
-    const icon = federal ? "fa-id-card" : login ? "fa-user-lock" : "fa-lock";
-    const text = federal ? t("Theme.IdRequired") : isComputer(p.phone) ? t("Lock.Session") : t("Warn.Locked");
-    const user = federal ? t("Theme.AgentId") : t("Lock.User");
-    return `<header class="spt-phone-top">${phoneSel}</header>
-      <div class="spt-lockscreen">
-        <i class="fas ${icon}"></i>
-        ${isComputer(p.phone) ? `<small class="spt-hostname">${esc(p.phone.label ?? "")}</small>` : ""}
-        <p>${text}</p>
-        ${login ? `<input type="text" class="spt-fake-login" placeholder="${user}" readonly tabindex="-1"><input type="password" class="spt-fake-login" placeholder="••••••••" readonly tabindex="-1">` : ""}
-        ${unread ? `<p class="spt-lock-notif">${tn("Unread", unread)}</p>` : ""}
-      </div>`;
-  }
-
-  _renderHeader(p, mine) {
-    const mode = modeOf(p.phone);
-    const phoneSel = this.gm ? deviceSelect(mine, p, phoneLabel) : this._deviceTitle(p);
-    const modeBtns = isComputer(p.phone) || (!this.gm && isFixed(p.phone)) ? "" : this._modeButtons(mode, modelOf(p.phone).noSilent);
-    // Player, mobile device switched off: only the power button, which switches it on.
-    if (!this.gm && mode === "off" && !isFixed(p.phone) && !isComputer(p.phone)) {
-      return `<header class="spt-phone-top">${phoneSel}<div class="spt-modes">${modeBtns}</div></header>`;
-    }
-    const gmOffline = !this.gm && !game.users.activeGM;
-    // Signal icon: bars (or Wi-Fi on a laptop), red without network. Installed devices always have a line.
-    const netIcon = isComputer(p.phone) ? "fa-wifi" : "fa-signal";
-    const signal = gmOffline
-      ? `<span class="spt-signal off" title="${t("Net.GmAbsent")}"><i class="fas ${netIcon}"></i> <small>[${t("Net.GmAway")}]</small></span>`
-      : isFixed(p.phone)
-        ? ""
-        : isSatellite(p.phone)
-        ? this._satSignal(p)
-        : hasSignal(p.phone)
-        ? `<i class="fas ${netIcon} spt-signal" title="${esc(isComputer(p.phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(p.phone)}`)}"></i>`
-        : `<i class="fas ${netIcon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
-    const contactsBtn = !isLandline(p.phone) && this._canEditContacts(p)
-      ? `<a data-action="contacts" title="${t("Contacts.Title")}" aria-label="${t("Contacts.Title")}"><i class="fas fa-address-book"></i></a>`
-      : "";
-    const gmTools = this.gm
-      ? `${contactsBtn}<a data-action="gmEditDevice" title="${t("EditDevice")}" aria-label="${t("EditDevice")}"><i class="fas fa-gear"></i></a>`
-      : contactsBtn;
-    // Secure device: a shield next to the signal.
-    const secure = isSecure(p.phone) ? shieldIcon({ title: t("Secure.Device"), cls: "spt-secure-badge" }) : "";
-    return `<header class="spt-phone-top">${phoneSel}${secure}${signal}${gmTools}<div class="spt-modes">${modeBtns}</div></header>`;
-  }
-
-  /**
-   * Two buttons: ring/silent (one toggle showing the current state) and power.
-   * Switched off, the toggle keeps its space (hidden) so the power button stays in place.
-   */
-  _modeButtons(mode, noSilent = false) {
-    const off = mode === "off";
-    const ring = mode === "silent" ? MODES.silent : MODES.on;
-    const toggle = off && !this.gm
-      ? `<button type="button" class="spt-mode" style="visibility:hidden" tabindex="-1" aria-hidden="true"><i class="fas ${ring.icon}"></i></button>`
-      : `<button type="button" class="spt-mode ${off ? "" : "active"}" data-mode="${mode === "on" ? "silent" : "on"}" title="${ring.label}" aria-label="${ring.label}"><i class="fas ${ring.icon}"></i></button>`;
-    const powerTitle = t(off ? "PowerOn" : "PowerOff");
-    const power = `<button type="button" class="spt-mode ${off ? "active" : ""}" data-mode="${off ? "on" : "off"}" title="${powerTitle}" aria-label="${powerTitle}"><i class="fas ${MODES.off.icon}"></i></button>`;
-    // Brick: rings or is off, no silent mode.
-    return noSilent ? power : toggle + power;
-  }
-
-  _renderList(p, mine) {
-    const convs = conversations(p.phone);
-    const rows = convs
-      .map((c) => {
-        const last = c.entries[0];
-        const preview = !last
-          ? `<em>${t("NoMessage")}</em>`
-          : last.kind === "sms"
-            ? `${last.dir === "out" ? `${t("You")} : ` : ""}${last.att ? '<i class="fas fa-paperclip"></i> ' : ""}${esc(last.text || (last.att ? t("Attachment") : ""))}`
-            : `<i class="fas fa-phone"></i> ${callLabel(last)}`;
-        return `<li class="spt-conv ${c.unread ? "unread" : ""}" data-action="open" data-key="${esc(c.key)}">
-            <div class="spt-conv-head"><strong>${esc(displayName(p.phone, c.key))}</strong></div>
-            <div class="spt-conv-preview">${preview}</div>
-            ${c.unread ? `<span class="spt-badge">${c.unread}</span>` : ""}
-          </li>`;
-      })
-      .join("");
-    return `${this._renderHeader(p, mine)}${this._tabsHtml(p)}
-      <ul class="spt-conv-list">${rows || `<li class="spt-phone-empty">${t("NoConversation")}</li>`}</ul>
-      <footer class="spt-phone-foot"><button type="button" data-action="compose">${composeLabel(p.phone, this.gm)}</button></footer>`;
-  }
-
-  _renderConv(p) {
-    const key = this._state.key;
-    const entries = getLog(p.phone, { includePending: this.gm })
-      .filter((e) => sameConv(p.phone, e.with, key))
-      .reverse();
-    // Delete: the GM any entry; the player their own messages and calls, except the operator's welcome (it holds the player guide)
-    // Only on a carried phone: never on a laptop, a terminal or an installed device.
-    const playerDel = !isComputer(p.phone) && !isFixed(p.phone);
-    const del = (e) => (this.gm || (playerDel && !e.help && !e.pending) ? `<a class="spt-del" data-action="gmDelete" data-id="${e.id ?? ""}" data-t="${e.t}" title="${t("Delete")}"><i class="fas fa-xmark"></i></a>` : "");
-    // Player: show screen / forward, on each message.
-    const share = (e) => {
-      if (this.gm || e.pending) return "";
-      const id = esc(e.id ?? String(e.t));
-      return `<span class="spt-share"><a data-action="showEntry" data-id="${id}" title="${t("Share.ShowScreen")}"><i class="fas fa-eye"></i></a><a data-action="fwdEntry" data-id="${id}" title="${t("Fwd.Forward")}"><i class="fas fa-share"></i></a></span>`;
-    };
-    // Encrypted message (secure line): a small shield.
-    // An <i>, not a <span>: bubble spans are full-width blocks that would cover the share icons.
-    const secureTag = (e) => (e.secure ? shieldIcon({ title: t("Secure.Message"), cls: "spt-secure-tag" }) : "");
-    const fwdTag = (e) => (e.fwd ? `<span class="spt-fwd"><i class="fas fa-share"></i> ${t("Fwd.Forwarded")}</span>` : "");
-    // Federal look: each email becomes a case file, with a stable reference and a stamp on received ones.
-    const federal = skinOf(p.phone) === "federal";
-    const fileTag = (e) => (federal ? `<span class="spt-ref">${t("Theme.Ref")} ${caseRef(e)}</span>${e.dir === "in" ? `<span class="spt-stamp">${t("Theme.Confidential")}</span>` : ""}` : "");
-    const bubbles = entries
-      .map((e) =>
-        e.kind === "sms"
-          ? `<div class="spt-bubble ${e.dir} ${e.nosat ? "spt-failed" : ""}">${fileTag(e)}${del(e)}${share(e)}${fwdTag(e)}${secureTag(e)}${this._attHtml(e)}${e.text ? `<div>${nl2br(e.text)}</div>` : ""}${e.nosat ? `<span class="spt-notsent"><i class="fas fa-satellite"></i> ${t("Satellite.NotSent")}${this.gm || !e.id ? "" : ` · <a data-action="retrySms" data-id="${esc(e.id)}">${t("Satellite.Retry")}</a>`}</span>` : ""}${e.help ? `<a class="spt-help-link" data-action="playerGuide"><i class="fas fa-circle-question"></i> ${t("Guide.Link")}</a>` : ""}${this.gm && e.dir === "in" && !e.prep ? `<span class="spt-read ${e.read === false ? "unread" : ""}">${e.pending ? t("Read.Pending") : e.read === false ? t("Read.Unread") : t("Read.Seen")}</span>` : ""}</div>`
-          : `<div class="spt-call-line"><i class="fas ${e.result === "answer" ? "fa-phone" : "fa-phone-slash"}"></i> ${callLabel(e)} ${del(e)}</div>`
-      )
-      .join("");
-    const masked = isMasked(key);
-    // Unknown correspondent, or a team contact (computed): offer to name it in the player's own contacts.
-    const contact = masked ? null : findContact(p.phone, key);
-    const addBtn = !masked && (!contact || contact.team) && this._canEditContacts(p)
-      ? `<a data-action="addContact" title="${t("Contacts.Add")}"><i class="fas fa-user-plus"></i></a>`
-      : "";
-    const composer = this.gm
-      ? this._gmComposer(2)
-      : !msgOn(p.phone)
-      ? ""
-      : masked
-      ? `<p class="spt-phone-empty">${t("Warn.CantReplyMasked")}</p>`
-      : `<div class="spt-composer"><textarea name="draft" rows="2" placeholder="${t("MessagePlaceholder")}">${esc(this._state.draft)}</textarea>
-           <button type="button" data-action="send" title="${t("Send")}"><i class="fas fa-paper-plane"></i></button></div>`;
-    return `<header class="spt-phone-top conv">
-        <a data-action="back" title="${t("Back")}"><i class="fas fa-chevron-left"></i></a>
-        <strong>${esc(displayName(p.phone, key))}${!masked && displayName(p.phone, key) !== key ? `<small class="spt-conv-num">${esc(key)}</small>` : ""}</strong>
-        <span class="spt-top-actions">${addBtn}${this.gm || !entries.length ? "" : `<a data-action="showConv" title="${t("Share.ShowConversation")}"><i class="fas fa-eye"></i></a>`}${masked || this.gm || modelOf(p.phone).noCalls ? "" : `<a data-action="call" title="${t("Call.Call")}"><i class="fas fa-phone"></i></a>`}</span>
-      </header>
-      <div class="spt-thread ${isComputer(p.phone) ? "mail" : ""}">${bubbles || `<p class="spt-phone-empty">${t("NoMessage")}.</p>`}</div>
-      ${composer}`;
-  }
-
-  /** Landline dialer. While it rings (modern look), the display shows the caller's number and the keys answer or hang up. */
-  _renderDialer(p, mine, incoming = null, live = null) {
-    this._state.view = "new";
-    // Empty display after a call, and on another device than the one last dialed from.
-    if (live || incoming || this._state.dialFor !== p.item.uuid) this._state.to = "";
-    this._state.dialFor = p.item.uuid;
-    const strip = live
-      ? `<div class="spt-dial-strip spt-lcd-ringing spt-lcd-live">
-          <input type="text" value="${esc(skinOf(p.phone) === "modern" ? lcdCaller(otherEnd(live, p.item.uuid)) : "")}" placeholder="${t("Live.OnLine")}" readonly tabindex="-1">
-          <i class="fas fa-phone"></i>
-        </div>`
-      : incoming
-      ? `<div class="spt-dial-strip spt-lcd-ringing">
-          <input type="text" value="${esc(incoming.caller ?? "")}" placeholder="${t("Call.Ringing")}" readonly tabindex="-1">
-          ${incoming.secure ? shieldIcon({ title: t("Secure.Line") }) : ""}<i class="fas fa-phone-volume"></i>
-        </div>`
-      : `<div class="spt-dial-strip">
-          <input type="text" name="to" list="spt-yellow" value="${esc(this._state.to)}" placeholder="${t("Number")}" autocomplete="off">
-          <datalist id="spt-yellow">${publicOptions()}</datalist>
-          <button type="button" data-action="dialBack" title="${t("Delete")}"><i class="fas fa-delete-left"></i></button>
-        </div>`;
-    const keys = live
-      ? `<div class="spt-phone-row spt-incoming-row">
-          <button type="button" class="spt-decline" data-action="liveHangup"><i class="fas fa-phone-slash"></i> ${t("Call.HangUp")}</button>
-        </div>`
-      : incoming
-      ? `<div class="spt-phone-row spt-incoming-row">
-          <button type="button" class="spt-answer" data-action="answer"><i class="fas fa-phone"></i> ${t("Call.Answer")}</button>
-          <button type="button" class="spt-decline" data-action="decline"><i class="fas fa-phone-slash"></i> ${t("Call.HangUp")}</button>
-        </div>`
-      : `<div class="spt-phone-row"><button type="button" data-action="call" ${this.gm ? "disabled" : ""}><i class="fas fa-phone"></i> ${t("Call.Call")}</button></div>`;
-    // Rotary landline: no device menu, only its number on a paper label stuck on the set.
-    const rotary = skinOf(p.phone) !== "modern";
-    const header = rotary ? `<header class="spt-phone-top spt-sticker-top"><span class="spt-number-sticker">${esc(p.phone.number ?? "")}</span></header>` : this._renderHeader(p, mine);
-    return `${header}
-      <div class="spt-new spt-dialer">
-        ${rotary ? rotaryDial() : ""}
-        ${strip}
-        ${skinOf(p.phone) === "modern" ? keypad() : ""}
-        ${keys}
-      </div>`;
-  }
-
-  _renderNew(p) {
-    const known = conversations(p.phone)
-      .filter((c) => !isMasked(c.key))
-      .map((c) => `<option value="${esc(displayName(p.phone, c.key))}">`)
-      .join("") + publicOptions();
-    return `<header class="spt-phone-top conv">
-        <a data-action="back" title="${t("Back")}"><i class="fas fa-chevron-left"></i></a>
-        <strong>${this.gm ? t("NewConversation") : isComputer(p.phone) ? t("NewMail") : msgOn(p.phone) && !modelOf(p.phone).noCalls ? t("CallOrMessage") : msgOn(p.phone) ? t("NewMessage") : t("Dial")}</strong><span></span>
-      </header>
-      <div class="spt-new">
-        <input type="text" name="to" list="spt-known" value="${esc(this._state.to)}" placeholder="${this.gm ? t("Gm.CorrespondentPlaceholder") : t("ToPlaceholder")}">
-        <datalist id="spt-known">${known}</datalist>
-        ${this.gm
-          ? this._gmComposer(5)
-          : `${msgOn(p.phone) ? `<textarea name="draft" rows="${isComputer(p.phone) ? 9 : 5}" placeholder="${isComputer(p.phone) ? t("MailPlaceholder") : t("MessagePlaceholder")}">${esc(this._state.draft)}</textarea>` : ""}
-        <div class="spt-phone-row">
-          ${msgOn(p.phone) ? `<button type="button" data-action="send"><i class="fas fa-paper-plane"></i> ${t("Send")}</button>` : ""}
-          ${modelOf(p.phone).noCalls ? "" : `<button type="button" data-action="call"><i class="fas fa-phone"></i> ${t("Call.Call")}</button>`}
-        </div>`}
-      </div>`;
-  }
-
-  /** GM: writes into the history (nothing is sent, no notification). */
-  _gmComposer(rows) {
-    const cur = this._current()?.phone;
-    // A pager only receives: no outgoing entries.
-    const types = Object.entries(GM_ENTRY_TYPES).filter(([, ty]) => (ty.kind === "call" ? !modelOf(cur).noCalls : msgOn(cur) && !(isPager(cur) && ty.entry.dir === "out")));
-    if (!types.some(([k]) => k === this._state.entryType)) this._state.entryType = types[0][0];
-    const opts = types
-      .map(([k, ty]) => `<option value="${k}" ${k === this._state.entryType ? "selected" : ""}>${ty.label}</option>`)
-      .join("");
-    return `<div class="spt-gm-composer spt-drop" title="${t("DropHere")}">
-        <select name="entryType">${opts}</select>
-        ${attChipHtml(this._state.att)}
-        <textarea name="draft" rows="${rows}" placeholder="${t("Prep.TextPlaceholder")}">${esc(this._state.draft)}</textarea>
-        <div class="spt-phone-row">
-          <button type="button" data-action="attach" title="${t("AttachImage")}" class="spt-icon-btn"><i class="fas fa-paperclip"></i></button>
-          <button type="button" data-action="send"><i class="fas fa-plus"></i> ${t("Prep.Add")}</button>
-        </div>
-      </div>`;
   }
 
   _replaceHTML(result, content) {
@@ -904,23 +440,6 @@ export class PlayerPhone extends ApplicationV2 {
     // Closed during a call: the call window takes over. Closed while dialing: the call is dropped (as closing the window did).
     if (!this.gm) phoneClosed();
     if (!this.gm && outgoing?.screen && !outgoing.done) outgoing.hangup();
-  }
-
-  /**
-   * Satellite device: the mobile network bars (green or red), and always the satellite:
-   * grey, green when linked (call through the satellite, or scene opened to it by the GM).
-   */
-  _satSignal(p) {
-    const phone = p.phone;
-    // Laptop: Wi-Fi instead of the mobile bars.
-    const icon = isComputer(phone) ? "fa-wifi" : "fa-signal";
-    const gsm = mobileSignal(phone)
-      ? `<i class="fas ${icon} spt-signal" title="${esc(isComputer(phone) ? t("Net.Signal") : `${t("Net.Signal")} · ${operatorName(phone)}`)}"></i>`
-      : `<i class="fas ${icon} spt-signal off" title="${t("Net.NoSignalShort")}"></i>`;
-    const uuid = p.item.uuid;
-    const linked = viaSatellite(phone) && (!!liveOn(uuid) || (outgoing?.itemUuid === uuid && !outgoing.done && !!outgoing.satLinked) || skyOpenFor(p));
-    const sat = `<i class="fas fa-satellite spt-sat-signal ${linked ? "linked" : ""}" title="${t("Satellite.Signal")}"></i>`;
-    return `${gsm}${sat}`;
   }
 
   _onRender(context, options) {
@@ -1019,52 +538,8 @@ export class PlayerPhone extends ApplicationV2 {
   }
 }
 
-/** Stable case reference, derived from the message id (e.g. 27-B-4417). */
-function caseRef(e) {
-  let h = 0;
-  for (const c of String(e.id ?? e.t)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return `${10 + (h % 90)}-${"ABCDFGHKMNPRST"[(h >>> 7) % 14]}-${String((h >>> 11) % 10000).padStart(4, "0")}`;
-}
-
-/** Entry types the GM can write into a history (preparation). */
-export const GM_ENTRY_TYPES = {
-  smsIn: { get label() { return t("Prep.smsIn"); }, kind: "sms", entry: { kind: "sms", dir: "in" } },
-  smsOut: { get label() { return t("Prep.smsOut"); }, kind: "sms", entry: { kind: "sms", dir: "out" } },
-  callMissed: { get label() { return t("Prep.callMissed"); }, kind: "call", entry: { kind: "call", dir: "in", result: "missed" } },
-  callIn: { get label() { return t("Prep.callIn"); }, kind: "call", entry: { kind: "call", dir: "in", result: "answer" } },
-  callOut: { get label() { return t("Prep.callOut"); }, kind: "call", entry: { kind: "call", dir: "out", result: "answer" } }
-};
-
-export function callLabel(e) {
-  if (e.dir === "out") {
-    const out = ["answer", "unassigned", "unreachable", "cancelled", "busy", "neterror"];
-    return t(`CallLog.out.${out.includes(e.result) ? e.result : "noanswer"}`);
-  }
-  return t(`CallLog.in.${["answer", "decline"].includes(e.result) ? e.result : "missed"}`);
-}
-
-/** Modern landline display on the line: the other end's number, like while it rang (a name only when there is no number to show). */
-function lcdCaller(other) {
-  return other.sub || other.name;
-}
-
-/** Public directory numbers (yellow pages): any agent can find them by name. */
-function publicOptions() {
-  return [...npcDirectory().filter((e) => e.pub && e.number && !e.off), ...publicDevices().filter((d) => d.name)]
-    .map((e) => `<option value="${esc(e.name)}" label="${esc(e.number)}"></option>`)
-    .join("");
-}
-
-/** "New" button of the conversation list: call and/or message, depending on what the device can do. */
-function composeLabel(phone, gm) {
-  if (gm) return `<i class="fas fa-pen-to-square"></i> ${t("NewConversation")}`;
-  if (isComputer(phone)) return `<i class="fas fa-pen-to-square"></i> ${t("NewMail")}`;
-  const sms = msgOn(phone);
-  const calls = !modelOf(phone).noCalls;
-  if (sms && calls) return `<i class="fas fa-phone"></i><i class="fas fa-comment-sms"></i> ${t("CallOrMessage")}`;
-  if (sms) return `<i class="fas fa-comment-sms"></i> ${t("NewMessage")}`;
-  return `<i class="fas fa-phone"></i> ${t("Dial")}`;
-}
+// The window's views live in views/*.js: their methods join the class, `this` stays the window.
+Object.assign(PlayerPhone.prototype, headerViews, messageViews, fileViews, screenViews);
 
 /* Repeated Ctrl+Shift+P: each device in turn (phones, then pagers in their own window), */
 /* then everything closes once all were shown; the next press starts again.              */
