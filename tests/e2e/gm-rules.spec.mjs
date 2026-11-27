@@ -193,7 +193,7 @@ test.describe("GM rules", () => {
     expect(await gmIncoming()).toBe(0);
   });
 
-  test("A device Mr Smith carries: Alice's SMS reaches the GM and stays in his device's history; her call rings at the GM", async () => {
+  test("A device Mr Smith carries: Alice's SMS and calls reach the GM and stay in his device's history, never unread", async () => {
     const { gm, alice, aliceDevice } = s;
     const npcDevice = await gm.evaluate(
       async (number) => (await (await window.spt("devices.js")).createPhone(game.actors.getName("Mr Smith"), { label: "Smith's phone", number })).uuid,
@@ -211,6 +211,27 @@ test.describe("GM rules", () => {
       await expect(ringDialog()).toContainText("Mr Smith");
       await endNpcCall("noanswer");
       await expectLogEntry(alice, aliceDevice.uuid, { kind: "call", dir: "out", call: callId, result: "noanswer" });
+      // The NPC's device keeps the call too, with no unread state (a PC may get hold of it later).
+      await expectLogEntry(gm, npcDevice, { kind: "call", dir: "in", call: callId, with: NUMBERS.Alice, result: "missed", read: true, npc: true });
+
+      // Answered and hung up: the NPC's device gets the duration.
+      const answered = await playerCall(alice, aliceDevice.uuid, NPC_DEVICE);
+      await endNpcCall("answer");
+      await expect.poll(() => gm.evaluate(async () => [...(await window.spt("live-call.js")).liveCalls.values()].some((c) => !c.ended && !c.dialing))).toBe(true);
+      await alice.evaluate(async (callId) => (await window.spt("live-call.js")).hangUpLive(callId), answered);
+      await expect.poll(async () => (await deviceLog(gm, npcDevice)).find((e) => e.call === answered)?.dur).toBeGreaterThanOrEqual(0);
+      await expectLogEntry(gm, npcDevice, { kind: "call", dir: "in", call: answered, result: "answer", npc: true });
+
+      // The GM calls Alice as Mr Smith from his device: the call goes out from it, answered once Alice picks up.
+      const out = await gm.evaluate(async ({ to, from }) => (await window.spt("ring.js")).ring(`phone:${to}`, { caller: from }), { to: NUMBERS.Alice, from: NPC_DEVICE });
+      await expectLogEntry(gm, npcDevice, { kind: "call", dir: "out", call: out, with: NUMBERS.Alice, result: "noanswer", npc: true });
+      await expect.poll(() => alice.evaluate(async () => (await window.spt("player-calls.js")).activeCall?.callId ?? null)).toBe(out);
+      await alice.evaluate(async () => (await window.spt("player-calls.js")).endCall("answer"));
+      await expectLogEntry(gm, npcDevice, { kind: "call", dir: "out", call: out, result: "answer" });
+      await gm.evaluate(async (callId) => (await window.spt("live-call.js")).hangUpLive(callId), out);
+      await expect.poll(() => gm.evaluate(async () => [...(await window.spt("live-call.js")).liveCalls.values()].some((c) => !c.ended))).toBe(false);
+      // Nothing unread on it, ever.
+      expect((await deviceLog(gm, npcDevice)).some((e) => e.read === false)).toBe(false);
     } finally {
       await gm.evaluate(async (uuid) => fromUuidSync(uuid)?.delete(), npcDevice);
     }

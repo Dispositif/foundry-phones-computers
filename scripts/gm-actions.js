@@ -164,6 +164,10 @@ export async function onPlayerCall({ fromItemUuid, to, callId, userId }) {
     rerenderAll();
     if (call.dialog?.rendered) call.dialog.close();
     if (result !== "cancelled") finishOrigin(origin, result);
+    // The NPC's device keeps the call in its history (a PC who searches it finds the call log).
+    if (npcEnd && result !== "unassigned") {
+      for (const p of targets) addLog(p.item, { kind: "call", call: callId, dir: "in", with: keyFor(p.phone, fromPhone.number), result: result === "answer" ? "answer" : "missed", read: true, npc: true });
+    }
     // Unknown number: the name typed in the window goes to the directory; "Unassigned" marks it off.
     if (unknown && result !== "cancelled" && (call.npcName?.trim() || result === "unassigned")) nameUnknown(key, call.npcName, { off: result === "unassigned" });
     if (result === "answer") {

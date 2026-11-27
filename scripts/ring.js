@@ -1,5 +1,5 @@
 import { MASKED, MODULE_ID, RESULT_LABELS, SOCKET } from "./constants.js";
-import { addLog, knownNpcFace, publicNpc, isSecure, secureWith, setSecureWith, defaultDeviceFor, displayName, findContact, getPhoneData, hasSignal, holders, isFixed, isLandline, keyFor, modelOf, npcNumber, phoneLabel, senderKey, phonesByNumber, ringOf, skinOf, modeOf } from "./devices.js";
+import { addLog, isNpcHeld, npcDevices, patchLog, knownNpcFace, publicNpc, isSecure, secureWith, setSecureWith, defaultDeviceFor, displayName, findContact, getPhoneData, hasSignal, holders, isFixed, isLandline, keyFor, modelOf, npcNumber, phoneLabel, senderKey, phonesByNumber, ringOf, skinOf, modeOf } from "./devices.js";
 import { maskedLabel, rerenderAll } from "./util.js";
 import { t } from "./i18n.js";
 import { agentSide, closeDial, lineBusy, npcSide, openGmRing, placeSide, startLive } from "./live-call.js";
@@ -55,6 +55,11 @@ export async function ring(target, { caller = MASKED, origin = null, callId = fo
     }
     // As an NPC: the caller's number, even if given by a name (directory, or the agent's contact).
     if (!origin) call.from = senderKey(caller, phones[0].phone);
+    // Called as an NPC who carries a device: the call goes in that device's history (answered: patched below).
+    // Only a call to a PC (someone holds the device called): what the NPC's phone would show if PCs search it.
+    if (!origin && phones.some((p) => holders(p).length)) {
+      for (const q of npcDevices(call.from)) if (!phones.some((p) => p.item === q.item)) addLog(q.item, { kind: "call", call: callId, dir: "out", with: keyFor(q.phone, value), result: "noanswer", npc: true });
+    }
     if (!origin) {
       if (secure === undefined) secure = phones.some((p) => secureWith(p.phone, keyFor(p.phone, call.from)));
       else for (const p of phones) await setSecureWith(p.item, keyFor(p.phone, call.from), secure);
@@ -74,8 +79,8 @@ export async function ring(target, { caller = MASKED, origin = null, callId = fo
         if (!origin) {
           ui.notifications.warn(`📱 ${phoneLabel(p)} : ${RESULT_LABELS[result]}.`);
         }
-        // Without signal, the missed call only shows when signal returns.
-        addLog(p.item, { kind: "call", call: callId, dir: "in", with: keyFor(p.phone, call.from), result: "missed", read: false, pending: result === "nosignal" || result === "off" });
+        // Without signal, the missed call only shows when signal returns. An NPC's device keeps only calls with PCs.
+        if (!isNpcHeld(p)) addLog(p.item, { kind: "call", call: callId, dir: "in", with: keyFor(p.phone, call.from), result: "missed", read: false, pending: result === "nosignal" || result === "off" });
         continue;
       }
       for (const u of users) {
@@ -179,6 +184,7 @@ export function onResponse({ callId, result, userId }) {
     for (const otherId of call.open.keys()) game.socket.emit(SOCKET, { type: "cancel", targetUserId: otherId, callId });
     call.open.clear();
     if (item) startLive(callId, ...liveSides(call, item, userId));
+    if (!call.origin) for (const q of npcDevices(call.from)) patchLog(q.item, (e) => e.call === callId && e.dir === "out", { result: "answer" });
   }
   if (!call.open.size) {
     pendingCalls.delete(callId);

@@ -40,7 +40,7 @@ body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) .spt-gm-send .f
 body[data-spt-gm-look="haze"] :is(#spt-phone-panel, .spt-dialog) .spt-agent-card.active { box-shadow: 0 0 0 1px var(--g-acc) inset, 0 0 18px rgba(255,138,42,0.25); }
 /* These looks are always dark, even with Foundry's light theme */
 body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-gm-status .spt-pill { color: #7fd18f; }
-body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) .spt-gm-status.down .spt-pill { color: #ff8a7a; }
+body[data-spt-gm-look] :is(#spt-phone-panel, .spt-dialog) :is(.spt-gm-status.down .spt-pill, .spt-gm-status .spt-pill:is(.spt-dz-pill, .spt-jam-pill)) { color: #ff8a7a; }
 
 
 /* Device icons are white SVGs: shown dark wherever Foundry's light theme applies (sidebar, sheets, dialogs). */

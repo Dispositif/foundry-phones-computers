@@ -13,12 +13,14 @@
 - Images app on the smartphone.
 - Network tones before "number not in service".
 - Player floating button always shown when the player has a device (setting removed).
+- NPC devices keep their calls in their history, with nothing unread.
 - QoL: New device button and Items context menu, device marks in the Items and Scenes sidebars, light theme, GM panel.
 - Fix: a call no longer rings forever when the player has not clicked in Foundry yet.
 - Fix: no extra "Cancelled" line after the GM's answer to a call to an NPC.
 - Fix: messages waiting in a dead zone arrive when the PC leaves it.
 - Fix: random numbers never reuse a number already in use.
 - Fix: a player can no longer act as another player (requests checked by the server).
+- Fix: Directory, naming a number to identify that the agent typed as a name.
 - Fix: a message no longer gets lost when a player and the GM change a device's history at the same moment.
 - Fix: calls no longer stay stuck when the GM disconnects while they ring.
 

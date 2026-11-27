@@ -1,5 +1,5 @@
 import { ApplicationV2, HANGUP_SRC, MODULE_ID, SECURE_SRC, SOCKET } from "./constants.js";
-import { directoryActor, findNpc, getPhoneData, isFixed, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
+import { allPhones, directoryActor, findNpc, getLog, getPhoneData, isFixed, isNpcHeld, knownNpcFace, npcCarrier, patchLog, publicNpc } from "./devices.js";
 import { esc, isActiveGM, isMasked, playLocal, rerenderAll, shieldIcon } from "./util.js";
 import { t } from "./i18n.js";
 import { PlayerPhone } from "./player-phone.js";
@@ -294,6 +294,10 @@ export function endLive(callId, reason = "hangup") {
     for (const side of [data.a, data.b]) {
       const item = side?.itemUuid ? fromUuidSync(side.itemUuid) : null;
       if (item) patchLog(item, (e) => e.call === callId && e.result === "answer", { dur, ...(data.secure ? { secure: true } : {}) });
+    }
+    // The NPC's side has no device of its own in the call: its device's history gets the duration too.
+    for (const p of allPhones().filter(isNpcHeld)) {
+      if (getLog(p.phone).some((e) => e.call === callId)) patchLog(p.item, (e) => e.call === callId && e.result === "answer", { dur });
     }
   }
   saveLive();

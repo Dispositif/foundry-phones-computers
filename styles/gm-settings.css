@@ -121,9 +121,8 @@
 .spt-gm-settings .spt-set-advanced .spt-set-quip { margin: 0 0 4px; font-size: 0.85em; font-style: italic; opacity: 0.75; }
 .spt-gm-settings .spt-set-icon { width: 1.2em; text-align: center; opacity: 0.8; }
 
-/* ---------- GM panel: PCs in a dead zone ---------- */
-.spt-gm .spt-dz-pill { cursor: pointer; background: rgba(255,159,10,0.18); color: #ffb340; }
-.theme-light .spt-gm .spt-dz-pill { color: #a65a10; }
+/* ---------- GM panel: PCs in a dead zone (status bar pill: same colors as "network down", gm-panel.css) ---------- */
+.spt-gm .spt-dz-pill { cursor: pointer; }
 .spt-gm .spt-agent-card { position: relative; }
 .spt-gm .spt-agent-card .spt-dz-badge { position: absolute; top: 4px; right: 4px; padding: 3px; border-radius: 50%; background: #ff9f0a; color: #1a0d00; font-size: 0.7em; }
 .spt-gm .spt-tile.deadzone { opacity: 0.55; }

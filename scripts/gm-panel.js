@@ -29,7 +29,8 @@ function callRows(phones) {
   const calls = new Map();
   for (const p of phones) {
     for (const e of getLog(p.phone, { includePending: true })) {
-      if (e.kind !== "call") continue;
+      // npc: the copy kept on a device an NPC carries (the call is already listed from the agent's side).
+      if (e.kind !== "call" || e.npc) continue;
       const id = e.call ?? `${p.item.uuid}|${e.id ?? e.t}`;
       if (!calls.has(id)) calls.set(id, { id, t: 0, outs: [], ins: [] });
       const c = calls.get(id);
@@ -217,12 +218,14 @@ function threadActors(th) {
 
 /** Numbers agents reached that nobody knows (no directory entry, contact or device), most recent first. */
 function unknownNumbers(phones) {
+  // The network operators (welcome message sender) are known to everyone.
+  const operators = new Set([...Object.values(OPERATORS).flat(), ...Object.values(SAT_OPERATORS)].map(norm));
   const found = new Map();
   for (const p of phones) {
     for (const e of getLog(p.phone)) {
       if (e.dir !== "out" || e.pj || e.prep || !["sms", "call"].includes(e.kind)) continue;
       const key = keyFor(p.phone, e.with);
-      if (!isUnknownNumber(p.phone, key)) continue;
+      if (!isUnknownNumber(p.phone, key) || operators.has(norm(key))) continue;
       const k = norm(key);
       if (!found.has(k)) found.set(k, { key, who: new Set(), sms: 0, calls: 0, t: 0 });
       const u = found.get(k);
@@ -232,6 +235,12 @@ function unknownNumbers(phones) {
     }
   }
   return [...found.values()].sort((a, b) => b.t - a.t);
+}
+
+/** Holder names for the Directory tab: a place gets the location icon instead of the 📍 emoji (safe HTML). */
+function whoHtml(names) {
+  const html = [...names].map((n) => (n.startsWith("📍") ? `<i class="fas fa-location-dot"></i> ${esc(n.replace(/^📍\s*/u, ""))}` : esc(n))).join(", ");
+  return html ? new Handlebars.SafeString(html) : "";
 }
 
 /** Directory entry -> agents who exchanged with it (messages or calls, either way). */
@@ -1251,7 +1260,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const edit = this._state.dirEdit;
     const all = directoryRows().map((r) => {
       if (r.title !== undefined) return { title: r.title, line: r.line };
-      const who = [...(usage.get(r.line) ?? [])].join(", ");
+      const who = whoHtml(usage.get(r.line) ?? []);
       return { ...r, label: npcLabel(r), unnamed: !r.name, editing: r.line === edit, who, npcId: npcId(r), search: `${r.name} ${r.number}`.toLowerCase() };
     });
     // A section title is kept only if an active NPC follows it.
@@ -1273,7 +1282,7 @@ export class PhonePanel extends HandlebarsApplicationMixin(ApplicationV2) {
       });
     const unknown = unknownNumbers(phones).map((u) => ({
       key: u.key,
-      who: [...u.who].join(", "),
+      who: whoHtml(u.who),
       count: [u.sms ? tn("Directory.Messages", u.sms) : "", u.calls ? tn("Directory.Calls", u.calls) : ""].filter(Boolean).join(" · ")
     }));
     return { rows, off, offOpen: this._state.dirOffOpen, devices, unknown, name: this._state.dirName, search: this._state.dirSearch, pin: this._state.dirPinNew, pub: this._state.dirPubNew };

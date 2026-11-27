@@ -587,7 +587,9 @@ export function nameUnknown(key, name = "", { off = false } = {}) {
   const k = String(key ?? "").trim();
   name = String(name ?? "").trim();
   if (!k || (!name && !off)) return false;
-  return /\d|@/.test(k) ? saveNpc({ name, number: k, off }) : saveNpc({ name: name || k, off });
+  if (/\d|@/.test(k)) return saveNpc({ name, number: k, off });
+  // A name the agent dialed ("Iridium", "Mom"): it stays the key, so later calls and texts find the entry.
+  return !name || norm(name) === norm(k) ? saveNpc({ name: k, off }) : saveNpc({ name, number: k, off });
 }
 
 /** Number marked "off" in the directory: unassigned, nobody answers. */
@@ -807,6 +809,8 @@ export function mutateLog(item, fn) {
 }
 
 export function addLog(item, entry) {
+  // A device the GM speaks for keeps no read/unread state: given to a PC later, nothing shows as unread.
+  if (entry.read === false && isNpcHeld({ item, phone: getPhoneData(item), actor: item?.parent instanceof Actor ? item.parent : null })) entry = { ...entry, read: true };
   return mutateLog(item, (log) => [{ id: foundry.utils.randomID(), t: Date.now(), ...entry }, ...log]);
 }
 

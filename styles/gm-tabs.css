@@ -98,5 +98,5 @@
 #spt-phone-panel { background: var(--background); backdrop-filter: none; }
 /* GM panel in Foundry's light theme: darker status colors for contrast. */
 #spt-phone-panel.theme-light .spt-gm-status .spt-pill, body.theme-light #spt-phone-panel:not(.theme-dark) .spt-gm-status .spt-pill { color: #23602f; }
-#spt-phone-panel.theme-light .spt-gm-status.down .spt-pill, body.theme-light #spt-phone-panel:not(.theme-dark) .spt-gm-status.down .spt-pill { color: #a8281b; }
+#spt-phone-panel.theme-light :is(.spt-gm-status.down .spt-pill, .spt-gm-status .spt-pill:is(.spt-dz-pill, .spt-jam-pill)), body.theme-light #spt-phone-panel:not(.theme-dark) :is(.spt-gm-status.down .spt-pill, .spt-gm-status .spt-pill:is(.spt-dz-pill, .spt-jam-pill)) { color: #a8281b; }
 #spt-phone-panel.theme-light .spt-fx-pill.warn, body.theme-light #spt-phone-panel:not(.theme-dark) .spt-fx-pill.warn { color: #a65a10; }

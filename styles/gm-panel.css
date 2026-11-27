@@ -11,7 +11,7 @@
 /* Status bar */
 .spt-gm-status { display: flex; align-items: center; gap: 0.5rem; padding: 6px 10px; border-bottom: 1px solid var(--spt-line); }
 .spt-gm-status .spt-pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 2px 10px; border-radius: 1em; font-weight: 600; font-size: 0.9em; background: rgba(47,111,62,0.22); color: #7fd18f; }
-.spt-gm-status.down .spt-pill { background: rgba(192,57,43,0.25); color: #ff8a7a; }
+.spt-gm-status.down .spt-pill, .spt-gm-status .spt-pill:is(.spt-dz-pill, .spt-jam-pill) { background: rgba(192,57,43,0.25); color: #ff8a7a; }
 .spt-gm-status .spt-gm-pending { font-size: 0.85em; opacity: 0.8; }
 .spt-gm-status .spt-gm-net { margin-left: auto; flex: 0 0 auto; width: auto; font-size: 0.85em; padding: 1px 10px; }
 .spt-gm-status .spt-gm-satsky { margin-left: auto; color: #4caf50; }
