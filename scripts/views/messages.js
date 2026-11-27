@@ -56,11 +56,12 @@ export const messageViews = {
 
   _renderList(p, mine) {
     const convs = conversations(p.phone, { team: false });
+    const sms = msgOn(p.phone);
     const rows = convs
       .map((c) => {
         const last = c.entries[0];
         const preview = !last
-          ? `<em>${t("NoMessage")}</em>`
+          ? sms ? `<em>${t("NoMessage")}</em>` : ""
           : last.kind === "sms"
             ? `${last.dir === "out" ? `${t("You")} : ` : ""}${last.att ? '<i class="fas fa-paperclip"></i> ' : ""}${esc(last.text || (last.att ? t("Attachment") : ""))}`
             : `<i class="fas fa-phone"></i> ${callLabel(last)}`;
@@ -124,7 +125,7 @@ export const messageViews = {
         <strong>${esc(displayName(p.phone, key))}${!masked && displayName(p.phone, key) !== key ? `<small class="spt-conv-num">${esc(key)}</small>` : ""}</strong>
         <span class="spt-top-actions">${addBtn}${this.gm || !entries.length ? "" : `<a data-action="showConv" title="${t("Share.ShowConversation")}"><i class="fas fa-eye"></i></a>`}${masked || this.gm || modelOf(p.phone).noCalls ? "" : `<a data-action="call" title="${t("Call.Call")}"><i class="fas fa-phone"></i></a>`}</span>
       </header>
-      <div class="spt-thread ${isComputer(p.phone) ? "mail" : ""}">${bubbles || `<p class="spt-phone-empty">${t("NoMessage")}.</p>`}</div>
+      <div class="spt-thread ${isComputer(p.phone) ? "mail" : ""}">${bubbles || (msgOn(p.phone) ? `<p class="spt-phone-empty">${t("NoMessage")}.</p>` : "")}</div>
       ${composer}`;
   },
 

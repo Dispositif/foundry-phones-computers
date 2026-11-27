@@ -65,6 +65,23 @@
   background-position: calc(30% + var(--spt-glare, 0px)) 0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 18px rgba(0,0,0,0.4);
 }
+/* Laptop and flat monitor: a faint, wide reflection (matte screen). CRT: a curved glass highlight and darker corners. */
+.spt-player-phone:is(.spt-frame-computer, .spt-frame-monitor, .spt-frame-crt):not(.minimized) > .window-content::after {
+  content: ""; position: absolute; inset: 0; z-index: 20; pointer-events: none; border-radius: inherit;
+  background-repeat: no-repeat; background-size: 140% 100%;
+  background-position: calc(30% + var(--spt-glare, 0px)) 0;
+}
+.spt-player-phone:is(.spt-frame-computer, .spt-frame-monitor):not(.minimized) > .window-content::after {
+  background-image:
+    linear-gradient(112deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 34%, transparent 34.5%),
+    linear-gradient(112deg, transparent 62%, rgba(255,255,255,0.07) 62.5%, transparent 72%),
+    linear-gradient(112deg, transparent 34.5%, rgba(0,0,0,0.035) 34.5%, rgba(0,0,0,0.05) 100%);
+}
+.spt-player-phone.spt-frame-crt:not(.minimized) > .window-content::after {
+  background-image: radial-gradient(ellipse 55% 40% at 28% 22%, rgba(255,255,255,0.17), rgba(255,255,255,0.05) 60%, transparent 75%);
+  background-size: 100% 100%;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.45);
+}
 /* A document read in full scrolls the screen itself: no glass there. */
 .spt-show-reading.spt-framed > .window-content::after { display: none; }
 
