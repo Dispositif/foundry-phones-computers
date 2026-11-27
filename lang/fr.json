@@ -879,8 +879,9 @@
     "DeleteEntryConfirm": "Supprimer définitivement ? Impossible d'annuler.",
     "News": {
       "Title": "Nouveautés de Phones & Computers {version}",
+      "Intro": "Salut MJ ! Les nouveautés de Phones & Computers {version}",
       "Changelog": "Toutes les modifications (en anglais)",
-      "Lines": "## 1.5\nOption **communication satellite** pour les appareils.\n**Onglet Appareils** : favoris (★) pour écrire en tant que PNJ ou lieu, appareils publics que les autres PJ trouvent par leur nom, filtres par porteur, légende.\n**Annuaire** : uniquement les numéros de PNJ ; l'édition en texte devient Importer / exporter.\n**Option Public** à la création ou à la modification d'un appareil.\nNouveau **téléphone brique** (années 80-90, appels seulement) pour l'univers Vintage.\nUnivers choisi dans la fenêtre d'accueil MJ ; le changer ne modifie plus les appareils existants.\nL'onglet Surveillance (écoutes, appels, traçage) devient une fonction avancée.\nFoundry v13 de nouveau pris en charge.\nNombreuses améliorations UX et correctifs.\n## 1.4\n**Grande refonte du panneau MJ** : réglages, nouvel annuaire, messages…\nOption Équipe : les PJ se connaissent (numéros et mails partagés dans les appareils).\nNombreuses corrections et améliorations de l'interface."
+      "Lines": "## 1.6 — Fluidité et robustesse\n**Donner** : les joueurs peuvent donner leur appareil à un autre joueur (ou l'abandonnent).\n**Menu général** sur les téléphones, **carnet d'adresses** et **appli Images** dans l'appareil.\n**Zones blanches** visibles par le MJ ; PNJ ajoutés à l'annuaire depuis la liste des acteurs ; portraits des PNJ pendant les appels.\nHabillages peaufinés et touches fonctionnelles sur les claviers téléphone ; le bouton flottant du joueur est toujours là.\nRobustesse : tests unitaires et d'intégration sur Foundry v13 et v14, nombreux correctifs."
     },
     "Satellite": {
       "Device": "Appareil satellite",

@@ -879,8 +879,9 @@
     "DeleteEntryConfirm": "Delete it permanently? It cannot be undone.",
     "News": {
       "Title": "What's new in Phones & Computers {version}",
+      "Intro": "Hello GM! What's new in Phones & Computers ? {version}",
       "Changelog": "Full changelog",
-      "Lines": "## 1.5\n**Satellite com** option for devices.\n**Devices tab**: favorites (★) to send as an NPC or a place, public devices that other PCs find by name, filters by holder, a legend.\n**Directory**: NPC numbers only; text editing becomes Import / export.\n**Public option** when creating or editing a device.\nNew **Brick phone** (1980-90s, calls only) for the Vintage universe.\nUniverse chosen in the GM welcome window; changing it no longer changes existing devices.\nIntel tab (wiretaps, calls, tracking) becomes an advanced feature.\nFoundry v13 supported again.\nLots of UX improvements and fixes.\n## 1.4\n**GM panel big redesign**: setting options, new directory, messages…\nTeam option: PCs know each other (numbers/emails shared in devices).\nLots of fixes and UI improvements."
+      "Lines": "## 1.6 — Frictionless and Robustness\n**Give a device**: players give their own device to another PC (or leave it to nobody).\n**General menu** on phones, **address book** and **Images app** inside the device.\n**Dead zones** shown to the GM; NPCs added to the directory from the Actors list; NPC portraits in calls.\nPolished looks and working keys on the older phones; the player floating button is always there.\nRobustness: unit and integration tests on Foundry v13 and v14, many fixes."
     },
     "Satellite": {
       "Device": "Satellite device",

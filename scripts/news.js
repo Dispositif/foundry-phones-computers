@@ -12,7 +12,7 @@ import { t } from "./i18n.js";
  * "## 1.5" starts a version's section, so the previous version can stay listed below).
  * Update both together at release time; a release without new highlights keeps the old version here.
  */
-export const NEWS_VERSION = "1.5.0";
+export const NEWS_VERSION = "1.6.0";
 
 const CHANGELOG_URL = "https://github.com/Dispositif/foundry-phones-computers/blob/main/CHANGELOG.md";
 
@@ -35,7 +35,7 @@ export function openNews() {
     classes: ["spt-dialog"],
     window: { title: t("News.Title", { version: NEWS_VERSION.replace(/\.0$/, "") }), icon: "fas fa-gift" },
     position: { width: 520 },
-    content: `<div class="spt-news">${lines}
+    content: `<div class="spt-news"><p class="spt-news-intro">${esc(t("News.Intro", { version: NEWS_VERSION.replace(/\.0$/, "") }))}</p>${lines}
       <p class="spt-news-more"><a href="${CHANGELOG_URL}" target="_blank" rel="noopener">${t("News.Changelog")}</a></p></div>`,
     ok: { label: t("Ok"), icon: "fas fa-check" },
     rejectClose: false

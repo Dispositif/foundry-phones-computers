@@ -7,8 +7,7 @@
 - NPC portraits in calls.
 - Send: places where PCs are, even without a landline.
 - Texts follow Foundry's language (module language setting removed).
-- Polished smartphone and mobile phone looks, working keys on the older phones.
-- Address book inside the device.
+- Polished looks (smartphone, mobile, monochrome LCD screens), working keys on the older phones.
 - General menu on phones.
 - Images app on the smartphone.
 - Network tones before "number not in service".
@@ -20,6 +19,7 @@
 - Fix: messages waiting in a dead zone arrive when the PC leaves it.
 - Fix: random numbers never reuse a number already in use.
 - Fix: a player can no longer act as another player (requests checked by the server).
+- Fix: a shown file or document reaches only the players it is for.
 - Fix: Directory, naming a number to identify that the agent typed as a name.
 - Fix: a message no longer gets lost when a player and the GM change a device's history at the same moment.
 - Fix: calls no longer stay stuck when the GM disconnects while they ring.
